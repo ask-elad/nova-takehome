@@ -16,25 +16,57 @@ checks them. Replace the NotImplementedError bodies with your code.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+from datetime import date
+from pathlib import Path
 
 DEFAULT_STATE = ".state"
 
+# Ensure harness/nova is importable regardless of working directory
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 
 def ingest(batch_dir: str, state_dir: str) -> None:
-    raise NotImplementedError(
-        f"ingest is not written yet: read the .eml files in {batch_dir} and keep what you learn under {state_dir}")
+    from nova.mailbox import load_batch
+    from nova.state import StateDir
+
+    state = StateDir(state_dir)
+    state.ensure()
+
+    for record in load_batch(Path(batch_dir)):
+        if not state.doc_exists(record.doc_id):
+            state.save_doc(record)
 
 
 def report(as_of: str, mode: str, state_dir: str) -> dict:
-    raise NotImplementedError(
-        f"report is not written yet: return the report.json dict for --as-of {as_of} in {mode} mode "
-        "(see grader/schema/report.schema.json and data/examples/*/expected_finding.json)")
+    from nova.state import StateDir
+
+    as_of_date = date.fromisoformat(as_of)
+    state = StateDir(state_dir)
+
+    return {
+        "schema_version": "1.0.0",
+        "as_of": as_of,
+        "mode": mode,
+        "findings": [],
+        "portfolio": {
+            "cashback": [],
+            "expiry": [],
+            "late_fee_risk": [],
+        },
+    }
 
 
 def feedback(feedback_file: str, state_dir: str) -> None:
-    raise NotImplementedError(
-        f"feedback is not written yet: store the decisions in {feedback_file} under {state_dir} so later reports use them")
+    from nova.state import StateDir
+
+    state = StateDir(state_dir)
+    state.root.mkdir(parents=True, exist_ok=True)
+
+    payload = json.loads(Path(feedback_file).read_text())
+    for item in payload.get("items", []):
+        state.append_feedback(item)
 
 
 def main(argv=None) -> int:
@@ -55,7 +87,6 @@ def main(argv=None) -> int:
         if a.cmd == "ingest":
             ingest(a.batch_dir, a.state_dir)
         elif a.cmd == "report":
-            import json
             json.dump(report(a.as_of, a.mode, a.state_dir), sys.stdout, indent=1)
             sys.stdout.write("\n")
         else:

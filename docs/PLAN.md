@@ -42,5 +42,5 @@ Each phase ends with a gate. The next phase starts only after the gate has passe
 - [x] `docs/decisions/0001-architecture.md` signed off
 
 ## Phase 2 checklist
-- [ ] Task 02 · foundation: text layer, mailbox, model client, runnable pipeline
+- [x] Task 02 · foundation: text layer, mailbox, model client, runnable pipeline
 - [ ] Task 03 · readers and verification
