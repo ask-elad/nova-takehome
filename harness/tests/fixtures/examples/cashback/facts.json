@@ -1,0 +1,2732 @@
+[
+  {
+    "type": "ContractTerms",
+    "doc": "batch_01/0002.eml#MSA-TBX-US-EXP-E58.pdf",
+    "data": {
+      "id": {
+        "value": "TBX-US-EXP-E58",
+        "ref": {
+          "page": 1,
+          "line": 3
+        }
+      },
+      "kind": "msa",
+      "parties": [
+        "Quillmere Pharma Inc.",
+        "Tarrowby Express Inc."
+      ],
+      "parties_ref": {
+        "page": 1,
+        "line": 5
+      },
+      "dated": {
+        "value": "2033-01-29",
+        "ref": {
+          "page": 1,
+          "line": 14
+        }
+      },
+      "effective_from": {
+        "value": "2033-02-14",
+        "ref": {
+          "page": 3,
+          "line": 20
+        }
+      },
+      "end_date": {
+        "value": "2034-02-13",
+        "ref": {
+          "page": 3,
+          "line": 21
+        }
+      },
+      "auto_renewal": false,
+      "auto_renewal_ref": {
+        "page": 3,
+        "line": 22
+      },
+      "precedence_order": [
+        "signed_amendment",
+        "msa",
+        "annexes"
+      ],
+      "precedence_ref": {
+        "page": 5,
+        "line": 3
+      },
+      "unranked_pairs": [
+        "rate_notice vs amendment"
+      ],
+      "unranked_ref": {
+        "page": 4,
+        "line": 43
+      },
+      "rate_periods": [
+        {
+          "label": "P1",
+          "start": "2033-02-14",
+          "end": "2033-08-13",
+          "ref": {
+            "page": 8,
+            "line": 3
+          }
+        },
+        {
+          "label": "P2",
+          "start": "2033-08-14",
+          "end": "2034-02-13",
+          "ref": {
+            "page": 8,
+            "line": 4
+          }
+        }
+      ],
+      "rate_rows": [
+        {
+          "lane": "USW2-USS2",
+          "band": "minimum charge",
+          "rates": [
+            "114.00",
+            "114.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 6
+          }
+        },
+        {
+          "lane": "USW2-USS2",
+          "band": "0-44.5 kg",
+          "rates": [
+            "5.48",
+            "5.81"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 7
+          }
+        },
+        {
+          "lane": "USW2-USS2",
+          "band": "45-99.5 kg",
+          "rates": [
+            "5.14",
+            "5.45"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 8
+          }
+        },
+        {
+          "lane": "USW2-USS2",
+          "band": "100-299.5 kg",
+          "rates": [
+            "4.81",
+            "5.10"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 9
+          }
+        },
+        {
+          "lane": "USW2-USS2",
+          "band": "300+ kg",
+          "rates": [
+            "4.51",
+            "4.78"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 10
+          }
+        },
+        {
+          "lane": "USC3-INW1",
+          "band": "minimum charge",
+          "rates": [
+            "53.00",
+            "53.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 11
+          }
+        },
+        {
+          "lane": "USC3-INW1",
+          "band": "0-44.5 kg",
+          "rates": [
+            "5.18",
+            "5.49"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 12
+          }
+        },
+        {
+          "lane": "USC3-INW1",
+          "band": "45-99.5 kg",
+          "rates": [
+            "4.91",
+            "5.20"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 13
+          }
+        },
+        {
+          "lane": "USC3-INW1",
+          "band": "100-299.5 kg",
+          "rates": [
+            "4.65",
+            "4.93"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 14
+          }
+        },
+        {
+          "lane": "USC3-INW1",
+          "band": "300+ kg",
+          "rates": [
+            "4.40",
+            "4.67"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 15
+          }
+        },
+        {
+          "lane": "USE2-USE1",
+          "band": "minimum charge",
+          "rates": [
+            "75.00",
+            "75.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 16
+          }
+        },
+        {
+          "lane": "USE2-USE1",
+          "band": "0-44.5 kg",
+          "rates": [
+            "8.58",
+            "9.10"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 17
+          }
+        },
+        {
+          "lane": "USE2-USE1",
+          "band": "45-99.5 kg",
+          "rates": [
+            "7.71",
+            "8.18"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 18
+          }
+        },
+        {
+          "lane": "USE2-USE1",
+          "band": "100-299.5 kg",
+          "rates": [
+            "6.93",
+            "7.35"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 19
+          }
+        },
+        {
+          "lane": "USE2-USE1",
+          "band": "300+ kg",
+          "rates": [
+            "6.23",
+            "6.60"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 20
+          }
+        },
+        {
+          "lane": "USC3-USS2",
+          "band": "minimum charge",
+          "rates": [
+            "55.00",
+            "55.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 21
+          }
+        },
+        {
+          "lane": "USC3-USS2",
+          "band": "0-44.5 kg",
+          "rates": [
+            "9.69",
+            "10.27"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 22
+          }
+        },
+        {
+          "lane": "USC3-USS2",
+          "band": "45-99.5 kg",
+          "rates": [
+            "8.79",
+            "9.32"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 23
+          }
+        },
+        {
+          "lane": "USC3-USS2",
+          "band": "100-299.5 kg",
+          "rates": [
+            "7.98",
+            "8.46"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 24
+          }
+        },
+        {
+          "lane": "USC3-USS2",
+          "band": "300+ kg",
+          "rates": [
+            "7.24",
+            "7.67"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 25
+          }
+        },
+        {
+          "lane": "USC1-INN1",
+          "band": "minimum charge",
+          "rates": [
+            "55.00",
+            "55.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 26
+          }
+        },
+        {
+          "lane": "USC1-INN1",
+          "band": "0-44.5 kg",
+          "rates": [
+            "6.10",
+            "6.47"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 27
+          }
+        },
+        {
+          "lane": "USC1-INN1",
+          "band": "45-99.5 kg",
+          "rates": [
+            "5.51",
+            "5.84"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 28
+          }
+        },
+        {
+          "lane": "USC1-INN1",
+          "band": "100-299.5 kg",
+          "rates": [
+            "4.97",
+            "5.27"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 29
+          }
+        },
+        {
+          "lane": "USC1-INN1",
+          "band": "300+ kg",
+          "rates": [
+            "4.49",
+            "4.76"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 30
+          }
+        },
+        {
+          "lane": "USE2-INW1",
+          "band": "minimum charge",
+          "rates": [
+            "111.00",
+            "111.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 31
+          }
+        },
+        {
+          "lane": "USE2-INW1",
+          "band": "0-44.5 kg",
+          "rates": [
+            "8.98",
+            "9.52"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 32
+          }
+        },
+        {
+          "lane": "USE2-INW1",
+          "band": "45-99.5 kg",
+          "rates": [
+            "8.61",
+            "9.13"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 33
+          }
+        },
+        {
+          "lane": "USE2-INW1",
+          "band": "100-299.5 kg",
+          "rates": [
+            "8.26",
+            "8.76"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 34
+          }
+        },
+        {
+          "lane": "USE2-INW1",
+          "band": "300+ kg",
+          "rates": [
+            "7.92",
+            "8.40"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 35
+          }
+        },
+        {
+          "lane": "USE2-USS2",
+          "band": "minimum charge",
+          "rates": [
+            "48.00",
+            "48.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 36
+          }
+        },
+        {
+          "lane": "USE2-USS2",
+          "band": "0-44.5 kg",
+          "rates": [
+            "7.32",
+            "7.76"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 37
+          }
+        },
+        {
+          "lane": "USE2-USS2",
+          "band": "45-99.5 kg",
+          "rates": [
+            "6.97",
+            "7.39"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 38
+          }
+        },
+        {
+          "lane": "USE2-USS2",
+          "band": "100-299.5 kg",
+          "rates": [
+            "6.63",
+            "7.03"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 39
+          }
+        },
+        {
+          "lane": "USE2-USS2",
+          "band": "300+ kg",
+          "rates": [
+            "6.31",
+            "6.69"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 40
+          }
+        }
+      ],
+      "fuel_rows": [
+        {
+          "month": "2033-02",
+          "rate": "18.95",
+          "ref": {
+            "page": 9,
+            "line": 4
+          }
+        },
+        {
+          "month": "2033-03",
+          "rate": "18.51",
+          "ref": {
+            "page": 9,
+            "line": 5
+          }
+        },
+        {
+          "month": "2033-04",
+          "rate": "19.10",
+          "ref": {
+            "page": 9,
+            "line": 6
+          }
+        },
+        {
+          "month": "2033-05",
+          "rate": "20.33",
+          "ref": {
+            "page": 9,
+            "line": 7
+          }
+        },
+        {
+          "month": "2033-06",
+          "rate": "18.57",
+          "ref": {
+            "page": 9,
+            "line": 8
+          }
+        },
+        {
+          "month": "2033-07",
+          "rate": "20.78",
+          "ref": {
+            "page": 9,
+            "line": 9
+          }
+        },
+        {
+          "month": "2033-08",
+          "rate": "21.71",
+          "ref": {
+            "page": 9,
+            "line": 10
+          }
+        },
+        {
+          "month": "2033-09",
+          "rate": "19.41",
+          "ref": {
+            "page": 9,
+            "line": 11
+          }
+        },
+        {
+          "month": "2033-10",
+          "rate": "17.27",
+          "ref": {
+            "page": 9,
+            "line": 12
+          }
+        },
+        {
+          "month": "2033-11",
+          "rate": "16.27",
+          "ref": {
+            "page": 9,
+            "line": 13
+          }
+        },
+        {
+          "month": "2033-12",
+          "rate": "17.56",
+          "ref": {
+            "page": 9,
+            "line": 14
+          }
+        },
+        {
+          "month": "2034-01",
+          "rate": "17.13",
+          "ref": {
+            "page": 9,
+            "line": 15
+          }
+        },
+        {
+          "month": "2034-02",
+          "rate": "16.68",
+          "ref": {
+            "page": 9,
+            "line": 16
+          }
+        }
+      ],
+      "accessorials": [
+        {
+          "code": "DG",
+          "label": "Dangerous goods fee",
+          "rate": "234.09",
+          "basis": "USD per shipment",
+          "ref": {
+            "page": 10,
+            "line": 4
+          }
+        },
+        {
+          "code": "DRYICE",
+          "label": "Dry ice handling fee",
+          "rate": "58.68",
+          "basis": "USD per shipment",
+          "ref": {
+            "page": 10,
+            "line": 5
+          }
+        },
+        {
+          "code": "SEC",
+          "label": "Security surcharge",
+          "rate": "0.23",
+          "basis": "USD per chargeable kg",
+          "ref": {
+            "page": 10,
+            "line": 6
+          }
+        },
+        {
+          "code": "STOR",
+          "label": "Storage",
+          "rate": "41.08",
+          "basis": "USD per storage day",
+          "ref": {
+            "page": 10,
+            "line": 7
+          }
+        },
+        {
+          "code": "DLV",
+          "label": "Delivery fee",
+          "rate": "63.14",
+          "basis": "USD per shipment",
+          "ref": {
+            "page": 10,
+            "line": 8
+          }
+        },
+        {
+          "code": "CUSTOMS",
+          "label": "Customs hold fee",
+          "rate": "223.51",
+          "basis": "USD per shipment",
+          "ref": {
+            "page": 10,
+            "line": 9
+          }
+        },
+        {
+          "code": "ACCT",
+          "label": "Monthly account fee",
+          "rate": "179.26",
+          "basis": "USD per month",
+          "ref": {
+            "page": 10,
+            "line": 10
+          }
+        },
+        {
+          "code": "SPROG",
+          "label": "Storage programme fee",
+          "rate": "837.02",
+          "basis": "USD per month",
+          "ref": {
+            "page": 10,
+            "line": 11
+          }
+        },
+        {
+          "code": "PPROG",
+          "label": "Pickup programme fee",
+          "rate": "390.72",
+          "basis": "USD per month",
+          "ref": {
+            "page": 10,
+            "line": 12
+          }
+        }
+      ],
+      "charge_code_aliases": [
+        {
+          "code": "FRT",
+          "label": "Air freight",
+          "aliases": [
+            "Express freight",
+            "Freight charge"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 14
+          }
+        },
+        {
+          "code": "FUEL",
+          "label": "Fuel surcharge",
+          "aliases": [
+            "FSC",
+            "Fuel adj."
+          ],
+          "ref": {
+            "page": 10,
+            "line": 15
+          }
+        },
+        {
+          "code": "SEC",
+          "label": "Security surcharge",
+          "aliases": [
+            "Screening fee",
+            "Screening fee (adj.)",
+            "Security screening"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 16
+          }
+        },
+        {
+          "code": "DG",
+          "label": "Dangerous goods fee",
+          "aliases": [
+            "DG handling",
+            "Hazmat handling"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 17
+          }
+        },
+        {
+          "code": "DRYICE",
+          "label": "Dry ice handling fee",
+          "aliases": [
+            "Dry ice handling"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 18
+          }
+        },
+        {
+          "code": "STOR",
+          "label": "Storage",
+          "aliases": [
+            "Warehouse storage",
+            "Demurrage"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 19
+          }
+        },
+        {
+          "code": "DLV",
+          "label": "Delivery fee",
+          "aliases": [
+            "Door delivery",
+            "Final-mile delivery"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 20
+          }
+        },
+        {
+          "code": "CUSTOMS",
+          "label": "Customs hold fee",
+          "aliases": [
+            "Customs examination",
+            "Hold handling"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 21
+          }
+        },
+        {
+          "code": "ACCT",
+          "label": "Monthly account fee",
+          "aliases": [
+            "Account maintenance"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 22
+          }
+        },
+        {
+          "code": "SPROG",
+          "label": "Storage programme fee",
+          "aliases": [
+            "Storage programme"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 23
+          }
+        },
+        {
+          "code": "PPROG",
+          "label": "Pickup programme fee",
+          "aliases": [
+            "Pickup programme"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 24
+          }
+        },
+        {
+          "code": "PEAK",
+          "label": "Peak season surcharge",
+          "aliases": [
+            "PSS"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 25
+          }
+        },
+        {
+          "code": "COST",
+          "label": "Carrier cost",
+          "aliases": [
+            "Linehaul cost pass-through"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 26
+          }
+        },
+        {
+          "code": "MARGIN",
+          "label": "Handling margin",
+          "aliases": [
+            "Forwarding margin"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 27
+          }
+        },
+        {
+          "code": "HDL",
+          "label": "Special handling",
+          "aliases": [
+            "Supplementary handling"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 28
+          }
+        },
+        {
+          "code": "DUTY",
+          "label": "Import duty (disbursement)",
+          "aliases": [
+            "Duty paid on your behalf"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 29
+          }
+        },
+        {
+          "code": "TAX",
+          "label": "Sales tax",
+          "aliases": [
+            "GST"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 30
+          }
+        },
+        {
+          "code": "LATE",
+          "label": "Late payment fee",
+          "aliases": [
+            "Late fee",
+            "Overdue interest"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 31
+          }
+        }
+      ],
+      "rebate_tiers": null,
+      "rebate_tier_rule": {
+        "value": "The tier rate applies to all QS in the Quarter",
+        "ref": {
+          "page": 4,
+          "line": 11
+        }
+      },
+      "rebate_due_days": {
+        "value": "45",
+        "ref": {
+          "page": 4,
+          "line": 13
+        }
+      },
+      "margin_not_applicable": {
+        "page": 4,
+        "line": 15
+      },
+      "promised_credits": [
+        {
+          "label": "Annual improvement credit",
+          "rate": {
+            "value": "1.43",
+            "ref": {
+              "page": 4,
+              "line": 19
+            }
+          },
+          "due_days": {
+            "value": "60",
+            "ref": {
+              "page": 4,
+              "line": 18
+            }
+          },
+          "ref": {
+            "page": 4,
+            "line": 18
+          }
+        }
+      ],
+      "payment_due_days": {
+        "value": "60",
+        "ref": {
+          "page": 4,
+          "line": 21
+        }
+      },
+      "payment_grace_days": {
+        "value": "5",
+        "ref": {
+          "page": 4,
+          "line": 22
+        }
+      },
+      "late_fee_rate": {
+        "value": "1.15",
+        "ref": {
+          "page": 4,
+          "line": 22
+        }
+      },
+      "late_fee_compounding": true,
+      "late_fee_compounding_ref": {
+        "page": 4,
+        "line": 25
+      },
+      "who_may_extend": {
+        "value": "payment_terms",
+        "ref": {
+          "page": 11,
+          "line": 7
+        }
+      },
+      "fx_not_applicable": {
+        "page": 11,
+        "line": 3
+      },
+      "schedule1_rows": [
+        {
+          "name": "Fintan Quigley",
+          "title": "Key Account Manager",
+          "party": "TBX-US",
+          "categories": [
+            "notices",
+            "billing_disputes"
+          ],
+          "email": "fintan.quigley@tarrowby.example",
+          "ref": {
+            "page": 11,
+            "line": 5
+          }
+        },
+        {
+          "name": "Vesna Rathbone",
+          "title": "Pricing Manager",
+          "party": "TBX-US",
+          "categories": [
+            "rates"
+          ],
+          "email": "vesna.rathbone@tarrowby.example",
+          "ref": {
+            "page": 11,
+            "line": 6
+          }
+        },
+        {
+          "name": "Joaquin Larkin",
+          "title": "Customer Finance Lead",
+          "party": "TBX-US",
+          "categories": [
+            "waivers",
+            "payment_terms"
+          ],
+          "email": "joaquin.larkin@tarrowby.example",
+          "ref": {
+            "page": 11,
+            "line": 7
+          }
+        },
+        {
+          "name": "Rosalind Kapadia",
+          "title": "Treasury Analyst",
+          "party": "TBX-US",
+          "categories": [
+            "treasury"
+          ],
+          "email": "rosalind.kapadia@tarrowby.example",
+          "ref": {
+            "page": 11,
+            "line": 8
+          }
+        },
+        {
+          "name": "Elspeth Iyengar",
+          "title": "AP Manager",
+          "party": "QMP-US",
+          "categories": [
+            "notices",
+            "payment_terms",
+            "billing_disputes"
+          ],
+          "email": "elspeth.iyengar@quillmere.example",
+          "ref": {
+            "page": 11,
+            "line": 9
+          }
+        },
+        {
+          "name": "Kavya Underhill",
+          "title": "Logistics Director",
+          "party": "QMP-US",
+          "categories": [
+            "rates"
+          ],
+          "email": "kavya.underhill@quillmere.example",
+          "ref": {
+            "page": 11,
+            "line": 10
+          }
+        }
+      ],
+      "key_clauses": [
+        {
+          "number": "3.2",
+          "topic": "Pricing date",
+          "ref": {
+            "page": 3,
+            "line": 28
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "BillingDoc",
+    "doc": "batch_01/0003.eml#TX-US-2033-5462.pdf",
+    "data": {
+      "id": {
+        "value": "TX-US-2033-5462",
+        "ref": {
+          "page": 1,
+          "line": 3
+        }
+      },
+      "kind": "invoice",
+      "issuer": {
+        "value": "Tarrowby Express Inc.",
+        "ref": {
+          "page": 1,
+          "line": 1
+        }
+      },
+      "contract_ref": {
+        "value": "TBX-US-EXP-E58",
+        "ref": {
+          "page": 1,
+          "line": 5
+        }
+      },
+      "currency": {
+        "value": "USD",
+        "ref": {
+          "page": 1,
+          "line": 8
+        }
+      },
+      "invoice_date": {
+        "value": "2033-04-12",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "due_date": {
+        "value": "2033-06-11",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "subtotal": {
+        "value": "21517.17",
+        "ref": {
+          "page": 1,
+          "line": 33
+        }
+      },
+      "total": {
+        "value": "21517.17",
+        "ref": {
+          "page": 1,
+          "line": 35
+        }
+      },
+      "lines": [
+        {
+          "line_no": "1",
+          "awb": "TE77329100",
+          "pickup_date": "2033-04-05",
+          "charge_label": "Air freight",
+          "lane": "USC3-USS2",
+          "qty": "506",
+          "unit": "kg",
+          "rate": "7.24",
+          "amount": "3663.44",
+          "ref": {
+            "page": 1,
+            "line": 9
+          }
+        },
+        {
+          "line_no": "3",
+          "awb": "TE77329100",
+          "pickup_date": "2033-04-05",
+          "charge_label": "Security surcharge",
+          "lane": "USC3-USS2",
+          "qty": "506",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "116.38",
+          "ref": {
+            "page": 1,
+            "line": 11
+          }
+        },
+        {
+          "line_no": "4",
+          "awb": "TE77329100",
+          "pickup_date": "2033-04-05",
+          "charge_label": "Delivery fee",
+          "lane": "USC3-USS2",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 12
+          }
+        },
+        {
+          "line_no": "5",
+          "awb": "TE35865627",
+          "pickup_date": "2033-04-05",
+          "charge_label": "Air freight",
+          "lane": "USW2-USS2",
+          "qty": "386",
+          "unit": "kg",
+          "rate": "4.51",
+          "amount": "1740.86",
+          "ref": {
+            "page": 1,
+            "line": 13
+          }
+        },
+        {
+          "line_no": "7",
+          "awb": "TE35865627",
+          "pickup_date": "2033-04-05",
+          "charge_label": "Security surcharge",
+          "lane": "USW2-USS2",
+          "qty": "386",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "88.78",
+          "ref": {
+            "page": 1,
+            "line": 15
+          }
+        },
+        {
+          "line_no": "8",
+          "awb": "TE35865627",
+          "pickup_date": "2033-04-05",
+          "charge_label": "Delivery fee",
+          "lane": "USW2-USS2",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 16
+          }
+        },
+        {
+          "line_no": "9",
+          "awb": "TE54341686",
+          "pickup_date": "2033-04-05",
+          "charge_label": "Air freight",
+          "lane": "USE2-INW1",
+          "qty": "516",
+          "unit": "kg",
+          "rate": "7.92",
+          "amount": "4086.72",
+          "ref": {
+            "page": 1,
+            "line": 17
+          }
+        },
+        {
+          "line_no": "11",
+          "awb": "TE54341686",
+          "pickup_date": "2033-04-05",
+          "charge_label": "Security surcharge",
+          "lane": "USE2-INW1",
+          "qty": "516",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "118.68",
+          "ref": {
+            "page": 1,
+            "line": 19
+          }
+        },
+        {
+          "line_no": "12",
+          "awb": "TE54341686",
+          "pickup_date": "2033-04-05",
+          "charge_label": "Delivery fee",
+          "lane": "USE2-INW1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 20
+          }
+        },
+        {
+          "line_no": "13",
+          "awb": "TE34291510",
+          "pickup_date": "2033-04-02",
+          "charge_label": "Air freight",
+          "lane": "USC3-INW1",
+          "qty": "391",
+          "unit": "kg",
+          "rate": "4.40",
+          "amount": "1720.40",
+          "ref": {
+            "page": 1,
+            "line": 21
+          }
+        },
+        {
+          "line_no": "15",
+          "awb": "TE34291510",
+          "pickup_date": "2033-04-02",
+          "charge_label": "Security surcharge",
+          "lane": "USC3-INW1",
+          "qty": "391",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "89.93",
+          "ref": {
+            "page": 1,
+            "line": 23
+          }
+        },
+        {
+          "line_no": "16",
+          "awb": "TE34291510",
+          "pickup_date": "2033-04-02",
+          "charge_label": "Delivery fee",
+          "lane": "USC3-INW1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 24
+          }
+        },
+        {
+          "line_no": "17",
+          "awb": "TE56810307",
+          "pickup_date": "2033-04-06",
+          "charge_label": "Air freight",
+          "lane": "USC3-USS2",
+          "qty": "453",
+          "unit": "kg",
+          "rate": "7.24",
+          "amount": "3279.72",
+          "ref": {
+            "page": 1,
+            "line": 25
+          }
+        },
+        {
+          "line_no": "19",
+          "awb": "TE56810307",
+          "pickup_date": "2033-04-06",
+          "charge_label": "Security surcharge",
+          "lane": "USC3-USS2",
+          "qty": "453",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "104.19",
+          "ref": {
+            "page": 1,
+            "line": 27
+          }
+        },
+        {
+          "line_no": "20",
+          "awb": "TE56810307",
+          "pickup_date": "2033-04-06",
+          "charge_label": "Delivery fee",
+          "lane": "USC3-USS2",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 28
+          }
+        },
+        {
+          "line_no": "21",
+          "awb": "TE76941537",
+          "pickup_date": "2033-04-03",
+          "charge_label": "Air freight",
+          "lane": "USE2-USS2",
+          "qty": "434",
+          "unit": "kg",
+          "rate": "6.31",
+          "amount": "2738.54",
+          "ref": {
+            "page": 1,
+            "line": 29
+          }
+        },
+        {
+          "line_no": "23",
+          "awb": "TE76941537",
+          "pickup_date": "2033-04-03",
+          "charge_label": "Security surcharge",
+          "lane": "USE2-USS2",
+          "qty": "434",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "99.82",
+          "ref": {
+            "page": 1,
+            "line": 31
+          }
+        },
+        {
+          "line_no": "24",
+          "awb": "TE76941537",
+          "pickup_date": "2033-04-03",
+          "charge_label": "Delivery fee",
+          "lane": "USE2-USS2",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 32
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "BillingDoc",
+    "doc": "batch_01/0004.eml#TX-US-2033-5464.pdf",
+    "data": {
+      "id": {
+        "value": "TX-US-2033-5464",
+        "ref": {
+          "page": 1,
+          "line": 3
+        }
+      },
+      "kind": "invoice",
+      "issuer": {
+        "value": "Tarrowby Express Inc.",
+        "ref": {
+          "page": 1,
+          "line": 1
+        }
+      },
+      "contract_ref": {
+        "value": "TBX-US-EXP-E58",
+        "ref": {
+          "page": 1,
+          "line": 5
+        }
+      },
+      "currency": {
+        "value": "USD",
+        "ref": {
+          "page": 1,
+          "line": 8
+        }
+      },
+      "invoice_date": {
+        "value": "2033-05-28",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "due_date": {
+        "value": "2033-07-27",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "subtotal": {
+        "value": "44049.82",
+        "ref": {
+          "page": 1,
+          "line": 45
+        }
+      },
+      "total": {
+        "value": "44049.82",
+        "ref": {
+          "page": 1,
+          "line": 47
+        }
+      },
+      "lines": [
+        {
+          "line_no": "1",
+          "awb": "TE52670245",
+          "pickup_date": "2033-05-15",
+          "charge_label": "Air freight",
+          "lane": "USC3-USS2",
+          "qty": "823",
+          "unit": "kg",
+          "rate": "7.24",
+          "amount": "5958.52",
+          "ref": {
+            "page": 1,
+            "line": 9
+          }
+        },
+        {
+          "line_no": "3",
+          "awb": "TE52670245",
+          "pickup_date": "2033-05-15",
+          "charge_label": "Security surcharge",
+          "lane": "USC3-USS2",
+          "qty": "823",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "189.29",
+          "ref": {
+            "page": 1,
+            "line": 11
+          }
+        },
+        {
+          "line_no": "4",
+          "awb": "TE52670245",
+          "pickup_date": "2033-05-15",
+          "charge_label": "Delivery fee",
+          "lane": "USC3-USS2",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 12
+          }
+        },
+        {
+          "line_no": "5",
+          "awb": "TE51172724",
+          "pickup_date": "2033-05-17",
+          "charge_label": "Air freight",
+          "lane": "USC3-INW1",
+          "qty": "687",
+          "unit": "kg",
+          "rate": "4.40",
+          "amount": "3022.80",
+          "ref": {
+            "page": 1,
+            "line": 13
+          }
+        },
+        {
+          "line_no": "7",
+          "awb": "TE51172724",
+          "pickup_date": "2033-05-17",
+          "charge_label": "Security surcharge",
+          "lane": "USC3-INW1",
+          "qty": "687",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "158.01",
+          "ref": {
+            "page": 1,
+            "line": 15
+          }
+        },
+        {
+          "line_no": "8",
+          "awb": "TE51172724",
+          "pickup_date": "2033-05-17",
+          "charge_label": "Delivery fee",
+          "lane": "USC3-INW1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 16
+          }
+        },
+        {
+          "line_no": "9",
+          "awb": "TE39099448",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Air freight",
+          "lane": "USC3-INW1",
+          "qty": "725",
+          "unit": "kg",
+          "rate": "4.40",
+          "amount": "3190.00",
+          "ref": {
+            "page": 1,
+            "line": 17
+          }
+        },
+        {
+          "line_no": "11",
+          "awb": "TE39099448",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Security surcharge",
+          "lane": "USC3-INW1",
+          "qty": "725",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "166.75",
+          "ref": {
+            "page": 1,
+            "line": 19
+          }
+        },
+        {
+          "line_no": "12",
+          "awb": "TE39099448",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Delivery fee",
+          "lane": "USC3-INW1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 20
+          }
+        },
+        {
+          "line_no": "13",
+          "awb": "TE81191577",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Air freight",
+          "lane": "USC1-INN1",
+          "qty": "748",
+          "unit": "kg",
+          "rate": "4.49",
+          "amount": "3358.52",
+          "ref": {
+            "page": 1,
+            "line": 21
+          }
+        },
+        {
+          "line_no": "15",
+          "awb": "TE81191577",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Security surcharge",
+          "lane": "USC1-INN1",
+          "qty": "748",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "172.04",
+          "ref": {
+            "page": 1,
+            "line": 23
+          }
+        },
+        {
+          "line_no": "16",
+          "awb": "TE81191577",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Delivery fee",
+          "lane": "USC1-INN1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 24
+          }
+        },
+        {
+          "line_no": "17",
+          "awb": "TE14764227",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Air freight",
+          "lane": "USC1-INN1",
+          "qty": "763",
+          "unit": "kg",
+          "rate": "4.49",
+          "amount": "3425.87",
+          "ref": {
+            "page": 1,
+            "line": 25
+          }
+        },
+        {
+          "line_no": "19",
+          "awb": "TE14764227",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Security surcharge",
+          "lane": "USC1-INN1",
+          "qty": "763",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "175.49",
+          "ref": {
+            "page": 1,
+            "line": 27
+          }
+        },
+        {
+          "line_no": "20",
+          "awb": "TE14764227",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Delivery fee",
+          "lane": "USC1-INN1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 28
+          }
+        },
+        {
+          "line_no": "21",
+          "awb": "TE12899893",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Air freight",
+          "lane": "USC1-INN1",
+          "qty": "761",
+          "unit": "kg",
+          "rate": "4.49",
+          "amount": "3416.89",
+          "ref": {
+            "page": 1,
+            "line": 29
+          }
+        },
+        {
+          "line_no": "23",
+          "awb": "TE12899893",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Security surcharge",
+          "lane": "USC1-INN1",
+          "qty": "761",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "175.03",
+          "ref": {
+            "page": 1,
+            "line": 31
+          }
+        },
+        {
+          "line_no": "24",
+          "awb": "TE12899893",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Delivery fee",
+          "lane": "USC1-INN1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 32
+          }
+        },
+        {
+          "line_no": "25",
+          "awb": "TE32673322",
+          "pickup_date": "2033-05-16",
+          "charge_label": "Air freight",
+          "lane": "USE2-USE1",
+          "qty": "666",
+          "unit": "kg",
+          "rate": "6.23",
+          "amount": "4149.18",
+          "ref": {
+            "page": 1,
+            "line": 33
+          }
+        },
+        {
+          "line_no": "27",
+          "awb": "TE32673322",
+          "pickup_date": "2033-05-16",
+          "charge_label": "Security surcharge",
+          "lane": "USE2-USE1",
+          "qty": "666",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "153.18",
+          "ref": {
+            "page": 1,
+            "line": 35
+          }
+        },
+        {
+          "line_no": "28",
+          "awb": "TE32673322",
+          "pickup_date": "2033-05-16",
+          "charge_label": "Delivery fee",
+          "lane": "USE2-USE1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 36
+          }
+        },
+        {
+          "line_no": "29",
+          "awb": "TE92812498",
+          "pickup_date": "2033-05-17",
+          "charge_label": "Air freight",
+          "lane": "USE2-USE1",
+          "qty": "756",
+          "unit": "kg",
+          "rate": "6.23",
+          "amount": "4709.88",
+          "ref": {
+            "page": 1,
+            "line": 37
+          }
+        },
+        {
+          "line_no": "31",
+          "awb": "TE92812498",
+          "pickup_date": "2033-05-17",
+          "charge_label": "Security surcharge",
+          "lane": "USE2-USE1",
+          "qty": "756",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "173.88",
+          "ref": {
+            "page": 1,
+            "line": 39
+          }
+        },
+        {
+          "line_no": "32",
+          "awb": "TE92812498",
+          "pickup_date": "2033-05-17",
+          "charge_label": "Delivery fee",
+          "lane": "USE2-USE1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 40
+          }
+        },
+        {
+          "line_no": "33",
+          "awb": "TE65307817",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Air freight",
+          "lane": "USW2-USS2",
+          "qty": "802",
+          "unit": "kg",
+          "rate": "4.51",
+          "amount": "3617.02",
+          "ref": {
+            "page": 1,
+            "line": 41
+          }
+        },
+        {
+          "line_no": "35",
+          "awb": "TE65307817",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Security surcharge",
+          "lane": "USW2-USS2",
+          "qty": "802",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "184.46",
+          "ref": {
+            "page": 1,
+            "line": 43
+          }
+        },
+        {
+          "line_no": "36",
+          "awb": "TE65307817",
+          "pickup_date": "2033-05-19",
+          "charge_label": "Delivery fee",
+          "lane": "USW2-USS2",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 44
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "ShipmentDoc",
+    "doc": "batch_01/0004.eml#AWB-TE14764227.pdf",
+    "data": {
+      "awb": {
+        "value": "TE14764227",
+        "ref": {
+          "page": 1,
+          "line": 2
+        }
+      },
+      "kind": "awb",
+      "executed_date": {
+        "value": "2033-05-19",
+        "ref": {
+          "page": 1,
+          "line": 3
+        }
+      },
+      "origin": null,
+      "destination": null,
+      "pieces": {
+        "value": "3",
+        "ref": {
+          "page": 1,
+          "line": 5
+        }
+      },
+      "actual_weight": {
+        "value": "762.9",
+        "ref": {
+          "page": 1,
+          "line": 6
+        }
+      },
+      "chargeable_weight": {
+        "value": "763",
+        "ref": {
+          "page": 1,
+          "line": 8
+        }
+      },
+      "goods": {
+        "value": "cell culture media",
+        "ref": {
+          "page": 1,
+          "line": 9
+        }
+      }
+    }
+  },
+  {
+    "type": "ShipmentDoc",
+    "doc": "batch_01/0004.eml#AWB-TE51172724.pdf",
+    "data": {
+      "awb": {
+        "value": "TE51172724",
+        "ref": {
+          "page": 1,
+          "line": 2
+        }
+      },
+      "kind": "awb",
+      "executed_date": {
+        "value": "2033-05-17",
+        "ref": {
+          "page": 1,
+          "line": 3
+        }
+      },
+      "origin": null,
+      "destination": null,
+      "pieces": {
+        "value": "3",
+        "ref": {
+          "page": 1,
+          "line": 5
+        }
+      },
+      "actual_weight": {
+        "value": "686.6",
+        "ref": {
+          "page": 1,
+          "line": 6
+        }
+      },
+      "chargeable_weight": {
+        "value": "687",
+        "ref": {
+          "page": 1,
+          "line": 8
+        }
+      },
+      "goods": {
+        "value": "lyophilised enzyme batches",
+        "ref": {
+          "page": 1,
+          "line": 9
+        }
+      }
+    }
+  },
+  {
+    "type": "BillingDoc",
+    "doc": "batch_02/0001.eml#TX-US-2033-5468.pdf",
+    "data": {
+      "id": {
+        "value": "TX-US-2033-5468",
+        "ref": {
+          "page": 1,
+          "line": 3
+        }
+      },
+      "kind": "invoice",
+      "issuer": {
+        "value": "Tarrowby Express Inc.",
+        "ref": {
+          "page": 1,
+          "line": 1
+        }
+      },
+      "contract_ref": {
+        "value": "TBX-US-EXP-E58",
+        "ref": {
+          "page": 1,
+          "line": 5
+        }
+      },
+      "currency": {
+        "value": "USD",
+        "ref": {
+          "page": 1,
+          "line": 8
+        }
+      },
+      "invoice_date": {
+        "value": "2033-07-31",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "due_date": {
+        "value": "2033-09-29",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "subtotal": {
+        "value": "58247.20",
+        "ref": {
+          "page": 2,
+          "line": 5
+        }
+      },
+      "total": {
+        "value": "58247.20",
+        "ref": {
+          "page": 2,
+          "line": 7
+        }
+      },
+      "lines": [
+        {
+          "line_no": "1",
+          "awb": "TE96550518",
+          "pickup_date": "2033-07-21",
+          "charge_label": "Air freight",
+          "lane": "USE2-INW1",
+          "qty": "760",
+          "unit": "kg",
+          "rate": "7.92",
+          "amount": "6019.20",
+          "ref": {
+            "page": 1,
+            "line": 9
+          }
+        },
+        {
+          "line_no": "3",
+          "awb": "TE96550518",
+          "pickup_date": "2033-07-21",
+          "charge_label": "Security surcharge",
+          "lane": "USE2-INW1",
+          "qty": "760",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "174.80",
+          "ref": {
+            "page": 1,
+            "line": 11
+          }
+        },
+        {
+          "line_no": "4",
+          "awb": "TE96550518",
+          "pickup_date": "2033-07-21",
+          "charge_label": "Delivery fee",
+          "lane": "USE2-INW1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 12
+          }
+        },
+        {
+          "line_no": "5",
+          "awb": "TE39887523",
+          "pickup_date": "2033-07-20",
+          "charge_label": "Air freight",
+          "lane": "USC3-INW1",
+          "qty": "697",
+          "unit": "kg",
+          "rate": "4.40",
+          "amount": "3066.80",
+          "ref": {
+            "page": 1,
+            "line": 13
+          }
+        },
+        {
+          "line_no": "7",
+          "awb": "TE39887523",
+          "pickup_date": "2033-07-20",
+          "charge_label": "Security surcharge",
+          "lane": "USC3-INW1",
+          "qty": "697",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "160.31",
+          "ref": {
+            "page": 1,
+            "line": 15
+          }
+        },
+        {
+          "line_no": "8",
+          "awb": "TE39887523",
+          "pickup_date": "2033-07-20",
+          "charge_label": "Delivery fee",
+          "lane": "USC3-INW1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 16
+          }
+        },
+        {
+          "line_no": "9",
+          "awb": "TE51779403",
+          "pickup_date": "2033-07-21",
+          "charge_label": "Air freight",
+          "lane": "USW2-USS2",
+          "qty": "750",
+          "unit": "kg",
+          "rate": "4.51",
+          "amount": "3382.50",
+          "ref": {
+            "page": 1,
+            "line": 17
+          }
+        },
+        {
+          "line_no": "11",
+          "awb": "TE51779403",
+          "pickup_date": "2033-07-21",
+          "charge_label": "Security surcharge",
+          "lane": "USW2-USS2",
+          "qty": "750",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "172.50",
+          "ref": {
+            "page": 1,
+            "line": 19
+          }
+        },
+        {
+          "line_no": "12",
+          "awb": "TE51779403",
+          "pickup_date": "2033-07-21",
+          "charge_label": "Delivery fee",
+          "lane": "USW2-USS2",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 20
+          }
+        },
+        {
+          "line_no": "13",
+          "awb": "TE47113413",
+          "pickup_date": "2033-07-24",
+          "charge_label": "Air freight",
+          "lane": "USC3-INW1",
+          "qty": "762",
+          "unit": "kg",
+          "rate": "4.40",
+          "amount": "3352.80",
+          "ref": {
+            "page": 1,
+            "line": 21
+          }
+        },
+        {
+          "line_no": "15",
+          "awb": "TE47113413",
+          "pickup_date": "2033-07-24",
+          "charge_label": "Security surcharge",
+          "lane": "USC3-INW1",
+          "qty": "762",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "175.26",
+          "ref": {
+            "page": 1,
+            "line": 23
+          }
+        },
+        {
+          "line_no": "16",
+          "awb": "TE47113413",
+          "pickup_date": "2033-07-24",
+          "charge_label": "Delivery fee",
+          "lane": "USC3-INW1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 24
+          }
+        },
+        {
+          "line_no": "17",
+          "awb": "TE56758883",
+          "pickup_date": "2033-07-22",
+          "charge_label": "Air freight",
+          "lane": "USC1-INN1",
+          "qty": "627",
+          "unit": "kg",
+          "rate": "4.49",
+          "amount": "2815.23",
+          "ref": {
+            "page": 1,
+            "line": 25
+          }
+        },
+        {
+          "line_no": "19",
+          "awb": "TE56758883",
+          "pickup_date": "2033-07-22",
+          "charge_label": "Security surcharge",
+          "lane": "USC1-INN1",
+          "qty": "627",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "144.21",
+          "ref": {
+            "page": 1,
+            "line": 27
+          }
+        },
+        {
+          "line_no": "20",
+          "awb": "TE56758883",
+          "pickup_date": "2033-07-22",
+          "charge_label": "Delivery fee",
+          "lane": "USC1-INN1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 28
+          }
+        },
+        {
+          "line_no": "21",
+          "awb": "TE46117930",
+          "pickup_date": "2033-07-21",
+          "charge_label": "Air freight",
+          "lane": "USC3-USS2",
+          "qty": "810",
+          "unit": "kg",
+          "rate": "7.24",
+          "amount": "5864.40",
+          "ref": {
+            "page": 1,
+            "line": 29
+          }
+        },
+        {
+          "line_no": "23",
+          "awb": "TE46117930",
+          "pickup_date": "2033-07-21",
+          "charge_label": "Security surcharge",
+          "lane": "USC3-USS2",
+          "qty": "810",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "186.30",
+          "ref": {
+            "page": 1,
+            "line": 31
+          }
+        },
+        {
+          "line_no": "24",
+          "awb": "TE46117930",
+          "pickup_date": "2033-07-21",
+          "charge_label": "Delivery fee",
+          "lane": "USC3-USS2",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 32
+          }
+        },
+        {
+          "line_no": "25",
+          "awb": "TE50613655",
+          "pickup_date": "2033-07-23",
+          "charge_label": "Air freight",
+          "lane": "USC3-USS2",
+          "qty": "708",
+          "unit": "kg",
+          "rate": "7.24",
+          "amount": "5125.92",
+          "ref": {
+            "page": 1,
+            "line": 33
+          }
+        },
+        {
+          "line_no": "27",
+          "awb": "TE50613655",
+          "pickup_date": "2033-07-23",
+          "charge_label": "Security surcharge",
+          "lane": "USC3-USS2",
+          "qty": "708",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "162.84",
+          "ref": {
+            "page": 1,
+            "line": 35
+          }
+        },
+        {
+          "line_no": "28",
+          "awb": "TE50613655",
+          "pickup_date": "2033-07-23",
+          "charge_label": "Delivery fee",
+          "lane": "USC3-USS2",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 36
+          }
+        },
+        {
+          "line_no": "29",
+          "awb": "TE38587838",
+          "pickup_date": "2033-07-20",
+          "charge_label": "Air freight",
+          "lane": "USE2-INW1",
+          "qty": "682",
+          "unit": "kg",
+          "rate": "7.92",
+          "amount": "5401.44",
+          "ref": {
+            "page": 1,
+            "line": 37
+          }
+        },
+        {
+          "line_no": "31",
+          "awb": "TE38587838",
+          "pickup_date": "2033-07-20",
+          "charge_label": "Security surcharge",
+          "lane": "USE2-INW1",
+          "qty": "682",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "156.86",
+          "ref": {
+            "page": 1,
+            "line": 39
+          }
+        },
+        {
+          "line_no": "32",
+          "awb": "TE38587838",
+          "pickup_date": "2033-07-20",
+          "charge_label": "Delivery fee",
+          "lane": "USE2-INW1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 40
+          }
+        },
+        {
+          "line_no": "33",
+          "awb": "TE88361307",
+          "pickup_date": "2033-07-22",
+          "charge_label": "Air freight",
+          "lane": "USE2-USE1",
+          "qty": "688",
+          "unit": "kg",
+          "rate": "6.23",
+          "amount": "4286.24",
+          "ref": {
+            "page": 1,
+            "line": 41
+          }
+        },
+        {
+          "line_no": "35",
+          "awb": "TE88361307",
+          "pickup_date": "2033-07-22",
+          "charge_label": "Security surcharge",
+          "lane": "USE2-USE1",
+          "qty": "688",
+          "unit": "kg",
+          "rate": "0.23",
+          "amount": "158.24",
+          "ref": {
+            "page": 1,
+            "line": 43
+          }
+        },
+        {
+          "line_no": "36",
+          "awb": "TE88361307",
+          "pickup_date": "2033-07-22",
+          "charge_label": "Delivery fee",
+          "lane": "USE2-USE1",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "amount": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 44
+          }
+        },
+        {
+          "line_no": "37",
+          "awb": "TE96550518",
+          "charge_label": "Import duty (disbursement)",
+          "lane": "USE2-INW1",
+          "qty": "1",
+          "unit": "fee",
+          "rate": "834.48",
+          "amount": "834.48",
+          "ref": {
+            "page": 1,
+            "line": 45
+          }
+        },
+        {
+          "line_no": "38",
+          "awb": "TE39887523",
+          "charge_label": "Import duty (disbursement)",
+          "lane": "USC3-INW1",
+          "qty": "1",
+          "unit": "fee",
+          "rate": "605.61",
+          "amount": "605.61",
+          "ref": {
+            "page": 1,
+            "line": 46
+          }
+        },
+        {
+          "line_no": "39",
+          "awb": "TE51779403",
+          "charge_label": "Import duty (disbursement)",
+          "lane": "USW2-USS2",
+          "qty": "1",
+          "unit": "fee",
+          "rate": "841.00",
+          "amount": "841.00",
+          "ref": {
+            "page": 1,
+            "line": 47
+          }
+        },
+        {
+          "line_no": "40",
+          "awb": "TE47113413",
+          "charge_label": "Import duty (disbursement)",
+          "lane": "USC3-INW1",
+          "qty": "1",
+          "unit": "fee",
+          "rate": "1468.46",
+          "amount": "1468.46",
+          "ref": {
+            "page": 1,
+            "line": 48
+          }
+        },
+        {
+          "line_no": "41",
+          "awb": "TE56758883",
+          "charge_label": "Import duty (disbursement)",
+          "lane": "USC1-INN1",
+          "qty": "1",
+          "unit": "fee",
+          "rate": "1014.90",
+          "amount": "1014.90",
+          "ref": {
+            "page": 1,
+            "line": 49
+          }
+        },
+        {
+          "line_no": "42",
+          "awb": "TE46117930",
+          "charge_label": "Import duty (disbursement)",
+          "lane": "USC3-USS2",
+          "qty": "1",
+          "unit": "fee",
+          "rate": "1579.97",
+          "amount": "1579.97",
+          "ref": {
+            "page": 1,
+            "line": 50
+          }
+        },
+        {
+          "line_no": "43",
+          "awb": "TE50613655",
+          "charge_label": "Import duty (disbursement)",
+          "lane": "USC3-USS2",
+          "qty": "1",
+          "unit": "fee",
+          "rate": "933.10",
+          "amount": "933.10",
+          "ref": {
+            "page": 1,
+            "line": 51
+          }
+        },
+        {
+          "line_no": "44",
+          "awb": "TE38587838",
+          "charge_label": "Import duty (disbursement)",
+          "lane": "USE2-INW1",
+          "qty": "1",
+          "unit": "fee",
+          "rate": "879.47",
+          "amount": "879.47",
+          "ref": {
+            "page": 2,
+            "line": 3
+          }
+        },
+        {
+          "line_no": "45",
+          "awb": "TE88361307",
+          "charge_label": "Import duty (disbursement)",
+          "lane": "USE2-USE1",
+          "qty": "1",
+          "unit": "fee",
+          "rate": "546.55",
+          "amount": "546.55",
+          "ref": {
+            "page": 2,
+            "line": 4
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "BillingDoc",
+    "doc": "batch_02/0002.eml#TX-US-2033-5472.pdf",
+    "data": {
+      "id": {
+        "value": "TX-US-2033-5472",
+        "ref": {
+          "page": 1,
+          "line": 1
+        }
+      },
+      "kind": "invoice",
+      "issuer": {
+        "value": "Tarrowby Express Inc.",
+        "ref": {
+          "page": 1,
+          "line": 2
+        }
+      },
+      "contract_ref": {
+        "value": "TBX-US-EXP-E58",
+        "ref": {
+          "page": 1,
+          "line": 5
+        }
+      },
+      "currency": {
+        "value": "USD",
+        "ref": {
+          "page": 1,
+          "line": 16
+        }
+      },
+      "invoice_date": {
+        "value": "2033-09-11",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "due_date": {
+        "value": "2033-11-10",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "subtotal": {
+        "value": "2024.69",
+        "ref": {
+          "page": 1,
+          "line": 14
+        }
+      },
+      "total": {
+        "value": "2024.69",
+        "ref": {
+          "page": 1,
+          "line": 16
+        }
+      },
+      "asks_for_payment": true,
+      "lines": [
+        {
+          "line_no": null,
+          "awb": "TE99472049",
+          "charge_label": "Air freight",
+          "lane": "USE2-INW1",
+          "collected_date": "2033-09-02",
+          "amount": "1454.16",
+          "qty": "166",
+          "unit": "kg",
+          "rate": "8.76",
+          "ref": {
+            "page": 1,
+            "line": 9
+          }
+        },
+        {
+          "line_no": null,
+          "awb": "TE99472049",
+          "charge_label": "Fuel surcharge",
+          "lane": "USE2-INW1",
+          "collected_date": "2033-09-02",
+          "amount": "282.25",
+          "qty": "1454.16",
+          "unit": "%",
+          "rate": "19.41",
+          "ref": {
+            "page": 1,
+            "line": 10
+          }
+        },
+        {
+          "line_no": null,
+          "awb": "TE99472049",
+          "charge_label": "Security surcharge",
+          "lane": "USE2-INW1",
+          "collected_date": "2033-09-02",
+          "amount": "38.18",
+          "qty": "166",
+          "unit": "kg",
+          "rate": "0.23",
+          "ref": {
+            "page": 1,
+            "line": 11
+          }
+        },
+        {
+          "line_no": null,
+          "awb": "TE99472049",
+          "charge_label": "Delivery fee",
+          "lane": "USE2-INW1",
+          "collected_date": "2033-09-02",
+          "amount": "63.14",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "63.14",
+          "ref": {
+            "page": 1,
+            "line": 12
+          }
+        },
+        {
+          "line_no": null,
+          "awb": "TE99472049",
+          "charge_label": "Import duty (disbursement)",
+          "lane": "USE2-INW1",
+          "collected_date": null,
+          "amount": "186.96",
+          "qty": "1",
+          "unit": "fee",
+          "rate": "186.96",
+          "ref": {
+            "page": 1,
+            "line": 13
+          }
+        }
+      ]
+    }
+  }
+]

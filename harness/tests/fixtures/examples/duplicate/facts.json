@@ -1,0 +1,521 @@
+[
+  {
+    "type": "BillingDoc",
+    "doc": "batch_01/0003.eml#TX-US-2033-5511.pdf",
+    "data": {
+      "id": {
+        "value": "TX-US-2033-5511",
+        "ref": {
+          "page": 1,
+          "line": 3
+        }
+      },
+      "kind": "invoice",
+      "issuer": {
+        "value": "Tarrowby Express Inc.",
+        "ref": {
+          "page": 1,
+          "line": 1
+        }
+      },
+      "contract_ref": {
+        "value": "TBX-US-EXP-E87",
+        "ref": {
+          "page": 1,
+          "line": 5
+        }
+      },
+      "currency": {
+        "value": "USD",
+        "ref": {
+          "page": 1,
+          "line": 8
+        }
+      },
+      "invoice_date": {
+        "value": "2033-01-31",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "due_date": {
+        "value": "2033-03-02",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "subtotal": {
+        "value": "1259.23",
+        "ref": {
+          "page": 1,
+          "line": 13
+        }
+      },
+      "total": {
+        "value": "1259.23",
+        "ref": {
+          "page": 1,
+          "line": 15
+        }
+      },
+      "lines": [
+        {
+          "line_no": "1",
+          "awb": "TE76569676",
+          "pickup_date": "2033-01-26",
+          "charge_label": "Air freight",
+          "lane": "USE2-INW2",
+          "qty": "151",
+          "unit": "kg",
+          "rate": "6.03",
+          "amount": "910.53",
+          "ref": {
+            "page": 1,
+            "line": 9
+          }
+        },
+        {
+          "line_no": "3",
+          "awb": "TE76569676",
+          "pickup_date": "2033-01-26",
+          "charge_label": "Security surcharge",
+          "lane": "USE2-INW2",
+          "qty": "151",
+          "unit": "kg",
+          "rate": "0.15",
+          "amount": "22.65",
+          "ref": {
+            "page": 1,
+            "line": 11
+          }
+        },
+        {
+          "line_no": "4",
+          "awb": "TE76569676",
+          "pickup_date": "2033-01-26",
+          "charge_label": "Delivery fee",
+          "lane": "USE2-INW2",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "97.23",
+          "amount": "97.23",
+          "ref": {
+            "page": 1,
+            "line": 12
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "BillingDoc",
+    "doc": "batch_01/0004.eml#TX-US-2033-5511.pdf",
+    "data": {
+      "id": {
+        "value": "TX-US-2033-5511",
+        "ref": {
+          "page": 1,
+          "line": 3
+        }
+      },
+      "kind": "invoice",
+      "issuer": {
+        "value": "Tarrowby Express Inc.",
+        "ref": {
+          "page": 1,
+          "line": 1
+        }
+      },
+      "contract_ref": {
+        "value": "TBX-US-EXP-E87",
+        "ref": {
+          "page": 1,
+          "line": 5
+        }
+      },
+      "currency": {
+        "value": "USD",
+        "ref": {
+          "page": 1,
+          "line": 8
+        }
+      },
+      "invoice_date": {
+        "value": "2033-01-31",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "due_date": {
+        "value": "2033-03-02",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "subtotal": {
+        "value": "1259.23",
+        "ref": {
+          "page": 1,
+          "line": 13
+        }
+      },
+      "total": {
+        "value": "1259.23",
+        "ref": {
+          "page": 1,
+          "line": 15
+        }
+      },
+      "lines": [
+        {
+          "line_no": "1",
+          "awb": "TE76569676",
+          "pickup_date": "2033-01-26",
+          "charge_label": "Air freight",
+          "lane": "USE2-INW2",
+          "qty": "151",
+          "unit": "kg",
+          "rate": "6.03",
+          "amount": "910.53",
+          "ref": {
+            "page": 1,
+            "line": 9
+          }
+        },
+        {
+          "line_no": "3",
+          "awb": "TE76569676",
+          "pickup_date": "2033-01-26",
+          "charge_label": "Security surcharge",
+          "lane": "USE2-INW2",
+          "qty": "151",
+          "unit": "kg",
+          "rate": "0.15",
+          "amount": "22.65",
+          "ref": {
+            "page": 1,
+            "line": 11
+          }
+        },
+        {
+          "line_no": "4",
+          "awb": "TE76569676",
+          "pickup_date": "2033-01-26",
+          "charge_label": "Delivery fee",
+          "lane": "USE2-INW2",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "97.23",
+          "amount": "97.23",
+          "ref": {
+            "page": 1,
+            "line": 12
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "SheetMap",
+    "doc": "batch_01/0006.eml#ap-register-2033-02-28.xlsx",
+    "data": {
+      "kind": "payment_register",
+      "sheet_number": 1,
+      "columns": {
+        "invoice_id": "Invoice no.",
+        "invoice_date": "Invoice date",
+        "due_date": "Due date",
+        "amount": "Amount",
+        "status": "Status",
+        "paid_date": "Paid date"
+      },
+      "ref": {
+        "page": 1,
+        "line": 1
+      }
+    }
+  },
+  {
+    "type": "BillingDoc",
+    "doc": "batch_02/0001.eml#TX-US-2033-5512.pdf",
+    "data": {
+      "id": {
+        "value": "TX-US-2033-5512",
+        "ref": {
+          "page": 1,
+          "line": 1
+        }
+      },
+      "kind": "invoice",
+      "issuer": {
+        "value": "Tarrowby Express Inc.",
+        "ref": {
+          "page": 1,
+          "line": 2
+        }
+      },
+      "contract_ref": {
+        "value": "TBX-US-EXP-E87",
+        "ref": {
+          "page": 1,
+          "line": 5
+        }
+      },
+      "currency": {
+        "value": "USD",
+        "ref": {
+          "page": 1,
+          "line": 15
+        }
+      },
+      "invoice_date": {
+        "value": "2033-05-19",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "due_date": {
+        "value": "2033-06-18",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "subtotal": {
+        "value": "1368.48",
+        "ref": {
+          "page": 1,
+          "line": 13
+        }
+      },
+      "total": {
+        "value": "1368.48",
+        "ref": {
+          "page": 1,
+          "line": 15
+        }
+      },
+      "asks_for_payment": true,
+      "lines": [
+        {
+          "line_no": null,
+          "awb": "TE19536828-H1",
+          "charge_label": "Air freight (MAWB TE19536828)",
+          "lane": "USW2-INE2",
+          "collected_date": "2033-05-14",
+          "amount": "981.60",
+          "qty": "240",
+          "unit": "kg",
+          "rate": "4.09",
+          "ref": {
+            "page": 1,
+            "line": 9
+          }
+        },
+        {
+          "line_no": null,
+          "awb": "TE19536828-H1",
+          "charge_label": "Fuel surcharge (MAWB TE19536828)",
+          "lane": "USW2-INE2",
+          "collected_date": "2033-05-14",
+          "amount": "253.65",
+          "qty": "981.60",
+          "unit": "%",
+          "rate": "25.84",
+          "ref": {
+            "page": 1,
+            "line": 10
+          }
+        },
+        {
+          "line_no": null,
+          "awb": "TE19536828-H1",
+          "charge_label": "Security surcharge (MAWB TE19536828)",
+          "lane": "USW2-INE2",
+          "collected_date": "2033-05-14",
+          "amount": "36.00",
+          "qty": "240",
+          "unit": "kg",
+          "rate": "0.15",
+          "ref": {
+            "page": 1,
+            "line": 11
+          }
+        },
+        {
+          "line_no": null,
+          "awb": "TE19536828-H1",
+          "charge_label": "Delivery fee (MAWB TE19536828)",
+          "lane": "USW2-INE2",
+          "collected_date": "2033-05-14",
+          "amount": "97.23",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "97.23",
+          "ref": {
+            "page": 1,
+            "line": 12
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "BillingDoc",
+    "doc": "batch_02/0002.eml#TX-US-2033-5514.pdf",
+    "data": {
+      "id": {
+        "value": "TX-US-2033-5514",
+        "ref": {
+          "page": 1,
+          "line": 1
+        }
+      },
+      "kind": "invoice",
+      "issuer": {
+        "value": "Tarrowby Express Inc.",
+        "ref": {
+          "page": 1,
+          "line": 2
+        }
+      },
+      "contract_ref": {
+        "value": "TBX-US-EXP-E87",
+        "ref": {
+          "page": 1,
+          "line": 5
+        }
+      },
+      "currency": {
+        "value": "USD",
+        "ref": {
+          "page": 1,
+          "line": 15
+        }
+      },
+      "invoice_date": {
+        "value": "2033-05-26",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "due_date": {
+        "value": "2033-06-25",
+        "ref": {
+          "page": 1,
+          "line": 4
+        }
+      },
+      "subtotal": {
+        "value": "642.81",
+        "ref": {
+          "page": 1,
+          "line": 13
+        }
+      },
+      "total": {
+        "value": "642.81",
+        "ref": {
+          "page": 1,
+          "line": 15
+        }
+      },
+      "asks_for_payment": true,
+      "lines": [
+        {
+          "line_no": null,
+          "awb": "TE19536828-H2",
+          "charge_label": "Air freight (MAWB TE19536828)",
+          "lane": "USW2-INE2",
+          "collected_date": "2033-05-14",
+          "amount": "421.27",
+          "qty": "103",
+          "unit": "kg",
+          "rate": "4.09",
+          "ref": {
+            "page": 1,
+            "line": 9
+          }
+        },
+        {
+          "line_no": null,
+          "awb": "TE19536828-H2",
+          "charge_label": "Fuel surcharge (MAWB TE19536828)",
+          "lane": "USW2-INE2",
+          "collected_date": "2033-05-14",
+          "amount": "108.86",
+          "qty": "421.27",
+          "unit": "%",
+          "rate": "25.84",
+          "ref": {
+            "page": 1,
+            "line": 10
+          }
+        },
+        {
+          "line_no": null,
+          "awb": "TE19536828-H2",
+          "charge_label": "Security surcharge (MAWB TE19536828)",
+          "lane": "USW2-INE2",
+          "collected_date": "2033-05-14",
+          "amount": "15.45",
+          "qty": "103",
+          "unit": "kg",
+          "rate": "0.15",
+          "ref": {
+            "page": 1,
+            "line": 11
+          }
+        },
+        {
+          "line_no": null,
+          "awb": "TE19536828-H2",
+          "charge_label": "Delivery fee (MAWB TE19536828)",
+          "lane": "USW2-INE2",
+          "collected_date": "2033-05-14",
+          "amount": "97.23",
+          "qty": "1",
+          "unit": "shpt",
+          "rate": "97.23",
+          "ref": {
+            "page": 1,
+            "line": 12
+          }
+        }
+      ]
+    }
+  },
+  {
+    "type": "ShipmentDoc",
+    "doc": "batch_02/0002.eml#AWB-TE19536828.pdf",
+    "data": {
+      "awb": {
+        "value": "TE19536828",
+        "ref": {
+          "page": 1,
+          "line": 2
+        }
+      },
+      "kind": "awb",
+      "executed_date": {
+        "value": "2033-05-14",
+        "ref": {
+          "page": 1,
+          "line": 3
+        }
+      },
+      "origin": null,
+      "destination": null,
+      "pieces": null,
+      "actual_weight": null,
+      "chargeable_weight": null,
+      "goods": null
+    }
+  }
+]

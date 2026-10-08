@@ -1,0 +1,1040 @@
+[
+  {
+    "type": "ContractTerms",
+    "doc": "batch_01/0002.eml#MSA-TBX-US-EXP-E24.pdf",
+    "data": {
+      "id": {
+        "value": "TBX-US-EXP-E24",
+        "ref": {
+          "page": 1,
+          "line": 3
+        }
+      },
+      "kind": "msa",
+      "parties": [
+        "Quillmere Pharma Inc.",
+        "Tarrowby Express Inc."
+      ],
+      "parties_ref": {
+        "page": 1,
+        "line": 5
+      },
+      "dated": {
+        "value": "2033-03-09",
+        "ref": {
+          "page": 1,
+          "line": 14
+        }
+      },
+      "effective_from": {
+        "value": "2033-03-21",
+        "ref": {
+          "page": 3,
+          "line": 20
+        }
+      },
+      "end_date": {
+        "value": "2034-03-20",
+        "ref": {
+          "page": 3,
+          "line": 21
+        }
+      },
+      "auto_renewal": false,
+      "auto_renewal_ref": {
+        "page": 3,
+        "line": 22
+      },
+      "precedence_order": [
+        "signed_amendment",
+        "msa",
+        "annexes"
+      ],
+      "precedence_ref": {
+        "page": 5,
+        "line": 3
+      },
+      "unranked_pairs": [
+        "rate_notice vs amendment"
+      ],
+      "unranked_ref": {
+        "page": 4,
+        "line": 43
+      },
+      "rate_periods": [
+        {
+          "label": "P1",
+          "start": "2033-03-21",
+          "end": "2033-09-20",
+          "ref": {
+            "page": 8,
+            "line": 3
+          }
+        },
+        {
+          "label": "P2",
+          "start": "2033-09-21",
+          "end": "2034-03-20",
+          "ref": {
+            "page": 8,
+            "line": 4
+          }
+        }
+      ],
+      "rate_rows": [
+        {
+          "lane": "USW2-INS1",
+          "band": "minimum charge",
+          "rates": [
+            "82.00",
+            "82.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 6
+          }
+        },
+        {
+          "lane": "USW2-INS1",
+          "band": "0-44.5 kg",
+          "rates": [
+            "7.72",
+            "8.22"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 7
+          }
+        },
+        {
+          "lane": "USW2-INS1",
+          "band": "45-99.5 kg",
+          "rates": [
+            "7.00",
+            "7.45"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 8
+          }
+        },
+        {
+          "lane": "USW2-INS1",
+          "band": "100-299.5 kg",
+          "rates": [
+            "6.35",
+            "6.76"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 9
+          }
+        },
+        {
+          "lane": "USW2-INS1",
+          "band": "300+ kg",
+          "rates": [
+            "5.76",
+            "6.13"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 10
+          }
+        },
+        {
+          "lane": "USC1-USS2",
+          "band": "minimum charge",
+          "rates": [
+            "91.00",
+            "91.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 11
+          }
+        },
+        {
+          "lane": "USC1-USS2",
+          "band": "0-44.5 kg",
+          "rates": [
+            "4.41",
+            "4.69"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 12
+          }
+        },
+        {
+          "lane": "USC1-USS2",
+          "band": "45-99.5 kg",
+          "rates": [
+            "3.99",
+            "4.25"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 13
+          }
+        },
+        {
+          "lane": "USC1-USS2",
+          "band": "100-299.5 kg",
+          "rates": [
+            "3.61",
+            "3.84"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 14
+          }
+        },
+        {
+          "lane": "USC1-USS2",
+          "band": "300+ kg",
+          "rates": [
+            "3.27",
+            "3.48"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 15
+          }
+        },
+        {
+          "lane": "USW1-USS2",
+          "band": "minimum charge",
+          "rates": [
+            "95.00",
+            "95.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 16
+          }
+        },
+        {
+          "lane": "USW1-USS2",
+          "band": "0-44.5 kg",
+          "rates": [
+            "4.20",
+            "4.47"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 17
+          }
+        },
+        {
+          "lane": "USW1-USS2",
+          "band": "45-99.5 kg",
+          "rates": [
+            "3.78",
+            "4.02"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 18
+          }
+        },
+        {
+          "lane": "USW1-USS2",
+          "band": "100-299.5 kg",
+          "rates": [
+            "3.39",
+            "3.61"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 19
+          }
+        },
+        {
+          "lane": "USW1-USS2",
+          "band": "300+ kg",
+          "rates": [
+            "3.05",
+            "3.25"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 20
+          }
+        },
+        {
+          "lane": "USE1-USE2",
+          "band": "minimum charge",
+          "rates": [
+            "49.00",
+            "49.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 21
+          }
+        },
+        {
+          "lane": "USE1-USE2",
+          "band": "0-44.5 kg",
+          "rates": [
+            "5.26",
+            "5.60"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 22
+          }
+        },
+        {
+          "lane": "USE1-USE2",
+          "band": "45-99.5 kg",
+          "rates": [
+            "4.83",
+            "5.14"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 23
+          }
+        },
+        {
+          "lane": "USE1-USE2",
+          "band": "100-299.5 kg",
+          "rates": [
+            "4.44",
+            "4.73"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 24
+          }
+        },
+        {
+          "lane": "USE1-USE2",
+          "band": "300+ kg",
+          "rates": [
+            "4.08",
+            "4.34"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 25
+          }
+        },
+        {
+          "lane": "USC3-INN1",
+          "band": "minimum charge",
+          "rates": [
+            "59.00",
+            "59.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 26
+          }
+        },
+        {
+          "lane": "USC3-INN1",
+          "band": "0-44.5 kg",
+          "rates": [
+            "7.28",
+            "7.75"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 27
+          }
+        },
+        {
+          "lane": "USC3-INN1",
+          "band": "45-99.5 kg",
+          "rates": [
+            "6.85",
+            "7.29"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 28
+          }
+        },
+        {
+          "lane": "USC3-INN1",
+          "band": "100-299.5 kg",
+          "rates": [
+            "6.45",
+            "6.86"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 29
+          }
+        },
+        {
+          "lane": "USC3-INN1",
+          "band": "300+ kg",
+          "rates": [
+            "6.07",
+            "6.46"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 30
+          }
+        },
+        {
+          "lane": "USS2-INS2",
+          "band": "minimum charge",
+          "rates": [
+            "54.00",
+            "54.00"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 31
+          }
+        },
+        {
+          "lane": "USS2-INS2",
+          "band": "0-44.5 kg",
+          "rates": [
+            "9.14",
+            "9.73"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 32
+          }
+        },
+        {
+          "lane": "USS2-INS2",
+          "band": "45-99.5 kg",
+          "rates": [
+            "8.39",
+            "8.93"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 33
+          }
+        },
+        {
+          "lane": "USS2-INS2",
+          "band": "100-299.5 kg",
+          "rates": [
+            "7.71",
+            "8.20"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 34
+          }
+        },
+        {
+          "lane": "USS2-INS2",
+          "band": "300+ kg",
+          "rates": [
+            "7.08",
+            "7.53"
+          ],
+          "ref": {
+            "page": 8,
+            "line": 35
+          }
+        }
+      ],
+      "fuel_rows": [
+        {
+          "month": "2033-03",
+          "rate": "14.70",
+          "ref": {
+            "page": 9,
+            "line": 4
+          }
+        },
+        {
+          "month": "2033-04",
+          "rate": "16.98",
+          "ref": {
+            "page": 9,
+            "line": 5
+          }
+        },
+        {
+          "month": "2033-05",
+          "rate": "16.18",
+          "ref": {
+            "page": 9,
+            "line": 6
+          }
+        },
+        {
+          "month": "2033-06",
+          "rate": "17.22",
+          "ref": {
+            "page": 9,
+            "line": 7
+          }
+        },
+        {
+          "month": "2033-07",
+          "rate": "16.70",
+          "ref": {
+            "page": 9,
+            "line": 8
+          }
+        },
+        {
+          "month": "2033-08",
+          "rate": "18.11",
+          "ref": {
+            "page": 9,
+            "line": 9
+          }
+        },
+        {
+          "month": "2033-09",
+          "rate": "19.99",
+          "ref": {
+            "page": 9,
+            "line": 10
+          }
+        },
+        {
+          "month": "2033-10",
+          "rate": "18.41",
+          "ref": {
+            "page": 9,
+            "line": 11
+          }
+        },
+        {
+          "month": "2033-11",
+          "rate": "16.19",
+          "ref": {
+            "page": 9,
+            "line": 12
+          }
+        },
+        {
+          "month": "2033-12",
+          "rate": "16.65",
+          "ref": {
+            "page": 9,
+            "line": 13
+          }
+        },
+        {
+          "month": "2034-01",
+          "rate": "19.07",
+          "ref": {
+            "page": 9,
+            "line": 14
+          }
+        },
+        {
+          "month": "2034-02",
+          "rate": "19.81",
+          "ref": {
+            "page": 9,
+            "line": 15
+          }
+        },
+        {
+          "month": "2034-03",
+          "rate": "21.27",
+          "ref": {
+            "page": 9,
+            "line": 16
+          }
+        }
+      ],
+      "accessorials": [
+        {
+          "code": "DG",
+          "label": "Dangerous goods fee",
+          "rate": "253.88",
+          "basis": "USD per shipment",
+          "ref": {
+            "page": 10,
+            "line": 4
+          }
+        },
+        {
+          "code": "DRYICE",
+          "label": "Dry ice handling fee",
+          "rate": "51.86",
+          "basis": "USD per shipment",
+          "ref": {
+            "page": 10,
+            "line": 5
+          }
+        },
+        {
+          "code": "SEC",
+          "label": "Security surcharge",
+          "rate": "0.12",
+          "basis": "USD per chargeable kg",
+          "ref": {
+            "page": 10,
+            "line": 6
+          }
+        },
+        {
+          "code": "STOR",
+          "label": "Storage",
+          "rate": "58.94",
+          "basis": "USD per storage day",
+          "ref": {
+            "page": 10,
+            "line": 7
+          }
+        },
+        {
+          "code": "DLV",
+          "label": "Delivery fee",
+          "rate": "136.96",
+          "basis": "USD per shipment",
+          "ref": {
+            "page": 10,
+            "line": 8
+          }
+        },
+        {
+          "code": "CUSTOMS",
+          "label": "Customs hold fee",
+          "rate": "134.00",
+          "basis": "USD per shipment",
+          "ref": {
+            "page": 10,
+            "line": 9
+          }
+        },
+        {
+          "code": "ACCT",
+          "label": "Monthly account fee",
+          "rate": "134.76",
+          "basis": "USD per month",
+          "ref": {
+            "page": 10,
+            "line": 10
+          }
+        },
+        {
+          "code": "SPROG",
+          "label": "Storage programme fee",
+          "rate": "489.28",
+          "basis": "USD per month",
+          "ref": {
+            "page": 10,
+            "line": 11
+          }
+        },
+        {
+          "code": "PPROG",
+          "label": "Pickup programme fee",
+          "rate": "777.97",
+          "basis": "USD per month",
+          "ref": {
+            "page": 10,
+            "line": 12
+          }
+        }
+      ],
+      "charge_code_aliases": [
+        {
+          "code": "FRT",
+          "label": "Air freight",
+          "aliases": [
+            "Express freight",
+            "Freight charge"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 14
+          }
+        },
+        {
+          "code": "FUEL",
+          "label": "Fuel surcharge",
+          "aliases": [
+            "FSC",
+            "Fuel adj."
+          ],
+          "ref": {
+            "page": 10,
+            "line": 15
+          }
+        },
+        {
+          "code": "SEC",
+          "label": "Security surcharge",
+          "aliases": [
+            "Screening fee",
+            "Screening fee (adj.)",
+            "Security screening"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 16
+          }
+        },
+        {
+          "code": "DG",
+          "label": "Dangerous goods fee",
+          "aliases": [
+            "DG handling",
+            "Hazmat handling"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 17
+          }
+        },
+        {
+          "code": "DRYICE",
+          "label": "Dry ice handling fee",
+          "aliases": [
+            "Dry ice handling"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 18
+          }
+        },
+        {
+          "code": "STOR",
+          "label": "Storage",
+          "aliases": [
+            "Warehouse storage",
+            "Demurrage"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 19
+          }
+        },
+        {
+          "code": "DLV",
+          "label": "Delivery fee",
+          "aliases": [
+            "Door delivery",
+            "Final-mile delivery"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 20
+          }
+        },
+        {
+          "code": "CUSTOMS",
+          "label": "Customs hold fee",
+          "aliases": [
+            "Customs examination",
+            "Hold handling"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 21
+          }
+        },
+        {
+          "code": "ACCT",
+          "label": "Monthly account fee",
+          "aliases": [
+            "Account maintenance"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 22
+          }
+        },
+        {
+          "code": "SPROG",
+          "label": "Storage programme fee",
+          "aliases": [
+            "Storage programme"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 23
+          }
+        },
+        {
+          "code": "PPROG",
+          "label": "Pickup programme fee",
+          "aliases": [
+            "Pickup programme"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 24
+          }
+        },
+        {
+          "code": "PEAK",
+          "label": "Peak season surcharge",
+          "aliases": [
+            "PSS"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 25
+          }
+        },
+        {
+          "code": "COST",
+          "label": "Carrier cost",
+          "aliases": [
+            "Linehaul cost pass-through"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 26
+          }
+        },
+        {
+          "code": "MARGIN",
+          "label": "Handling margin",
+          "aliases": [
+            "Forwarding margin"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 27
+          }
+        },
+        {
+          "code": "HDL",
+          "label": "Special handling",
+          "aliases": [
+            "Supplementary handling"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 28
+          }
+        },
+        {
+          "code": "DUTY",
+          "label": "Import duty (disbursement)",
+          "aliases": [
+            "Duty paid on your behalf"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 29
+          }
+        },
+        {
+          "code": "TAX",
+          "label": "Sales tax",
+          "aliases": [
+            "GST"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 30
+          }
+        },
+        {
+          "code": "LATE",
+          "label": "Late payment fee",
+          "aliases": [
+            "Late fee",
+            "Overdue interest"
+          ],
+          "ref": {
+            "page": 10,
+            "line": 31
+          }
+        }
+      ],
+      "rebate_tiers": null,
+      "rebate_tier_rule": {
+        "value": "The tier rate applies to all QS in the Quarter",
+        "ref": {
+          "page": 4,
+          "line": 11
+        }
+      },
+      "rebate_due_days": {
+        "value": "45",
+        "ref": {
+          "page": 4,
+          "line": 13
+        }
+      },
+      "margin_not_applicable": {
+        "page": 4,
+        "line": 15
+      },
+      "promised_credits": [
+        {
+          "label": "Annual improvement credit",
+          "rate": {
+            "value": "1.84",
+            "ref": {
+              "page": 4,
+              "line": 19
+            }
+          },
+          "due_days": {
+            "value": "60",
+            "ref": {
+              "page": 4,
+              "line": 18
+            }
+          },
+          "ref": {
+            "page": 4,
+            "line": 18
+          }
+        }
+      ],
+      "payment_due_days": {
+        "value": "45",
+        "ref": {
+          "page": 4,
+          "line": 21
+        }
+      },
+      "payment_grace_days": {
+        "value": "0",
+        "ref": {
+          "page": 4,
+          "line": 22
+        }
+      },
+      "late_fee_rate": {
+        "value": "1.99",
+        "ref": {
+          "page": 4,
+          "line": 22
+        }
+      },
+      "late_fee_compounding": true,
+      "late_fee_compounding_ref": {
+        "page": 4,
+        "line": 25
+      },
+      "who_may_extend": {
+        "value": "payment_terms",
+        "ref": {
+          "page": 11,
+          "line": 7
+        }
+      },
+      "fx_not_applicable": {
+        "page": 11,
+        "line": 3
+      },
+      "schedule1_rows": [
+        {
+          "name": "Isolde Yardley",
+          "title": "Key Account Manager",
+          "party": "TBX-US",
+          "categories": [
+            "notices"
+          ],
+          "email": "isolde.yardley@tarrowby.example",
+          "ref": {
+            "page": 11,
+            "line": 5
+          }
+        },
+        {
+          "name": "Gwen Thackeray",
+          "title": "Pricing Manager",
+          "party": "TBX-US",
+          "categories": [
+            "rates"
+          ],
+          "email": "gwen.thackeray@tarrowby.example",
+          "ref": {
+            "page": 11,
+            "line": 6
+          }
+        },
+        {
+          "name": "Hemant Nairne",
+          "title": "Customer Finance Lead",
+          "party": "TBX-US",
+          "categories": [
+            "waivers",
+            "payment_terms"
+          ],
+          "email": "hemant.nairne@tarrowby.example",
+          "ref": {
+            "page": 11,
+            "line": 7
+          }
+        },
+        {
+          "name": "Maren Pembroke",
+          "title": "Treasury Analyst",
+          "party": "TBX-US",
+          "categories": [
+            "treasury"
+          ],
+          "email": "maren.pembroke@tarrowby.example",
+          "ref": {
+            "page": 11,
+            "line": 8
+          }
+        },
+        {
+          "name": "Declan Bhandari",
+          "title": "Billing Disputes Lead",
+          "party": "TBX-US",
+          "categories": [
+            "billing_disputes"
+          ],
+          "email": "declan.bhandari@tarrowby.example",
+          "ref": {
+            "page": 11,
+            "line": 9
+          }
+        },
+        {
+          "name": "Keira Quigley",
+          "title": "AP Manager",
+          "party": "QMP-US",
+          "categories": [
+            "notices",
+            "payment_terms",
+            "billing_disputes"
+          ],
+          "email": "keira.quigley@quillmere.example",
+          "ref": {
+            "page": 11,
+            "line": 10
+          }
+        },
+        {
+          "name": "Bram Ashdown",
+          "title": "Logistics Director",
+          "party": "QMP-US",
+          "categories": [
+            "rates"
+          ],
+          "email": "bram.ashdown@quillmere.example",
+          "ref": {
+            "page": 11,
+            "line": 11
+          }
+        }
+      ],
+      "key_clauses": [
+        {
+          "number": "3.2",
+          "topic": "Pricing date",
+          "ref": {
+            "page": 3,
+            "line": 28
+          }
+        }
+      ]
+    }
+  }
+]
