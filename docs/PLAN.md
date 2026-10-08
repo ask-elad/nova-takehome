@@ -6,9 +6,8 @@ changed by the humans only.
 
 ## Where we are
 
-**Phase 1 · Census.** Current task: `docs/tasks/01-census.md`.
-No architecture has been chosen yet, so don't write code under `harness/` until `docs/decisions/0001-architecture.md`
-exists.
+**Phase 2 · Reading layer.** The architecture is decided: `docs/decisions/0001-architecture.md`. Current task:
+`docs/tasks/02-foundation.md`.
 
 ## How work reaches you
 
@@ -39,3 +38,9 @@ Each phase ends with a gate. The next phase starts only after the gate has passe
 - [x] `docs/research/02-extract.md`
 - [x] `docs/research/03-rules.md`
 - [x] `docs/research/00-summary.md`
+- [x] `docs/research/04-review.md` (human review of the census)
+- [x] `docs/decisions/0001-architecture.md` signed off
+
+## Phase 2 checklist
+- [ ] Task 02 · foundation: text layer, mailbox, model client, runnable pipeline
+- [ ] Task 03 · readers and verification
