@@ -1,0 +1,306 @@
+ ▐▛███▜▌   Claude Code v2.1.140
+▝▜█████▛▘  Sonnet 4.6 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/AAtakeHome/nova-takehome
+
+❯ Read CLAUDE.md and docs/PLAN.md, then do the current task                     
+
+● Reading the project files to understand the current state and task.
+
+  Read 2 files (ctrl+o to expand)
+
+● Now let me read the current task and architecture decision.
+
+  Read 2 files (ctrl+o to expand)
+
+● Let me explore the existing codebase structure and grader files before
+  building.
+
+  Searched for 2 patterns, read 2 files (ctrl+o to expand)
+
+● Let me look at the schema and an example finding to understand the expected
+  output format.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Let me check the Makefile and requirements to understand how the project runs.
+
+  Searched for 2 patterns, read 1 file, listed 5 directories, ran 2 shell commands (ctrl+o to expand)
+
+● Now I have everything I need. Let me build all the files systematically,
+  starting with the tests (as required by the task).
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Write(harness/nova/__init__.py)
+  ⎿  Wrote 1 lines to harness/nova/__init__.py
+      1 (No content)
+
+● Write(harness/tests/__init__.py)
+  ⎿  Wrote 1 lines to harness/tests/__init__.py
+      1 (No content)
+
+● Now create textlayer.py as a verbatim copy of grader/extract.py:
+
+● Write(harness/nova/textlayer.py)
+  ⎿  Wrote 200 lines to harness/nova/textlayer.py
+      1 # Vendored from grader/extract.py. Kept as a byte-for-byte copy s
+      2 # produce identical text from every document. Do not modify the l
+        ogic; update by re-copying.
+        der checks a citation.
+      5 Standalone on purpose (the candidate's copy of the grader imports
+         nothing else from this repo). Same rules as the
+      7 - text PDF: words grouped into lines by baseline, each line read 
+        left to right; one entry per PDF page;
+        s its displayed cell texts joined by " | ";
+        la
+     … +229 lines (ctrl+o to expand)
+
+● Now create mailbox.py:
+
+● Write(harness/nova/mailbox.py)
+  ⎿  Wrote 137 lines to harness/nova/mailbox.py
+       1 """Reads a batch folder into document records."""
+       2 from __future__ import annotations
+       3 
+       4 from dataclasses import dataclass, field
+       5 from datetime import datetime, timezone
+       7 from pathlib import Path
+       8 from typing import Optional
+       9 
+      10 from nova.textlayer import pages_of, pdf_is_image_only, parse_em
+         l, attachments
+     … +138 lines (ctrl+o to expand)
+
+● Now create state.py:
+
+● Write(harness/nova/state.py)
+  ⎿  Wrote 106 lines to harness/nova/state.py
+       1 """State folder layout and atomic JSON writes.
+       2 
+       3 Layout under <state_dir>/:
+       4   documents/   one <safe-doc-id>.json per document record
+       5   cache/       LLM response cache files
+       6   feedback.jsonl  one JSON object per line
+       7   reports/     saved report snapshots
+       8   ledger.jsonl    one JSON object per LLM call
+       9 """
+      10 from __future__ import annotations
+     … +101 lines (ctrl+o to expand)
+
+● Now create llm.py:
+● Write(harness/nova/llm.py)
+  ⎿  Wrote 195 lines to harness/nova/llm.py
+       1 """The only place that calls the Anthropic API.
+       2 
+       3 Three model tiers:
+       4   fast   NOVA_MODEL_FAST   default claude-haiku-4-5-20251001
+       5   main   NOVA_MODEL_MAIN   default claude-sonnet-4-6
+       7 
+       8 Set NOVA_LLM=fake to skip the network entirely (use fake_set_res
+         ponse / fake_set_fail to control
+       9 behaviour in tests).
+      10 """
+     … +221 lines (ctrl+o to expand)
+
+● Now write the tests. Starting with test_textlayer.py:
+
+● Write(harness/tests/test_textlayer.py)
+  ⎿  Wrote 90 lines to harness/tests/test_textlayer.py
+       1 """textlayer output must be identical to grader/extract.py for e
+         very document in the mailboxes."""
+       2 from __future__ import annotations
+       3 
+       4 import sys
+       6 
+       7 import pytest
+       8 
+       9 REPO = Path(__file__).resolve().parents[2]
+      10 sys.path.insert(0, str(REPO / "harness"))
+     … +94 lines (ctrl+o to expand)
+
+● Write(harness/tests/test_mailbox.py)
+  ⎿  Wrote 158 lines to harness/tests/test_mailbox.py
+      1 """Mailbox loading, doc-id convention, evidence quotes, received-
+        date filtering, line resolver."""
+      2 from __future__ import annotations
+      3 
+      4 import email
+      5 import json
+      6 import sys
+      7 import textwrap
+      8 from datetime import datetime, timezone, timedelta
+      9 from pathlib import Path
+     … +158 lines (ctrl+o to expand)
+
+● Write(harness/tests/test_llm.py)
+  ⎿  Wrote 86 lines to harness/tests/test_llm.py
+      1 """LLM client: cache, ledger, and tier fallback using the fake cl
+        ient."""
+      2 from __future__ import annotations
+      3 
+      4 import json
+      5 import os
+      6 import sys
+      7 from pathlib import Path
+      8 
+      9 import pytest
+     … +84 lines (ctrl+o to expand)
+
+● Write(harness/tests/test_report.py)
+  ⎿  Wrote 97 lines to harness/tests/test_report.py
+      1 """report output must validate against grader/schema/report.schem
+        a.json."""
+      2 from __future__ import annotations
+      3 
+      4 import json
+      5 import subprocess
+      6 import sys
+      7 from pathlib import Path
+      8 
+      9 import pytest
+     … +99 lines (ctrl+o to expand)
+
+● Now update harness.py with the actual implementations:
+
+● Write(harness/harness.py)
+  ⎿  Added 39 lines, removed 8 lines
+      16  from __future__ import annotations
+      17  
+      18  import argparse
+      19 +import json                                                    
+      20  import sys
+      21 +from datetime import date                                      
+      22 +from pathlib import Path                                       
+      23  
+      24  DEFAULT_STATE = ".state"
+      25  
+      26 +# Ensure harness/nova is importable regardless of working direc
+         +tory                                                           
+      27 +sys.path.insert(0, str(Path(__file__).resolve().parent))       
+      28  
+      29 +                                                               
+      30  def ingest(batch_dir: str, state_dir: str) -> None:
+      25 -    raise NotImplementedError(                                 
+      26 -        f"ingest is not written yet: read the .eml files in {ba
+         -tch_dir} and keep what you learn under {state_dir}")           
+      31 +    from nova.mailbox import load_batch                        
+      32 +    from nova.state import StateDir                            
+      33  
+      34 +    state = StateDir(state_dir)                                
+      35 +    state.ensure()                                             
+      36  
+      37 +    for record in load_batch(Path(batch_dir)):                 
+      38 +        if not state.doc_exists(record.doc_id):                
+      39 +            state.save_doc(record)                             
+      40 +                                                               
+      41 +                                                               
+      42  def report(as_of: str, mode: str, state_dir: str) -> dict:
+      30 -    raise NotImplementedError(                                 
+      31 -        f"report is not written yet: return the report.json dic
+         -t for --as-of {as_of} in {mode} mode "                         
+      32 -        "(see grader/schema/report.schema.json and data/example
+         -s/*/expected_finding.json)")                                   
+      43 +    from nova.state import StateDir                            
+      44  
+      45 +    as_of_date = date.fromisoformat(as_of)                     
+      46 +    state = StateDir(state_dir)                                
+      47  
+      48 +    return {                                                   
+      49 +        "schema_version": "1.0.0",                             
+      50 +        "as_of": as_of,                                        
+      51 +        "mode": mode,                                          
+      52 +        "findings": [],                                        
+      53 +        "portfolio": {                                         
+      54 +            "cashback": [],                                    
+      55 +            "expiry": [],                                      
+      56 +            "late_fee_risk": [],                               
+      57 +        },                                                     
+      58 +    }                                                          
+      59 +                                                               
+      60 +                                                               
+      61  def feedback(feedback_file: str, state_dir: str) -> None:
+      36 -    raise NotImplementedError(                                 
+      37 -        f"feedback is not written yet: store the decisions in {
+         -feedback_file} under {state_dir} so later reports use them")   
+      62 +    from nova.state import StateDir                            
+      63  
+      64 +    state = StateDir(state_dir)                                
+      65 +    state.root.mkdir(parents=True, exist_ok=True)              
+      66  
+      67 +    payload = json.loads(Path(feedback_file).read_text())      
+      68 +    for item in payload.get("items", []):                      
+      69 +        state.append_feedback(item)                            
+      70 +                                                               
+      71 +                                                               
+      72  def main(argv=None) -> int:
+      73      ap = argparse.ArgumentParser(prog="harness.py", description
+          ="Freight invoice audit harness")
+      74      sub = ap.add_subparsers(dest="cmd", required=True)
+     ...
+      87          if a.cmd == "ingest":
+      88              ingest(a.batch_dir, a.state_dir)
+      89          elif a.cmd == "report":
+      58 -            import json                                        
+      90              json.dump(report(a.as_of, a.mode, a.state_dir), sys
+          .stdout, indent=1)
+      91              sys.stdout.write("\n")
+      92          else:
+
+● Now let's run the tests to see what fails:
+
+  Listed 1 directory, ran 4 shell commands (ctrl+o to expand)
+
+● All 32 tests pass. Now let's run make grade:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All 32 tests pass and make grade runs end-to-end without harness errors (score
+   near zero is expected at this stage, since the rules engine isn't built yet).
+   Now let me tick the task in PLAN.md:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      42  - [x] `docs/decisions/0001-architecture.md` signed off
+      43  
+      44  ## Phase 2 checklist
+      45 -- [ ] Task 02 · foundation: text layer, mailbox, model client, 
+         -runnable pipeline                                              
+      45 +- [x] Task 02 · foundation: text layer, mailbox, model client, 
+         +runnable pipeline                                              
+      46  - [ ] Task 03 · readers and verification
+      47   No newline at end of file
+
+● Tests:
+  .venv/bin/python -m pytest harness/tests -q
+  32 passed in 3.55s
+
+  make grade ran end-to-end (near-zero score as expected — no rules engine yet):
+  make grade
+    supervised  W1 batch_01 as of 2035-05-31: 0 item(s)
+    supervised  W1 batch_02 as of 2035-09-30: 0 item(s)
+    ...
+  NOT YET. 0 of 9 rows match.
+
+  ---
+  Here's what was built:
+
+  - harness/nova/textlayer.py — verbatim copy of grader/extract.py with header
+  comment
+  - harness/nova/mailbox.py — load_batch() produces DocRecord objects (doc_id,
+  received UTC, sender, subject, pages, is_scan, parent_id); render_pages() adds
+   [p1 L7] labels; resolve_lines() round-trips line text
+  - harness/nova/state.py — StateDir with atomic JSON writes, save_doc/load_docs
+   (with as_of filter), ledger and feedback append
+  - harness/nova/llm.py — three tiers with env-var overrides and fallback on
+  "model not found", disk cache keyed by (model, prompt_version, content_hash),
+  ledger logging, retry on rate-limits, thread pool; fake client via
+  NOVA_LLM=fake
+  - harness/harness.py — ingest (dedup by doc_id), report (schema-valid empty
+  output), feedback (stores items in feedback.jsonl)
+  - harness/tests/ — 32 tests covering textlayer identity, evidence doc-ids and
+  quote lookup, received-date filtering, line-resolver round-trips, LLM
+  cache/ledger/fallback, schema validation, dedup, and feedback storage
+
+✻ Sautéed for 7m 36s
