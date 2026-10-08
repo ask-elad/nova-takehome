@@ -31,6 +31,7 @@ _CURRENCY_RE = re.compile(r'\b(USD|INR|EUR|GBP)\b')
 _MONEY_RE = re.compile(r'^[\d]+\.\d+$')
 _ISO_DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
 _MONTH_RE = re.compile(r'^\d{4}-\d{2}$')
+_NUMERIC_RE = re.compile(r'^\d+(\.\d+)?$')
 
 _MONTH_NAMES = {
     1: ["january", "jan"],
@@ -73,26 +74,47 @@ def _date_variants(iso: str) -> list[str]:
     return variants
 
 
+def _number_whole_token(value: str, text: str) -> bool:
+    """True iff numeric *value* appears as a whole token in *text*.
+
+    Fails if the match is immediately preceded by a digit, or followed by a
+    digit or by a decimal point and a digit (e.g. "340.1" must not match
+    "340.12", and "44" must not match "144").
+    """
+    pattern = r'(?<!\d)' + re.escape(value) + r'(?!\d|\.\d)'
+    return bool(re.search(pattern, text))
+
+
+def _date_whole_token(variant: str, text: str) -> bool:
+    """True iff date *variant* appears as a whole token in *text* (case-insensitive)."""
+    return bool(re.search(r'\b' + re.escape(variant) + r'\b', text, re.IGNORECASE))
+
+
 def _value_on_line(value: str, line: str) -> bool:
     """Return True iff *value* can be found in *line* under the matching rules."""
     norm_line = norm(line)
     norm_val = norm(value)
 
-    # Case-insensitive plain substring (covers strings and short codes)
-    if norm_val.lower() in norm_line.lower():
-        return True
-
-    # Money: try after stripping thousands separators and currency codes
-    stripped_val = _strip_money(norm_val)
-    stripped_line = _strip_money(norm_line)
-    if stripped_val and stripped_val in stripped_line:
-        return True
-
-    # Date: try multiple printed forms
+    # ISO date: whole-token check on each printed variant
     if _ISO_DATE_RE.match(norm_val):
         for variant in _date_variants(norm_val):
-            if variant.lower() in norm_line.lower():
+            if _date_whole_token(variant, norm_line):
                 return True
+        return False
+
+    # Strip thousands-separator commas and currency codes for money matching
+    stripped_val = _strip_money(norm_val)
+    stripped_line = _strip_money(norm_line)
+
+    # Numeric values: whole-token match (after stripping) to avoid partial hits
+    if stripped_val and _NUMERIC_RE.match(stripped_val):
+        return _number_whole_token(stripped_val, stripped_line)
+
+    # Strings and codes: case-insensitive substring match
+    if norm_val.lower() in norm_line.lower():
+        return True
+    if stripped_val and stripped_val in stripped_line:
+        return True
 
     return False
 
@@ -238,10 +260,19 @@ def _walk(obj: Any, pages: list[str], path: str):
                                 "value not found on row line",
                             )
 
-            # dict field (e.g. SheetMap.columns)
+            # dict field (e.g. SheetMap.columns) – check string values against row ref
             if isinstance(field_val, dict):
                 for k, v in field_val.items():
-                    yield from _walk(v, pages, f"{field_path}.{k}")
+                    item_path = f"{field_path}.{k}"
+                    if isinstance(v, str) and v and row_ref is not None:
+                        line = _get_line(pages, row_ref)
+                        if line is not None and not _value_on_line(v, line):
+                            yield VerifyFailure(
+                                item_path, v, row_ref, line,
+                                "value not found on row line",
+                            )
+                    else:
+                        yield from _walk(v, pages, item_path)
         return
 
     if isinstance(obj, list):

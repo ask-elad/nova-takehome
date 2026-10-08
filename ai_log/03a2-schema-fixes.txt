@@ -1,0 +1,616 @@
+ ▐▛███▜▌   Claude Code v2.1.140
+▝▜█████▛▘  Sonnet 4.6 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/AAtakeHome/nova-takehome
+
+❯ Read CLAUDE.md and docs/PLAN.md, then do the current task.                    
+
+● I'll read the plan to understand the current task.
+
+  Read 2 files (ctrl+o to expand)
+
+● Let me explore the relevant files before starting.
+
+  Searched for 2 patterns, read 2 files (ctrl+o to expand)
+
+● Now let me read the test file and some fixtures:
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● Good — 69 tests pass currently. Now let me understand the full picture. Let me
+   look at the fixtures more carefully and check the actual document text to
+  prepare the new typed fields:
+
+  Searched for 1 pattern, ran 15 shell commands (ctrl+o to expand)
+
+● Let me check the email text layers for EmailFacts fixtures:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now I have a complete picture. Let me start implementing. I'll write the
+  failing tests first, then fix the code, then update fixtures.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now I have all the data I need. Let me implement everything step by step.
+  Starting with the failing tests:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(harness/tests/test_schemas.py)
+  ⎿  Added 24 lines
+       9  
+      10  import pytest
+      11  
+      12 +from pydantic import ValidationError                           
+      13 +                                                               
+      14  from nova.schemas import (
+      15 +    Accessorial,                                               
+      16      BillingDoc,
+      17      ContractTerms,
+      18      EmailFacts,
+     ...
+      25  from nova.textlayer import Mailbox
+      26  from nova.verify import VerifyFailure, verify_object
+      27  
+      28 +                                                               
+      29 +def _minimal_contract_terms(**overrides):                      
+      30 +    """Return a minimal valid ContractTerms dict for validation
+         + tests."""                                                     
+      31 +    base = {                                                   
+      32 +        "id": {"value": "X", "ref": {"page": 1, "line": 1}},   
+      33 +        "kind": "msa",                                         
+      34 +        "parties": ["A", "B"],                                 
+      35 +        "dated": {"value": "2031-01-01", "ref": {"page": 1, "li
+         +ne": 1}},                                                      
+      36 +        "effective_from": {"value": "2031-01-01", "ref": {"page
+         +": 1, "line": 1}},                                             
+      37 +        "auto_renewal": False,                                 
+      38 +        "rate_periods": [],                                    
+      39 +        "rate_rows": [],                                       
+      40 +        "payment_due_days": {"value": "45", "ref": {"page": 1, 
+         +"line": 1}},                                                   
+      41 +        "payment_grace_days": {"value": "0", "ref": {"page": 1,
+         + "line": 1}},                                                  
+      42 +        "late_fee_rate": {"value": "1.0", "ref": {"page": 1, "l
+         +ine": 1}},                                                     
+      43 +        "late_fee_compounding": False,                         
+      44 +        "schedule1_rows": [],                                  
+      45 +    }                                                          
+      46 +    base.update(overrides)                                     
+      47 +    return base                                                
+      48 +                                                               
+      49  EXAMPLES_DIR = Path("data/examples")
+      50  FIXTURES_DIR = Path("harness/tests/fixtures/examples")
+      51  
+
+● Now add the new test classes at the end of the file:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(harness/tests/test_schemas.py)
+  ⎿  Added 123 lines
+      251  def test_schema_has_properties(schema_cls):
+      252      schema = flatten_schema(schema_cls.model_json_schema())
+      253      assert "properties" in schema, f"{schema_cls.__name__}: no
+            'properties' key"
+      254 +                                                              
+      255 +                                                              
+      256 +# ------------------------------------------------------------
+          +---------------                                               
+      257 +# Whole-token number matching                                 
+      258 +# ------------------------------------------------------------
+          +---------------                                               
+      259 +                                                              
+      260 +class TestWholeTokenNumbers:                                  
+      261 +    def _pages(self, *lines: str) -> list[str]:               
+      262 +        return ["\n".join(lines)]                             
+      263 +                                                              
+      264 +    def test_prefix_digit_fails(self):                        
+      265 +        """2.84 must not match 12.84."""                      
+      266 +        pages = self._pages("12.84 total")                    
+      267 +        ref = Ref(page=1, line=1)                             
+      268 +        val = Val(value="2.84", ref=ref)                      
+      269 +        assert len(verify_object(val, pages)) == 1            
+      270 +                                                              
+      271 +    def test_prefix_digit_int_fails(self):                    
+      272 +        """44 must not match 144."""                          
+      273 +        pages = self._pages("144 kg")                         
+      274 +        ref = Ref(page=1, line=1)                             
+      275 +        val = Val(value="44", ref=ref)                        
+      276 +        assert len(verify_object(val, pages)) == 1            
+      277 +                                                              
+      278 +    def test_absent_between_neighbours_fails(self):           
+      279 +        """6.01 not on a line that has 16.01 and 6.16 but not 
+          +6.01."""                                                      
+      280 +        pages = self._pages("16.01 and 6.16")                 
+      281 +        ref = Ref(page=1, line=1)                             
+      282 +        val = Val(value="6.01", ref=ref)                      
+      283 +        assert len(verify_object(val, pages)) == 1            
+      284 +                                                              
+      285 +    def test_suffix_digit_fails(self):                        
+      286 +        """340.1 must not match 340.12."""                    
+      287 +        pages = self._pages("340.12 total")                   
+      288 +        ref = Ref(page=1, line=1)                             
+      289 +        val = Val(value="340.1", ref=ref)                     
+      290 +        assert len(verify_object(val, pages)) == 1            
+      291 +                                                              
+      292 +    def test_thousands_stripped_matches(self):                
+      293 +        """5235.09 stored must still match 5,235.09 on the lin
+          +e."""                                                         
+      294 +        pages = self._pages("Total USD 5,235.09")             
+      295 +        ref = Ref(page=1, line=1)                             
+      296 +        val = Val(value="5235.09", ref=ref)                   
+      297 +        assert not verify_object(val, pages)                  
+      298 +                                                              
+      299 +    def test_date_dmy_whole_token_matches(self):              
+      300 +        """17/07/2030 on the line still matches stored ISO 203
+          +0-07-17."""                                                   
+      301 +        pages = self._pages("due date 17/07/2030 net 30")     
+      302 +        ref = Ref(page=1, line=1)                             
+      303 +        val = Val(value="2030-07-17", ref=ref)                
+      304 +        assert not verify_object(val, pages)                  
+      305 +                                                              
+      306 +                                                              
+      307 +# ------------------------------------------------------------
+          +---------------                                               
+      308 +# SheetMap column-value checking                              
+      309 +# ------------------------------------------------------------
+          +---------------                                               
+      310 +                                                              
+      311 +class TestSheetMapColumnValues:                               
+      312 +    def _pages(self, *lines: str) -> list[str]:               
+      313 +        return ["\n".join(lines)]                             
+      314 +                                                              
+      315 +    def test_correct_column_labels_pass(self):                
+      316 +        pages = self._pages("AWB | Event | Date")             
+      317 +        obj = SheetMap(                                       
+      318 +            kind="tracking_export",                           
+      319 +            sheet_number=1,                                   
+      320 +            columns={"awb": "AWB", "event": "Event", "date": "
+          +Date"},                                                       
+      321 +            ref=Ref(page=1, line=1),                          
+      322 +        )                                                     
+      323 +        assert not verify_object(obj, pages)                  
+      324 +                                                              
+      325 +    def test_wrong_column_label_fails(self):                  
+      326 +        pages = self._pages("AWB | Event | Date")             
+      327 +        obj = SheetMap(                                       
+      328 +            kind="tracking_export",                           
+      329 +            sheet_number=1,                                   
+      330 +            columns={"awb": "AWB", "event": "EventXXX"},      
+      331 +            ref=Ref(page=1, line=1),                          
+      332 +        )                                                     
+      333 +        failures = verify_object(obj, pages)                  
+      334 +        assert any("EventXXX" in str(f) for f in failures)    
+      335 +                                                              
+      336 +                                                              
+      337 +# ------------------------------------------------------------
+          +---------------                                               
+      338 +# Typed field validation                                      
+      339 +# ------------------------------------------------------------
+          +---------------                                               
+      340 +                                                              
+      341 +class TestTypedFieldValidation:                               
+      342 +    def test_basis_kind_accepts_valid(self):                  
+      343 +        obj = Accessorial(                                    
+      344 +            code="DG", label="Dangerous goods fee", rate="284.
+          +91",                                                          
+      345 +            basis="USD per shipment", basis_kind="per_shipment
+          +",                                                            
+      346 +            ref=Ref(page=1, line=1),                          
+      347 +        )                                                     
+      348 +        assert obj.basis_kind == "per_shipment"               
+      349 +                                                              
+      350 +    def test_basis_kind_rejects_invalid(self):                
+      351 +        with pytest.raises(ValidationError):                  
+      352 +            Accessorial(                                      
+      353 +                code="DG", label="Dangerous goods fee", rate="
+          +284.91",                                                      
+      354 +                basis="USD per shipment", basis_kind="invalid_
+          +kind",                                                        
+      355 +                ref=Ref(page=1, line=1),                      
+      356 +            )                                                 
+      357 +                                                              
+      358 +    def test_rebate_tier_rule_rejects_invalid(self):          
+      359 +        data = _minimal_contract_terms(rebate_tier_rule="inval
+          +id")                                                          
+      360 +        with pytest.raises(ValidationError):                  
+      361 +            ContractTerms.model_validate(data)                
+      362 +                                                              
+      363 +    def test_rebate_period_rejects_invalid(self):             
+      364 +        data = _minimal_contract_terms(rebate_period="monthly"
+          +)                                                             
+      365 +        with pytest.raises(ValidationError):                  
+      366 +            ContractTerms.model_validate(data)                
+      367 +                                                              
+      368 +    def test_rebate_tier_rule_accepts_whole(self):            
+      369 +        data = _minimal_contract_terms(rebate_tier_rule="whole
+          +")                                                            
+      370 +        obj = ContractTerms.model_validate(data)              
+      371 +        assert obj.rebate_tier_rule == "whole"                
+      372 +                                                              
+      373 +    def test_rebate_period_accepts_quarter(self):             
+      374 +        data = _minimal_contract_terms(rebate_period="quarter"
+          +)                                                             
+      375 +        obj = ContractTerms.model_validate(data)              
+      376 +        assert obj.rebate_period == "quarter"                 
+
+● Now let's run the new tests to confirm they fail (as expected before the code
+  changes):
+  Ran 1 shell command (ctrl+o to expand)
+
+● Good — 10 tests fail as expected. Now I'll fix verify.py first:
+
+● Update(harness/nova/verify.py)
+  ⎿  Added 1 line
+      31  _MONEY_RE = re.compile(r'^[\d]+\.\d+$')
+      32  _ISO_DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+      33  _MONTH_RE = re.compile(r'^\d{4}-\d{2}$')
+      34 +_NUMERIC_RE = re.compile(r'^\d+(\.\d+)?$')                     
+      35  
+      36  _MONTH_NAMES = {
+      37      1: ["january", "jan"],
+
+● Update(harness/nova/verify.py)
+  ⎿  Added 31 lines, removed 10 lines
+       74      return variants
+       75  
+       76  
+       77 +def _number_whole_token(value: str, text: str) -> bool:       
+       78 +    """True iff numeric *value* appears as a whole token in *t
+          +ext*.                                                         
+       79 +                                                              
+       80 +    Fails if the match is immediately preceded by a digit, or 
+          +followed by a                                                 
+       81 +    digit or by a decimal point and a digit (e.g. "340.1" must
+          + not match                                                    
+       82 +    "340.12", and "44" must not match "144").                 
+       83 +    """                                                       
+       84 +    pattern = r'(?<!\d)' + re.escape(value) + r'(?!\d|\.\d)'  
+       85 +    return bool(re.search(pattern, text))                     
+       86 +                                                              
+       87 +                                                              
+       88 +def _date_whole_token(variant: str, text: str) -> bool:       
+       89 +    """True iff date *variant* appears as a whole token in *te
+          +xt* (case-insensitive)."""                                    
+       90 +    return bool(re.search(r'\b' + re.escape(variant) + r'\b', 
+          +text, re.IGNORECASE))                                         
+       91 +                                                              
+       92 +                                                              
+       93  def _value_on_line(value: str, line: str) -> bool:
+       94      """Return True iff *value* can be found in *line* under th
+           e matching rules."""
+       95      norm_line = norm(line)
+       96      norm_val = norm(value)
+       97  
+       82 -    # Case-insensitive plain substring (covers strings and sho
+          -rt codes)                                                     
+       83 -    if norm_val.lower() in norm_line.lower():                 
+       84 -        return True                                           
+       98 +    # ISO date: whole-token check on each printed variant     
+       99 +    if _ISO_DATE_RE.match(norm_val):                          
+      100 +        for variant in _date_variants(norm_val):              
+      101 +            if _date_whole_token(variant, norm_line):         
+      102 +                return True                                   
+      103 +        return False                                          
+      104  
+       86 -    # Money: try after stripping thousands separators and curr
+          -ency codes                                                    
+      105 +    # Strip thousands-separator commas and currency codes for 
+          +money matching                                                
+      106      stripped_val = _strip_money(norm_val)
+      107      stripped_line = _strip_money(norm_line)
+      108 +                                                              
+      109 +    # Numeric values: whole-token match (after stripping) to a
+          +void partial hits                                             
+      110 +    if stripped_val and _NUMERIC_RE.match(stripped_val):      
+      111 +        return _number_whole_token(stripped_val, stripped_line
+          +)                                                             
+      112 +                                                              
+      113 +    # Strings and codes: case-insensitive substring match     
+      114 +    if norm_val.lower() in norm_line.lower():                 
+      115 +        return True                                           
+      116      if stripped_val and stripped_val in stripped_line:
+      117          return True
+      118  
+       92 -    # Date: try multiple printed forms                        
+       93 -    if _ISO_DATE_RE.match(norm_val):                          
+       94 -        for variant in _date_variants(norm_val):              
+       95 -            if variant.lower() in norm_line.lower():          
+       96 -                return True                                   
+       97 -                                                              
+      119      return False
+      120  
+      121  
+
+● Now fix the SheetMap dict value check:
+
+● Update(harness/nova/verify.py)
+  ⎿  Added 11 lines, removed 2 lines
+      260                                  "value not found on row line",
+      261                              )
+      262  
+      263 -            # dict field (e.g. SheetMap.columns)              
+      263 +            # dict field (e.g. SheetMap.columns) – check strin
+          +g values against row ref                                      
+      264              if isinstance(field_val, dict):
+      265                  for k, v in field_val.items():
+      266 -                    yield from _walk(v, pages, f"{field_path}.
+          -{k}")                                                         
+      266 +                    item_path = f"{field_path}.{k}"           
+      267 +                    if isinstance(v, str) and v and row_ref is
+          + not None:                                                    
+      268 +                        line = _get_line(pages, row_ref)      
+      269 +                        if line is not None and not _value_on_
+          +line(v, line):                                                
+      270 +                            yield VerifyFailure(              
+      271 +                                item_path, v, row_ref, line,  
+      272 +                                "value not found on row line",
+      273 +                            )                                 
+      274 +                    else:                                     
+      275 +                        yield from _walk(v, pages, item_path) 
+      276          return
+      277  
+      278      if isinstance(obj, list):
+
+● Now run the verify-related tests to check progress:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All verify tests pass. Now update schemas.py with the new typed fields:
+
+● Update(harness/nova/schemas.py)
+  ⎿  Added 12 lines, removed 3 lines
+      60      ref: Ref      # line that defines this period
+      61  
+      62  
+      63 +class RatePeriodRate(BaseModel):                               
+      64 +    """One rate entry keyed to a specific rate period."""      
+      65 +    period: Optional[str] = None  # "P1", "P2"; None for amendm
+         +ents with no named period                                      
+      66 +    rate: str                     # "6.01"                     
+      67 +                                                               
+      68 +                                                               
+      69  class RateRow(BaseModel):
+      70      """One row of Annex A (express rates table)."""
+      65 -    lane: str               # "USE2-INE2"                      
+      66 -    band: str               # "minimum charge"  or  "0-44.5 kg"
+      67 -    rates: list[str]        # one decimal string per period, e.
+         -g. ["6.01", "6.16"]                                            
+      71 +    lane: str                        # "USE2-INE2"             
+      72 +    band: str                        # "minimum charge"  or  "0
+         +-44.5 kg"                                                      
+      73 +    band_min_kg: Optional[float] = None  # None for minimum-cha
+         +rge rows                                                       
+      74 +    band_max_kg: Optional[float] = None  # None for minimum-cha
+         +rge or open-top bands                                          
+      75 +    is_minimum_charge: bool = False                            
+      76 +    rates: list[RatePeriodRate]      # one entry per period; pe
+         +riod=None for amendments                                       
+      77      ref: Ref
+      78  
+      79  
+
+● Update(harness/nova/schemas.py)
+  ⎿  Added 5 lines, removed 1 line
+      89      code: str                         # "DG"
+      90      label: str                        # "Dangerous goods fee"
+      91      rate: str                         # "284.91"
+      92 -    basis: str                        # "USD per shipment"     
+      92 +    basis: str                        # "USD per shipment" – ke
+         +pt as printed                                                  
+      93 +    basis_kind: Literal[                                       
+      94 +        "per_kg", "per_shipment", "pct_of_freight",            
+      95 +        "per_month", "per_piece", "other",                     
+      96 +    ]                                                          
+      97      condition: Optional[str] = None   # e.g. "for pickups in Se
+          ptember to November"
+      98      months: Optional[list[str]] = None
+      99      ref: Ref
+
+● Now add the new models (MarginStepRow, ReferTo) and update ContractTerms:
+
+● Update(harness/nova/schemas.py)
+  ⎿  Added 16 lines
+      139      ref: Ref
+      140  
+      141  
+      142 +class MarginStepRow(BaseModel):                               
+      143 +    """One row of the handling-margin step-down table."""     
+      144 +    threshold: str   # qualifying-spend threshold, e.g. "50000
+          +0.00"                                                         
+      145 +    from_pct: str    # margin percentage before step, e.g. "3.
+          +0"                                                            
+      146 +    to_pct: str      # margin percentage after step, e.g. "2.5
+          +"                                                             
+      147 +    period: str      # period label or description, e.g. "P2" 
+      148 +    ref: Ref                                                  
+      149 +                                                              
+      150 +                                                              
+      151 +class ReferTo(BaseModel):                                     
+      152 +    """One document this instrument refers to."""             
+      153 +    name: str            # document name exactly as cited     
+      154 +    ref: Ref             # line where the reference appears   
+      155 +    quote: Optional[Val] = None  # required for cannot_determi
+          +ne items                                                      
+      156 +                                                              
+      157 +                                                              
+      158  class KeyClause(BaseModel):
+      159      """A clause the rules engine needs to cite in evidence."""
+      160      number: str    # "3.2"
+
+● Now update ContractTerms — change rebate_tier_rule, margin_step_down, and
+  refers_to, and add new fields:
+
+● Update(harness/nova/schemas.py)
+  ⎿  Added 7 lines, removed 2 lines
+      210      # Volume rebate (clause 7)
+      211      rebate_not_applicable: Optional[Ref] = None
+      212      rebate_tiers: Optional[list[RebateTier]] = None
+      213 -    rebate_tier_rule: Optional[Val] = None   # full clause tex
+          -t                                                             
+      213 +    rebate_tier_rule: Optional[Literal["whole", "marginal"]] =
+          + None                                                         
+      214 +    rebate_tier_rule_ref: Optional[Ref] = None                
+      215 +    rebate_tier_rule_text: Optional[Val] = None  # the clause 
+          +text as printed                                               
+      216 +    rebate_period: Optional[Literal["quarter", "contract_year"
+          +]] = None                                                     
+      217      rebate_due_days: Optional[Val] = None    # "45"
+      218 +    qs_includes: Optional[Val] = None  # what the contract's Q
+          +S definition counts                                           
+      219 +    qs_excludes: Optional[Val] = None  # what the contract's Q
+          +S definition excludes                                         
+      220  
+      221      # Handling margin / step-down (clause 8)
+      222      margin_not_applicable: Optional[Ref] = None
+      218 -    margin_step_down: Optional[list[Val]] = None              
+      223 +    margin_step_down: Optional[list[MarginStepRow]] = None    
+      224  
+      225      # Promised credits (clause 9)
+      226      promised_credits_not_applicable: Optional[Ref] = None
+
+● Update(harness/nova/schemas.py)
+  ⎿  Added 1 line, removed 1 line
+      245      key_clauses: Optional[list[KeyClause]] = None
+      246  
+      247      # Documents this instrument refers to (e.g. an amendment n
+           ames its MSA)
+      248 -    refers_to: Optional[list[str]] = None                     
+      248 +    refers_to: Optional[list[ReferTo]] = None                 
+      249  
+      250  
+      251  # ------------------------------------------------------------
+           ---------------
+
+● Now update EmailFacts - add new models and change the fields:
+
+● Update(harness/nova/schemas.py)
+  ⎿  Added 28 lines, removed 11 lines
+      341      ref: Ref
+      342  
+      343  
+      344 -class OwnTextLine(BaseModel):                                 
+      345 -    text: str                                                 
+      346 -    ref: Ref                                                  
+      344 +class OwnTextBlock(BaseModel):                                
+      345 +    """A range of lines in the email's own (non-quoted) text. 
+      346  
+      347 +    The model does not copy the text; the reader cites the lin
+          +e range and the                                               
+      348 +    rules engine reads it from the document.                  
+      349 +    """                                                       
+      350 +    ref: Ref   # set line_end to span multiple lines          
+      351  
+      349 -class QuotedTextLine(BaseModel):                              
+      350 -    text: str                                                 
+      352 +                                                              
+      353 +class QuotedTextBlock(BaseModel):                             
+      354 +    """A range of quoted lines in an email reply."""          
+      355      original_sender: Optional[str] = None
+      356 +    ref: Ref   # set line_end to span multiple lines          
+      357 +                                                              
+      358 +                                                              
+      359 +class PaymentRequest(BaseModel):                              
+      360 +    """An invoice the email asks to be paid."""               
+      361 +    invoice_id: str                                           
+      362 +    is_copy: bool = False                                     
+      363 +    is_reminder: bool = False                                 
+      364 +    is_for_your_records: bool = False                         
+      365 +    asks_for_payment: bool = True                             
+      366      ref: Ref
+      367  
+      368  
+     ...
+      376      ]
+      377      sender: Val    # "Elspeth Iyengar <elspeth.iyengar@tarrowb
+           y.example>"
+      378  
+      365 -    own_lines: list[OwnTextLine]                              
+      366 -    quoted_lines: list[QuotedTextLine]                        
+      379 +    own_lines: list[OwnTextBlock]      # line ranges, not copi
+          +ed text                                                       
+      380 +    quoted_lines: list[QuotedTextBlock]                       
+      381  
+      368 -    # Waiver                                                  
+      369 -    waiver: Optional[WaiverDetails] = None                    
+      382 +    # Waivers (list; a single email may waive multiple charges
+          +)                                                             
+      383 +    waivers: Optional[list[WaiverDetails]] = None             
+      384  
+      371 -    # Due-date extension                                      
+      372 -    extension: Optional[ExtensionDetails] = None              
+      385 +    # Due-date extensions (list)                              
+      386 +    extensions: Optional[list[ExtensionDetails]] = None       
+      387  
+      388      # Rate notice
+      389      rate_notice: Optional[RateNoticeDetails] = None
+     ...
+      391      # Pickup confirmation
+      392      pickup: Optional[PickupDetails] = None
+      393  
+      394 +    # Invoices the email asks to be paid                      
+      395 +    payment_requests: Optional[list[PaymentRequest]] = None   
+      396 +                                                              
+      397      # Prompt-injection flags (always extracted, always with a 
+           ref)
+      398      addresses_automation: bool = False
+      399      addresses_automation_ref: Optional[Ref] = None
+
+● Now run the typed-field validation tests and schema tests:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now update all 8 fixture files. Let me write a transformation script:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now run the full test suite to see what's failing:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All 83 tests pass. Let me verify the count makes sense — we had 69 before
+  adding tests, now 83 (14 new tests added). Let me also spot-check the
+  verification of some key values to make sure fixtures are correct:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Everything verifies cleanly. Let me run the complete test suite one final
+  time:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All 83 tests pass. Here's a summary of what was done:
+
+  Fix 1 — Whole-token number/date matching (verify.py):
+  - Added _NUMERIC_RE to detect pure decimal values
+  - Added _number_whole_token(): uses (?<!\d)..(?!\d|\.\d) lookaround so 2.84
+  won't match 12.84 or 340.12
+  - Added _date_whole_token(): uses \b word boundaries so 2030-07-17 won't match
+   inside a larger date-like string
+  - Restructured _value_on_line to route numeric and ISO-date values through the
+   whole-token helpers
+
+  Fix 2 — SheetMap.columns value checking (verify.py):
+  - The dict field loop now checks string values against row_ref (the header
+  row), instead of silently skipping them
+
+  Fix 3 — Typed schema fields (schemas.py):
+  - RatePeriodRate(period, rate) model; RateRow gains band_min_kg, band_max_kg,
+  is_minimum_charge and rates: list[RatePeriodRate]
+  - Accessorial.basis_kind with a Literal of six basis kinds
+  - ContractTerms.rebate_tier_rule → Literal["whole","marginal"]; new
+  rebate_tier_rule_ref, rebate_tier_rule_text, rebate_period, qs_includes,
+  qs_excludes
+  - MarginStepRow and ReferTo new models; margin_step_down and refers_to fields
+  updated to use them
+  - OwnTextBlock/QuotedTextBlock replace OwnTextLine/QuotedTextLine (no copied
+  text, just Ref)
+  - EmailFacts: waiver→waivers, extension→extensions (both lists); new
+  payment_requests
+
+  Fix 4 — All 8 fixtures updated to use the new field structures, with every
+  value verified against its cited document line.
+
+✻ Cogitated for 12m 56s
+※ recap: Task 03a2 is complete: typed schema fields, whole-token number matching, and all 8 fixtures are updated with 83 tests passing. The next action is to mark the task done in PLAN.md and wait for the humans to review before phase 3 begins. (disable recaps in /config)

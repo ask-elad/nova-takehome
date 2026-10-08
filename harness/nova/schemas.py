@@ -60,11 +60,20 @@ class RatePeriod(BaseModel):
     ref: Ref      # line that defines this period
 
 
+class RatePeriodRate(BaseModel):
+    """One rate entry keyed to a specific rate period."""
+    period: Optional[str] = None  # "P1", "P2"; None for amendments with no named period
+    rate: str                     # "6.01"
+
+
 class RateRow(BaseModel):
     """One row of Annex A (express rates table)."""
-    lane: str               # "USE2-INE2"
-    band: str               # "minimum charge"  or  "0-44.5 kg"
-    rates: list[str]        # one decimal string per period, e.g. ["6.01", "6.16"]
+    lane: str                        # "USE2-INE2"
+    band: str                        # "minimum charge"  or  "0-44.5 kg"
+    band_min_kg: Optional[float] = None  # None for minimum-charge rows
+    band_max_kg: Optional[float] = None  # None for minimum-charge or open-top bands
+    is_minimum_charge: bool = False
+    rates: list[RatePeriodRate]      # one entry per period; period=None for amendments
     ref: Ref
 
 
@@ -80,7 +89,11 @@ class Accessorial(BaseModel):
     code: str                         # "DG"
     label: str                        # "Dangerous goods fee"
     rate: str                         # "284.91"
-    basis: str                        # "USD per shipment"
+    basis: str                        # "USD per shipment" – kept as printed
+    basis_kind: Literal[
+        "per_kg", "per_shipment", "pct_of_freight",
+        "per_month", "per_piece", "other",
+    ]
     condition: Optional[str] = None   # e.g. "for pickups in September to November"
     months: Optional[list[str]] = None
     ref: Ref
@@ -124,6 +137,22 @@ class Schedule1Row(BaseModel):
     categories: list[str]   # ["rates"]  or  ["waivers", "payment_terms"]
     email: str
     ref: Ref
+
+
+class MarginStepRow(BaseModel):
+    """One row of the handling-margin step-down table."""
+    threshold: str   # qualifying-spend threshold, e.g. "500000.00"
+    from_pct: str    # margin percentage before step, e.g. "3.0"
+    to_pct: str      # margin percentage after step, e.g. "2.5"
+    period: str      # period label or description, e.g. "P2"
+    ref: Ref
+
+
+class ReferTo(BaseModel):
+    """One document this instrument refers to."""
+    name: str            # document name exactly as cited
+    ref: Ref             # line where the reference appears
+    quote: Optional[Val] = None  # required for cannot_determine items
 
 
 class KeyClause(BaseModel):
@@ -181,12 +210,17 @@ class ContractTerms(BaseModel):
     # Volume rebate (clause 7)
     rebate_not_applicable: Optional[Ref] = None
     rebate_tiers: Optional[list[RebateTier]] = None
-    rebate_tier_rule: Optional[Val] = None   # full clause text
+    rebate_tier_rule: Optional[Literal["whole", "marginal"]] = None
+    rebate_tier_rule_ref: Optional[Ref] = None
+    rebate_tier_rule_text: Optional[Val] = None  # the clause text as printed
+    rebate_period: Optional[Literal["quarter", "contract_year"]] = None
     rebate_due_days: Optional[Val] = None    # "45"
+    qs_includes: Optional[Val] = None  # what the contract's QS definition counts
+    qs_excludes: Optional[Val] = None  # what the contract's QS definition excludes
 
     # Handling margin / step-down (clause 8)
     margin_not_applicable: Optional[Ref] = None
-    margin_step_down: Optional[list[Val]] = None
+    margin_step_down: Optional[list[MarginStepRow]] = None
 
     # Promised credits (clause 9)
     promised_credits_not_applicable: Optional[Ref] = None
@@ -211,7 +245,7 @@ class ContractTerms(BaseModel):
     key_clauses: Optional[list[KeyClause]] = None
 
     # Documents this instrument refers to (e.g. an amendment names its MSA)
-    refers_to: Optional[list[str]] = None
+    refers_to: Optional[list[ReferTo]] = None
 
 
 # ---------------------------------------------------------------------------
@@ -307,14 +341,28 @@ class PickupDetails(BaseModel):
     ref: Ref
 
 
-class OwnTextLine(BaseModel):
-    text: str
-    ref: Ref
+class OwnTextBlock(BaseModel):
+    """A range of lines in the email's own (non-quoted) text.
+
+    The model does not copy the text; the reader cites the line range and the
+    rules engine reads it from the document.
+    """
+    ref: Ref   # set line_end to span multiple lines
 
 
-class QuotedTextLine(BaseModel):
-    text: str
+class QuotedTextBlock(BaseModel):
+    """A range of quoted lines in an email reply."""
     original_sender: Optional[str] = None
+    ref: Ref   # set line_end to span multiple lines
+
+
+class PaymentRequest(BaseModel):
+    """An invoice the email asks to be paid."""
+    invoice_id: str
+    is_copy: bool = False
+    is_reminder: bool = False
+    is_for_your_records: bool = False
+    asks_for_payment: bool = True
     ref: Ref
 
 
@@ -328,20 +376,23 @@ class EmailFacts(BaseModel):
     ]
     sender: Val    # "Elspeth Iyengar <elspeth.iyengar@tarrowby.example>"
 
-    own_lines: list[OwnTextLine]
-    quoted_lines: list[QuotedTextLine]
+    own_lines: list[OwnTextBlock]      # line ranges, not copied text
+    quoted_lines: list[QuotedTextBlock]
 
-    # Waiver
-    waiver: Optional[WaiverDetails] = None
+    # Waivers (list; a single email may waive multiple charges)
+    waivers: Optional[list[WaiverDetails]] = None
 
-    # Due-date extension
-    extension: Optional[ExtensionDetails] = None
+    # Due-date extensions (list)
+    extensions: Optional[list[ExtensionDetails]] = None
 
     # Rate notice
     rate_notice: Optional[RateNoticeDetails] = None
 
     # Pickup confirmation
     pickup: Optional[PickupDetails] = None
+
+    # Invoices the email asks to be paid
+    payment_requests: Optional[list[PaymentRequest]] = None
 
     # Prompt-injection flags (always extracted, always with a ref)
     addresses_automation: bool = False

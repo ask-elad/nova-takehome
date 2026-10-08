@@ -9,7 +9,10 @@ from pathlib import Path
 
 import pytest
 
+from pydantic import ValidationError
+
 from nova.schemas import (
+    Accessorial,
     BillingDoc,
     ContractTerms,
     EmailFacts,
@@ -21,6 +24,27 @@ from nova.schemas import (
 )
 from nova.textlayer import Mailbox
 from nova.verify import VerifyFailure, verify_object
+
+
+def _minimal_contract_terms(**overrides):
+    """Return a minimal valid ContractTerms dict for validation tests."""
+    base = {
+        "id": {"value": "X", "ref": {"page": 1, "line": 1}},
+        "kind": "msa",
+        "parties": ["A", "B"],
+        "dated": {"value": "2031-01-01", "ref": {"page": 1, "line": 1}},
+        "effective_from": {"value": "2031-01-01", "ref": {"page": 1, "line": 1}},
+        "auto_renewal": False,
+        "rate_periods": [],
+        "rate_rows": [],
+        "payment_due_days": {"value": "45", "ref": {"page": 1, "line": 1}},
+        "payment_grace_days": {"value": "0", "ref": {"page": 1, "line": 1}},
+        "late_fee_rate": {"value": "1.0", "ref": {"page": 1, "line": 1}},
+        "late_fee_compounding": False,
+        "schedule1_rows": [],
+    }
+    base.update(overrides)
+    return base
 
 EXAMPLES_DIR = Path("data/examples")
 FIXTURES_DIR = Path("harness/tests/fixtures/examples")
@@ -227,3 +251,126 @@ def test_schema_no_dollar_ref(schema_cls):
 def test_schema_has_properties(schema_cls):
     schema = flatten_schema(schema_cls.model_json_schema())
     assert "properties" in schema, f"{schema_cls.__name__}: no 'properties' key"
+
+
+# ---------------------------------------------------------------------------
+# Whole-token number matching
+# ---------------------------------------------------------------------------
+
+class TestWholeTokenNumbers:
+    def _pages(self, *lines: str) -> list[str]:
+        return ["\n".join(lines)]
+
+    def test_prefix_digit_fails(self):
+        """2.84 must not match 12.84."""
+        pages = self._pages("12.84 total")
+        ref = Ref(page=1, line=1)
+        val = Val(value="2.84", ref=ref)
+        assert len(verify_object(val, pages)) == 1
+
+    def test_prefix_digit_int_fails(self):
+        """44 must not match 144."""
+        pages = self._pages("144 kg")
+        ref = Ref(page=1, line=1)
+        val = Val(value="44", ref=ref)
+        assert len(verify_object(val, pages)) == 1
+
+    def test_absent_between_neighbours_fails(self):
+        """6.01 not on a line that has 16.01 and 6.16 but not 6.01."""
+        pages = self._pages("16.01 and 6.16")
+        ref = Ref(page=1, line=1)
+        val = Val(value="6.01", ref=ref)
+        assert len(verify_object(val, pages)) == 1
+
+    def test_suffix_digit_fails(self):
+        """340.1 must not match 340.12."""
+        pages = self._pages("340.12 total")
+        ref = Ref(page=1, line=1)
+        val = Val(value="340.1", ref=ref)
+        assert len(verify_object(val, pages)) == 1
+
+    def test_thousands_stripped_matches(self):
+        """5235.09 stored must still match 5,235.09 on the line."""
+        pages = self._pages("Total USD 5,235.09")
+        ref = Ref(page=1, line=1)
+        val = Val(value="5235.09", ref=ref)
+        assert not verify_object(val, pages)
+
+    def test_date_dmy_whole_token_matches(self):
+        """17/07/2030 on the line still matches stored ISO 2030-07-17."""
+        pages = self._pages("due date 17/07/2030 net 30")
+        ref = Ref(page=1, line=1)
+        val = Val(value="2030-07-17", ref=ref)
+        assert not verify_object(val, pages)
+
+
+# ---------------------------------------------------------------------------
+# SheetMap column-value checking
+# ---------------------------------------------------------------------------
+
+class TestSheetMapColumnValues:
+    def _pages(self, *lines: str) -> list[str]:
+        return ["\n".join(lines)]
+
+    def test_correct_column_labels_pass(self):
+        pages = self._pages("AWB | Event | Date")
+        obj = SheetMap(
+            kind="tracking_export",
+            sheet_number=1,
+            columns={"awb": "AWB", "event": "Event", "date": "Date"},
+            ref=Ref(page=1, line=1),
+        )
+        assert not verify_object(obj, pages)
+
+    def test_wrong_column_label_fails(self):
+        pages = self._pages("AWB | Event | Date")
+        obj = SheetMap(
+            kind="tracking_export",
+            sheet_number=1,
+            columns={"awb": "AWB", "event": "EventXXX"},
+            ref=Ref(page=1, line=1),
+        )
+        failures = verify_object(obj, pages)
+        assert any("EventXXX" in str(f) for f in failures)
+
+
+# ---------------------------------------------------------------------------
+# Typed field validation
+# ---------------------------------------------------------------------------
+
+class TestTypedFieldValidation:
+    def test_basis_kind_accepts_valid(self):
+        obj = Accessorial(
+            code="DG", label="Dangerous goods fee", rate="284.91",
+            basis="USD per shipment", basis_kind="per_shipment",
+            ref=Ref(page=1, line=1),
+        )
+        assert obj.basis_kind == "per_shipment"
+
+    def test_basis_kind_rejects_invalid(self):
+        with pytest.raises(ValidationError):
+            Accessorial(
+                code="DG", label="Dangerous goods fee", rate="284.91",
+                basis="USD per shipment", basis_kind="invalid_kind",
+                ref=Ref(page=1, line=1),
+            )
+
+    def test_rebate_tier_rule_rejects_invalid(self):
+        data = _minimal_contract_terms(rebate_tier_rule="invalid")
+        with pytest.raises(ValidationError):
+            ContractTerms.model_validate(data)
+
+    def test_rebate_period_rejects_invalid(self):
+        data = _minimal_contract_terms(rebate_period="monthly")
+        with pytest.raises(ValidationError):
+            ContractTerms.model_validate(data)
+
+    def test_rebate_tier_rule_accepts_whole(self):
+        data = _minimal_contract_terms(rebate_tier_rule="whole")
+        obj = ContractTerms.model_validate(data)
+        assert obj.rebate_tier_rule == "whole"
+
+    def test_rebate_period_accepts_quarter(self):
+        data = _minimal_contract_terms(rebate_period="quarter")
+        obj = ContractTerms.model_validate(data)
+        assert obj.rebate_period == "quarter"

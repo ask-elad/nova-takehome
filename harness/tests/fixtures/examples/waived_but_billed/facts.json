@@ -85,9 +85,18 @@
         {
           "lane": "USE1-USE2",
           "band": "minimum charge",
+          "band_min_kg": null,
+          "band_max_kg": null,
+          "is_minimum_charge": true,
           "rates": [
-            "103.00",
-            "103.00"
+            {
+              "period": "P1",
+              "rate": "103.00"
+            },
+            {
+              "period": "P2",
+              "rate": "103.00"
+            }
           ],
           "ref": {
             "page": 8,
@@ -97,9 +106,18 @@
         {
           "lane": "USE1-USE2",
           "band": "0-44.5 kg",
+          "band_min_kg": 0.0,
+          "band_max_kg": 44.5,
+          "is_minimum_charge": false,
           "rates": [
-            "3.36",
-            "3.35"
+            {
+              "period": "P1",
+              "rate": "3.36"
+            },
+            {
+              "period": "P2",
+              "rate": "3.35"
+            }
           ],
           "ref": {
             "page": 8,
@@ -109,9 +127,18 @@
         {
           "lane": "USE1-USE2",
           "band": "45-99.5 kg",
+          "band_min_kg": 45.0,
+          "band_max_kg": 99.5,
+          "is_minimum_charge": false,
           "rates": [
-            "3.13",
-            "3.12"
+            {
+              "period": "P1",
+              "rate": "3.13"
+            },
+            {
+              "period": "P2",
+              "rate": "3.12"
+            }
           ],
           "ref": {
             "page": 8,
@@ -121,9 +148,18 @@
         {
           "lane": "USE1-USE2",
           "band": "100-299.5 kg",
+          "band_min_kg": 100.0,
+          "band_max_kg": 299.5,
+          "is_minimum_charge": false,
           "rates": [
-            "2.91",
-            "2.91"
+            {
+              "period": "P1",
+              "rate": "2.91"
+            },
+            {
+              "period": "P2",
+              "rate": "2.91"
+            }
           ],
           "ref": {
             "page": 8,
@@ -133,9 +169,18 @@
         {
           "lane": "USE1-USE2",
           "band": "300+ kg",
+          "band_min_kg": 300.0,
+          "band_max_kg": null,
+          "is_minimum_charge": false,
           "rates": [
-            "2.71",
-            "2.71"
+            {
+              "period": "P1",
+              "rate": "2.71"
+            },
+            {
+              "period": "P2",
+              "rate": "2.71"
+            }
           ],
           "ref": {
             "page": 8,
@@ -145,9 +190,18 @@
         {
           "lane": "USE2-USC1",
           "band": "minimum charge",
+          "band_min_kg": null,
+          "band_max_kg": null,
+          "is_minimum_charge": true,
           "rates": [
-            "113.00",
-            "113.00"
+            {
+              "period": "P1",
+              "rate": "113.00"
+            },
+            {
+              "period": "P2",
+              "rate": "113.00"
+            }
           ],
           "ref": {
             "page": 8,
@@ -157,9 +211,18 @@
         {
           "lane": "USE2-USC1",
           "band": "0-44.5 kg",
+          "band_min_kg": 0.0,
+          "band_max_kg": 44.5,
+          "is_minimum_charge": false,
           "rates": [
-            "5.55",
-            "5.54"
+            {
+              "period": "P1",
+              "rate": "5.55"
+            },
+            {
+              "period": "P2",
+              "rate": "5.54"
+            }
           ],
           "ref": {
             "page": 8,
@@ -169,9 +232,18 @@
         {
           "lane": "USE2-USC1",
           "band": "45-99.5 kg",
+          "band_min_kg": 45.0,
+          "band_max_kg": 99.5,
+          "is_minimum_charge": false,
           "rates": [
-            "5.23",
-            "5.22"
+            {
+              "period": "P1",
+              "rate": "5.23"
+            },
+            {
+              "period": "P2",
+              "rate": "5.22"
+            }
           ],
           "ref": {
             "page": 8,
@@ -181,9 +253,18 @@
         {
           "lane": "USE2-USC1",
           "band": "100-299.5 kg",
+          "band_min_kg": 100.0,
+          "band_max_kg": 299.5,
+          "is_minimum_charge": false,
           "rates": [
-            "4.93",
-            "4.92"
+            {
+              "period": "P1",
+              "rate": "4.93"
+            },
+            {
+              "period": "P2",
+              "rate": "4.92"
+            }
           ],
           "ref": {
             "page": 8,
@@ -193,9 +274,18 @@
         {
           "lane": "USE2-USC1",
           "band": "300+ kg",
+          "band_min_kg": 300.0,
+          "band_max_kg": null,
+          "is_minimum_charge": false,
           "rates": [
-            "4.65",
-            "4.64"
+            {
+              "period": "P1",
+              "rate": "4.65"
+            },
+            {
+              "period": "P2",
+              "rate": "4.64"
+            }
           ],
           "ref": {
             "page": 8,
@@ -205,9 +295,18 @@
         {
           "lane": "USE2-INN1",
           "band": "minimum charge",
+          "band_min_kg": null,
+          "band_max_kg": null,
+          "is_minimum_charge": true,
           "rates": [
-            "116.00",
-            "116.00"
+            {
+              "period": "P1",
+              "rate": "116.00"
+            },
+            {
+              "period": "P2",
+              "rate": "116.00"
+            }
           ],
           "ref": {
             "page": 8,
@@ -217,9 +316,18 @@
         {
           "lane": "USE2-INN1",
           "band": "0-44.5 kg",
+          "band_min_kg": 0.0,
+          "band_max_kg": 44.5,
+          "is_minimum_charge": false,
           "rates": [
-            "5.07",
-            "5.06"
+            {
+              "period": "P1",
+              "rate": "5.07"
+            },
+            {
+              "period": "P2",
+              "rate": "5.06"
+            }
           ],
           "ref": {
             "page": 8,
@@ -229,9 +337,18 @@
         {
           "lane": "USE2-INN1",
           "band": "45-99.5 kg",
+          "band_min_kg": 45.0,
+          "band_max_kg": 99.5,
+          "is_minimum_charge": false,
           "rates": [
-            "4.71",
-            "4.70"
+            {
+              "period": "P1",
+              "rate": "4.71"
+            },
+            {
+              "period": "P2",
+              "rate": "4.70"
+            }
           ],
           "ref": {
             "page": 8,
@@ -241,9 +358,18 @@
         {
           "lane": "USE2-INN1",
           "band": "100-299.5 kg",
+          "band_min_kg": 100.0,
+          "band_max_kg": 299.5,
+          "is_minimum_charge": false,
           "rates": [
-            "4.37",
-            "4.36"
+            {
+              "period": "P1",
+              "rate": "4.37"
+            },
+            {
+              "period": "P2",
+              "rate": "4.36"
+            }
           ],
           "ref": {
             "page": 8,
@@ -253,9 +379,18 @@
         {
           "lane": "USE2-INN1",
           "band": "300+ kg",
+          "band_min_kg": 300.0,
+          "band_max_kg": null,
+          "is_minimum_charge": false,
           "rates": [
-            "4.06",
-            "4.05"
+            {
+              "period": "P1",
+              "rate": "4.06"
+            },
+            {
+              "period": "P2",
+              "rate": "4.05"
+            }
           ],
           "ref": {
             "page": 8,
@@ -265,9 +400,18 @@
         {
           "lane": "USW1-USW2",
           "band": "minimum charge",
+          "band_min_kg": null,
+          "band_max_kg": null,
+          "is_minimum_charge": true,
           "rates": [
-            "73.00",
-            "73.00"
+            {
+              "period": "P1",
+              "rate": "73.00"
+            },
+            {
+              "period": "P2",
+              "rate": "73.00"
+            }
           ],
           "ref": {
             "page": 8,
@@ -277,9 +421,18 @@
         {
           "lane": "USW1-USW2",
           "band": "0-44.5 kg",
+          "band_min_kg": 0.0,
+          "band_max_kg": 44.5,
+          "is_minimum_charge": false,
           "rates": [
-            "4.32",
-            "4.31"
+            {
+              "period": "P1",
+              "rate": "4.32"
+            },
+            {
+              "period": "P2",
+              "rate": "4.31"
+            }
           ],
           "ref": {
             "page": 8,
@@ -289,9 +442,18 @@
         {
           "lane": "USW1-USW2",
           "band": "45-99.5 kg",
+          "band_min_kg": 45.0,
+          "band_max_kg": 99.5,
+          "is_minimum_charge": false,
           "rates": [
-            "3.99",
-            "3.98"
+            {
+              "period": "P1",
+              "rate": "3.99"
+            },
+            {
+              "period": "P2",
+              "rate": "3.98"
+            }
           ],
           "ref": {
             "page": 8,
@@ -301,9 +463,18 @@
         {
           "lane": "USW1-USW2",
           "band": "100-299.5 kg",
+          "band_min_kg": 100.0,
+          "band_max_kg": 299.5,
+          "is_minimum_charge": false,
           "rates": [
-            "3.68",
-            "3.67"
+            {
+              "period": "P1",
+              "rate": "3.68"
+            },
+            {
+              "period": "P2",
+              "rate": "3.67"
+            }
           ],
           "ref": {
             "page": 8,
@@ -313,9 +484,18 @@
         {
           "lane": "USW1-USW2",
           "band": "300+ kg",
+          "band_min_kg": 300.0,
+          "band_max_kg": null,
+          "is_minimum_charge": false,
           "rates": [
-            "3.40",
-            "3.39"
+            {
+              "period": "P1",
+              "rate": "3.40"
+            },
+            {
+              "period": "P2",
+              "rate": "3.39"
+            }
           ],
           "ref": {
             "page": 8,
@@ -325,9 +505,18 @@
         {
           "lane": "USW2-USC3",
           "band": "minimum charge",
+          "band_min_kg": null,
+          "band_max_kg": null,
+          "is_minimum_charge": true,
           "rates": [
-            "63.00",
-            "63.00"
+            {
+              "period": "P1",
+              "rate": "63.00"
+            },
+            {
+              "period": "P2",
+              "rate": "63.00"
+            }
           ],
           "ref": {
             "page": 8,
@@ -337,9 +526,18 @@
         {
           "lane": "USW2-USC3",
           "band": "0-44.5 kg",
+          "band_min_kg": 0.0,
+          "band_max_kg": 44.5,
+          "is_minimum_charge": false,
           "rates": [
-            "6.52",
-            "6.50"
+            {
+              "period": "P1",
+              "rate": "6.52"
+            },
+            {
+              "period": "P2",
+              "rate": "6.50"
+            }
           ],
           "ref": {
             "page": 8,
@@ -349,9 +547,18 @@
         {
           "lane": "USW2-USC3",
           "band": "45-99.5 kg",
+          "band_min_kg": 45.0,
+          "band_max_kg": 99.5,
+          "is_minimum_charge": false,
           "rates": [
-            "5.77",
-            "5.75"
+            {
+              "period": "P1",
+              "rate": "5.77"
+            },
+            {
+              "period": "P2",
+              "rate": "5.75"
+            }
           ],
           "ref": {
             "page": 8,
@@ -361,9 +568,18 @@
         {
           "lane": "USW2-USC3",
           "band": "100-299.5 kg",
+          "band_min_kg": 100.0,
+          "band_max_kg": 299.5,
+          "is_minimum_charge": false,
           "rates": [
-            "5.10",
-            "5.09"
+            {
+              "period": "P1",
+              "rate": "5.10"
+            },
+            {
+              "period": "P2",
+              "rate": "5.09"
+            }
           ],
           "ref": {
             "page": 8,
@@ -373,9 +589,18 @@
         {
           "lane": "USW2-USC3",
           "band": "300+ kg",
+          "band_min_kg": 300.0,
+          "band_max_kg": null,
+          "is_minimum_charge": false,
           "rates": [
-            "4.51",
-            "4.50"
+            {
+              "period": "P1",
+              "rate": "4.51"
+            },
+            {
+              "period": "P2",
+              "rate": "4.50"
+            }
           ],
           "ref": {
             "page": 8,
@@ -385,9 +610,18 @@
         {
           "lane": "USC3-INS1",
           "band": "minimum charge",
+          "band_min_kg": null,
+          "band_max_kg": null,
+          "is_minimum_charge": true,
           "rates": [
-            "64.00",
-            "64.00"
+            {
+              "period": "P1",
+              "rate": "64.00"
+            },
+            {
+              "period": "P2",
+              "rate": "64.00"
+            }
           ],
           "ref": {
             "page": 8,
@@ -397,9 +631,18 @@
         {
           "lane": "USC3-INS1",
           "band": "0-44.5 kg",
+          "band_min_kg": 0.0,
+          "band_max_kg": 44.5,
+          "is_minimum_charge": false,
           "rates": [
-            "5.52",
-            "5.51"
+            {
+              "period": "P1",
+              "rate": "5.52"
+            },
+            {
+              "period": "P2",
+              "rate": "5.51"
+            }
           ],
           "ref": {
             "page": 8,
@@ -409,9 +652,18 @@
         {
           "lane": "USC3-INS1",
           "band": "45-99.5 kg",
+          "band_min_kg": 45.0,
+          "band_max_kg": 99.5,
+          "is_minimum_charge": false,
           "rates": [
-            "4.95",
-            "4.93"
+            {
+              "period": "P1",
+              "rate": "4.95"
+            },
+            {
+              "period": "P2",
+              "rate": "4.93"
+            }
           ],
           "ref": {
             "page": 8,
@@ -421,9 +673,18 @@
         {
           "lane": "USC3-INS1",
           "band": "100-299.5 kg",
+          "band_min_kg": 100.0,
+          "band_max_kg": 299.5,
+          "is_minimum_charge": false,
           "rates": [
-            "4.43",
-            "4.42"
+            {
+              "period": "P1",
+              "rate": "4.43"
+            },
+            {
+              "period": "P2",
+              "rate": "4.42"
+            }
           ],
           "ref": {
             "page": 8,
@@ -433,9 +694,18 @@
         {
           "lane": "USC3-INS1",
           "band": "300+ kg",
+          "band_min_kg": 300.0,
+          "band_max_kg": null,
+          "is_minimum_charge": false,
           "rates": [
-            "3.97",
-            "3.96"
+            {
+              "period": "P1",
+              "rate": "3.97"
+            },
+            {
+              "period": "P2",
+              "rate": "3.96"
+            }
           ],
           "ref": {
             "page": 8,
@@ -445,9 +715,18 @@
         {
           "lane": "USW1-USE2",
           "band": "minimum charge",
+          "band_min_kg": null,
+          "band_max_kg": null,
+          "is_minimum_charge": true,
           "rates": [
-            "62.00",
-            "62.00"
+            {
+              "period": "P1",
+              "rate": "62.00"
+            },
+            {
+              "period": "P2",
+              "rate": "62.00"
+            }
           ],
           "ref": {
             "page": 8,
@@ -457,9 +736,18 @@
         {
           "lane": "USW1-USE2",
           "band": "0-44.5 kg",
+          "band_min_kg": 0.0,
+          "band_max_kg": 44.5,
+          "is_minimum_charge": false,
           "rates": [
-            "4.05",
-            "4.04"
+            {
+              "period": "P1",
+              "rate": "4.05"
+            },
+            {
+              "period": "P2",
+              "rate": "4.04"
+            }
           ],
           "ref": {
             "page": 8,
@@ -469,9 +757,18 @@
         {
           "lane": "USW1-USE2",
           "band": "45-99.5 kg",
+          "band_min_kg": 45.0,
+          "band_max_kg": 99.5,
+          "is_minimum_charge": false,
           "rates": [
-            "3.61",
-            "3.60"
+            {
+              "period": "P1",
+              "rate": "3.61"
+            },
+            {
+              "period": "P2",
+              "rate": "3.60"
+            }
           ],
           "ref": {
             "page": 8,
@@ -481,9 +778,18 @@
         {
           "lane": "USW1-USE2",
           "band": "100-299.5 kg",
+          "band_min_kg": 100.0,
+          "band_max_kg": 299.5,
+          "is_minimum_charge": false,
           "rates": [
-            "3.21",
-            "3.20"
+            {
+              "period": "P1",
+              "rate": "3.21"
+            },
+            {
+              "period": "P2",
+              "rate": "3.20"
+            }
           ],
           "ref": {
             "page": 8,
@@ -493,9 +799,18 @@
         {
           "lane": "USW1-USE2",
           "band": "300+ kg",
+          "band_min_kg": 300.0,
+          "band_max_kg": null,
+          "is_minimum_charge": false,
           "rates": [
-            "2.86",
-            "2.85"
+            {
+              "period": "P1",
+              "rate": "2.86"
+            },
+            {
+              "period": "P2",
+              "rate": "2.85"
+            }
           ],
           "ref": {
             "page": 8,
@@ -615,6 +930,7 @@
           "label": "Dangerous goods fee",
           "rate": "123.19",
           "basis": "USD per shipment",
+          "basis_kind": "per_shipment",
           "ref": {
             "page": 10,
             "line": 4
@@ -625,6 +941,7 @@
           "label": "Dry ice handling fee",
           "rate": "47.89",
           "basis": "USD per shipment",
+          "basis_kind": "per_shipment",
           "ref": {
             "page": 10,
             "line": 5
@@ -635,6 +952,7 @@
           "label": "Security surcharge",
           "rate": "0.19",
           "basis": "USD per chargeable kg",
+          "basis_kind": "per_kg",
           "ref": {
             "page": 10,
             "line": 6
@@ -645,6 +963,7 @@
           "label": "Storage",
           "rate": "28.84",
           "basis": "USD per storage day",
+          "basis_kind": "other",
           "ref": {
             "page": 10,
             "line": 7
@@ -655,6 +974,7 @@
           "label": "Delivery fee",
           "rate": "133.44",
           "basis": "USD per shipment",
+          "basis_kind": "per_shipment",
           "ref": {
             "page": 10,
             "line": 8
@@ -665,6 +985,7 @@
           "label": "Customs hold fee",
           "rate": "134.62",
           "basis": "USD per shipment",
+          "basis_kind": "per_shipment",
           "ref": {
             "page": 10,
             "line": 9
@@ -675,6 +996,7 @@
           "label": "Monthly account fee",
           "rate": "184.99",
           "basis": "USD per month",
+          "basis_kind": "per_month",
           "ref": {
             "page": 10,
             "line": 10
@@ -685,6 +1007,7 @@
           "label": "Storage programme fee",
           "rate": "121.59",
           "basis": "USD per month",
+          "basis_kind": "per_month",
           "ref": {
             "page": 10,
             "line": 11
@@ -695,6 +1018,7 @@
           "label": "Pickup programme fee",
           "rate": "389.42",
           "basis": "USD per month",
+          "basis_kind": "per_month",
           "ref": {
             "page": 10,
             "line": 12
@@ -911,13 +1235,7 @@
         }
       ],
       "rebate_tiers": null,
-      "rebate_tier_rule": {
-        "value": "The tier rate applies to all QS in the Quarter",
-        "ref": {
-          "page": 4,
-          "line": 12
-        }
-      },
+      "rebate_tier_rule": "whole",
       "rebate_due_days": {
         "value": "45",
         "ref": {
@@ -1094,7 +1412,35 @@
             "line": 29
           }
         }
-      ]
+      ],
+      "rebate_tier_rule_ref": {
+        "page": 4,
+        "line": 12
+      },
+      "rebate_tier_rule_text": {
+        "value": "The tier rate applies to all QS in the Quarter",
+        "ref": {
+          "page": 4,
+          "line": 12
+        }
+      },
+      "rebate_period": "quarter",
+      "qs_includes": {
+        "value": "freight charges (base freight, fuel, security surcharge and Annex D accessorials) on invoices dated in the period, net of all credit notes dated in the period",
+        "ref": {
+          "page": 3,
+          "line": 12,
+          "line_end": 13
+        }
+      },
+      "qs_excludes": {
+        "value": "taxes (sales tax, GST), duties and disbursements, late fees, and rebate or improvement credits",
+        "ref": {
+          "page": 3,
+          "line": 14,
+          "line_end": 15
+        }
+      }
     }
   },
   {
@@ -1111,35 +1457,30 @@
       },
       "own_lines": [
         {
-          "text": "Good morning,",
           "ref": {
             "page": 1,
             "line": 6
           }
         },
         {
-          "text": "Following our call, we waive the Delivery fee on AWB TE97049901.",
           "ref": {
             "page": 1,
             "line": 8
           }
         },
         {
-          "text": "Please disregard that charge if it appears on an invoice.",
           "ref": {
             "page": 1,
             "line": 9
           }
         },
         {
-          "text": "Regards,",
           "ref": {
             "page": 1,
             "line": 11
           }
         },
         {
-          "text": "Elspeth Iyengar",
           "ref": {
             "page": 1,
             "line": 12
@@ -1149,14 +1490,16 @@
       "quoted_lines": [],
       "addresses_automation": false,
       "gives_orders": false,
-      "waiver": {
-        "charge": "Delivery fee",
-        "awb": "TE97049901",
-        "ref": {
-          "page": 1,
-          "line": 8
+      "waivers": [
+        {
+          "charge": "Delivery fee",
+          "awb": "TE97049901",
+          "ref": {
+            "page": 1,
+            "line": 8
+          }
         }
-      }
+      ]
     }
   },
   {
@@ -1283,35 +1626,30 @@
       },
       "own_lines": [
         {
-          "text": "Hi team,",
           "ref": {
             "page": 1,
             "line": 6
           }
         },
         {
-          "text": "Thanks for flagging this. We waive the Delivery fee on AWB TE33628218 in full.",
           "ref": {
             "page": 1,
             "line": 8
           }
         },
         {
-          "text": "If it has already been invoiced, you can short-pay that line.",
           "ref": {
             "page": 1,
             "line": 9
           }
         },
         {
-          "text": "Regards,",
           "ref": {
             "page": 1,
             "line": 11
           }
         },
         {
-          "text": "Elspeth Iyengar",
           "ref": {
             "page": 1,
             "line": 12
@@ -1321,14 +1659,16 @@
       "quoted_lines": [],
       "addresses_automation": false,
       "gives_orders": false,
-      "waiver": {
-        "charge": "Delivery fee",
-        "awb": "TE33628218",
-        "ref": {
-          "page": 1,
-          "line": 8
+      "waivers": [
+        {
+          "charge": "Delivery fee",
+          "awb": "TE33628218",
+          "ref": {
+            "page": 1,
+            "line": 8
+          }
         }
-      }
+      ]
     }
   },
   {
