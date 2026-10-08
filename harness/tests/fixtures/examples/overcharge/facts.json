@@ -1527,6 +1527,22 @@
           "category": "freight"
         },
         {
+          "line_no": "2",
+          "awb": "TE56915687",
+          "pickup_date": "2031-12-25",
+          "charge_label": "Fuel surcharge",
+          "lane": "USE2-INE2",
+          "qty": "1612.29",
+          "unit": "%",
+          "rate": "20.16",
+          "amount": "325.04",
+          "ref": {
+            "page": 1,
+            "line": 10
+          },
+          "category": "fuel"
+        },
+        {
           "line_no": "3",
           "awb": "TE56915687",
           "pickup_date": "2031-12-25",
@@ -1638,6 +1654,22 @@
             "line": 9
           },
           "category": "freight"
+        },
+        {
+          "line_no": "2",
+          "awb": "TE68271803",
+          "pickup_date": "2032-01-18",
+          "charge_label": "Fuel surcharge",
+          "lane": "USE2-INE2",
+          "qty": "340.12",
+          "unit": "%",
+          "rate": "22.00",
+          "amount": "74.83",
+          "ref": {
+            "page": 1,
+            "line": 10
+          },
+          "category": "fuel"
         },
         {
           "line_no": "3",
