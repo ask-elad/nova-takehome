@@ -6,8 +6,8 @@ changed by the humans only.
 
 ## Where we are
 
-**Phase 2 · Reading layer.** The architecture is decided: `docs/decisions/0001-architecture.md`. Current task:
-`docs/tasks/02-foundation.md`.
+**Phase 2 · Foundation and schemas.** The architecture is decided: `docs/decisions/0001-architecture.md`.
+Current task: `docs/tasks/02b-foundation-fixes.md` (fixes from the review of task 02).
 
 ## How work reaches you
 
@@ -17,30 +17,33 @@ changed by the humans only.
   explain why instead of working around it.
 - A task is done when its "done when" check passes. End by showing the command you ran and its output.
 - Tests come first: write the test from `GLOSSARY.md` or the worked example, watch it fail, then write the code.
+- Tests never call the real API. Real model calls happen only in the runs a task asks for.
 
 ## Phases
 
 Each phase ends with a gate. The next phase starts only after the gate has passed.
+The rules engine is built before the readers: it's proven on hand-written facts first, and the readers then have
+to produce the same facts.
 
 | # | Phase | Gate |
 |---|---|---|
 | 0 | Workspace: repo, `CLAUDE.md`, this plan | done |
-| 1 | Census of the mailboxes, then the architecture decision | `docs/decisions/0001-architecture.md` signed off |
-| 2 | Reading layer and fact store | every extracted quote is found by `grader/extract.py`; invoice lines reconcile |
-| 3 | Rules engine, one class at a time | all eight worked examples pass as tests; first `make grade` score recorded |
-| 4 | Verdicts, actions, modes, confidence | invariant tests for the five score-capping mistakes pass |
-| 5 | New documents and feedback | one test per feedback kind, plus tests that feedback doesn't spread |
-| 6 | Our own eval set, exam run | `make eval` green; answer sheet checked against the documents |
-| 7 | Write-up and submission | `make validate` green |
+| 1 | Census, then the architecture decision | done: `docs/decisions/0001-architecture.md` |
+| 2 | Foundation, then the typed schemas for what each reader returns | tests green; schemas reviewed by the humans |
+| 3 | Rules engine on hand-written facts, one class at a time | all eight worked examples pass as tests |
+| 4 | Readers (the model fills the schemas) | quotes found by `grader/extract.py`; invoice lines reconcile; reader facts match the hand-written facts; first `make grade` score |
+| 5 | Verdicts, actions, modes, confidence | invariant tests for the five score-capping mistakes pass |
+| 6 | New documents and feedback | one test per feedback kind, plus tests that feedback doesn't spread |
+| 7 | Our own eval set, exam run | `make eval` green; answer sheet checked against the documents |
+| 8 | Write-up and submission | `make validate` green |
 
 ## Phase 1 checklist
-- [x] `docs/research/01-documents.md`
-- [x] `docs/research/02-extract.md`
-- [x] `docs/research/03-rules.md`
-- [x] `docs/research/00-summary.md`
+- [x] `docs/research/01-documents.md`, `02-extract.md`, `03-rules.md`, `00-summary.md`
 - [x] `docs/research/04-review.md` (human review of the census)
-- [x] `docs/decisions/0001-architecture.md` signed off
+- [x] `docs/decisions/0001-architecture.md` accepted
 
 ## Phase 2 checklist
 - [x] Task 02 · foundation: text layer, mailbox, model client, runnable pipeline
-- [ ] Task 03 · readers and verification
+- [ ] Task 02b · fixes from review: real-SDK fallback and retries, system prompt, full cache key, truncation,
+      no silently dropped documents
+- [ ] Task 03a · reader schemas (no prompts, no API calls)
