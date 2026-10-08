@@ -1320,7 +1320,13 @@
         }
       },
       "rebate_period": "quarter",
-      "qs_includes": {
+      "qs_includes": [
+        "freight",
+        "fuel",
+        "security",
+        "accessorial"
+      ],
+      "qs_text": {
         "value": "freight charges (base freight, fuel, security surcharge and Annex D accessorials) on invoices dated in the period, net of all credit notes dated in the period",
         "ref": {
           "page": 3,
@@ -1328,14 +1334,13 @@
           "line_end": 12
         }
       },
-      "qs_excludes": {
-        "value": "taxes (sales tax, GST), duties and disbursements, late fees, and rebate or improvement credits",
-        "ref": {
-          "page": 3,
-          "line": 13,
-          "line_end": 14
-        }
-      }
+      "qs_excludes": [
+        "tax",
+        "duty",
+        "disbursement",
+        "late_fee",
+        "credit"
+      ]
     }
   },
   {
@@ -1472,7 +1477,8 @@
           "ref": {
             "page": 1,
             "line": 9
-          }
+          },
+          "category": "freight"
         },
         {
           "line_no": "3",
@@ -1487,7 +1493,8 @@
           "ref": {
             "page": 1,
             "line": 11
-          }
+          },
+          "category": "security"
         },
         {
           "line_no": "4",
@@ -1502,7 +1509,8 @@
           "ref": {
             "page": 1,
             "line": 12
-          }
+          },
+          "category": "accessorial"
         },
         {
           "line_no": "5",
@@ -1517,7 +1525,8 @@
           "ref": {
             "page": 1,
             "line": 13
-          }
+          },
+          "category": "freight"
         },
         {
           "line_no": "7",
@@ -1532,7 +1541,8 @@
           "ref": {
             "page": 1,
             "line": 15
-          }
+          },
+          "category": "security"
         },
         {
           "line_no": "8",
@@ -1547,7 +1557,8 @@
           "ref": {
             "page": 1,
             "line": 16
-          }
+          },
+          "category": "accessorial"
         },
         {
           "line_no": "9",
@@ -1562,7 +1573,8 @@
           "ref": {
             "page": 1,
             "line": 17
-          }
+          },
+          "category": "freight"
         },
         {
           "line_no": "11",
@@ -1577,7 +1589,8 @@
           "ref": {
             "page": 1,
             "line": 19
-          }
+          },
+          "category": "security"
         },
         {
           "line_no": "12",
@@ -1592,7 +1605,8 @@
           "ref": {
             "page": 1,
             "line": 20
-          }
+          },
+          "category": "accessorial"
         }
       ]
     }
@@ -1751,7 +1765,8 @@
           "ref": {
             "page": 1,
             "line": 9
-          }
+          },
+          "category": "freight"
         },
         {
           "line_no": "3",
@@ -1766,7 +1781,8 @@
           "ref": {
             "page": 1,
             "line": 11
-          }
+          },
+          "category": "security"
         },
         {
           "line_no": "4",
@@ -1781,7 +1797,8 @@
           "ref": {
             "page": 1,
             "line": 12
-          }
+          },
+          "category": "accessorial"
         },
         {
           "line_no": "5",
@@ -1796,7 +1813,8 @@
           "ref": {
             "page": 1,
             "line": 13
-          }
+          },
+          "category": "accessorial"
         },
         {
           "line_no": "6",
@@ -1811,7 +1829,8 @@
           "ref": {
             "page": 1,
             "line": 14
-          }
+          },
+          "category": "accessorial"
         },
         {
           "line_no": "7",
@@ -1826,7 +1845,8 @@
           "ref": {
             "page": 1,
             "line": 15
-          }
+          },
+          "category": "freight"
         },
         {
           "line_no": "9",
@@ -1841,7 +1861,8 @@
           "ref": {
             "page": 1,
             "line": 17
-          }
+          },
+          "category": "security"
         },
         {
           "line_no": "10",
@@ -1856,7 +1877,8 @@
           "ref": {
             "page": 1,
             "line": 18
-          }
+          },
+          "category": "accessorial"
         }
       ]
     }

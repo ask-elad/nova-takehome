@@ -215,8 +215,11 @@ class ContractTerms(BaseModel):
     rebate_tier_rule_text: Optional[Val] = None  # the clause text as printed
     rebate_period: Optional[Literal["quarter", "contract_year"]] = None
     rebate_due_days: Optional[Val] = None    # "45"
-    qs_includes: Optional[Val] = None  # what the contract's QS definition counts
-    qs_excludes: Optional[Val] = None  # what the contract's QS definition excludes
+    # Qualifying-spend definition for rebate/credits. Categories drive arithmetic;
+    # qs_text is the clause as printed, kept for evidence.
+    qs_includes: Optional[list[BillingCategory]] = None
+    qs_excludes: Optional[list[BillingCategory]] = None
+    qs_text: Optional[Val] = None
 
     # Handling margin / step-down (clause 8)
     margin_not_applicable: Optional[Ref] = None
@@ -252,11 +255,20 @@ class ContractTerms(BaseModel):
 # BillingDoc (invoice, credit note, statement)
 # ---------------------------------------------------------------------------
 
+BillingCategory = Literal[
+    "freight", "fuel", "security", "accessorial", "minimum_charge",
+    "tax", "duty", "disbursement", "late_fee", "credit",
+    "programme_fee", "other",
+]
+
+
 class BillingLine(BaseModel):
     """One charge line of an invoice, credit note or statement."""
     line_no: Optional[str] = None
     awb: Optional[str] = None
     charge_label: str
+    category: BillingCategory
+    refers_to_invoice: Optional[str] = None  # a late-fee line names the invoice it is charged on
     lane: Optional[str] = None
     pickup_date: Optional[str] = None    # ISO "2031-12-25"
     collected_date: Optional[str] = None # ISO; Caldrith "Collected" column

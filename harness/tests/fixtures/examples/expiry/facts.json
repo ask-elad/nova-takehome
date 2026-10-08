@@ -1320,7 +1320,13 @@
         }
       },
       "rebate_period": "quarter",
-      "qs_includes": {
+      "qs_includes": [
+        "freight",
+        "fuel",
+        "security",
+        "accessorial"
+      ],
+      "qs_text": {
         "value": "freight charges (base freight, fuel, security surcharge and Annex D accessorials) on invoices dated in the period, net of all credit notes dated in the period",
         "ref": {
           "page": 3,
@@ -1328,14 +1334,13 @@
           "line_end": 12
         }
       },
-      "qs_excludes": {
-        "value": "taxes (sales tax, GST), duties and disbursements, late fees, and rebate or improvement credits",
-        "ref": {
-          "page": 3,
-          "line": 13,
-          "line_end": 14
-        }
-      }
+      "qs_excludes": [
+        "tax",
+        "duty",
+        "disbursement",
+        "late_fee",
+        "credit"
+      ]
     }
   }
 ]
