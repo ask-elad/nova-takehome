@@ -7,7 +7,7 @@ changed by the humans only.
 ## Where we are
 
 **Phase 2 · Foundation and schemas.** The architecture is decided: `docs/decisions/0001-architecture.md`.
-Current task: `docs/tasks/02b-foundation-fixes.md` (fixes from the review of task 02).
+Current task: `docs/tasks/03a-schemas.md`.
 
 ## How work reaches you
 
@@ -44,6 +44,6 @@ to produce the same facts.
 
 ## Phase 2 checklist
 - [x] Task 02 · foundation: text layer, mailbox, model client, runnable pipeline
-- [ ] Task 02b · fixes from review: real-SDK fallback and retries, system prompt, full cache key, truncation,
+- [x] Task 02b · fixes from review: real-SDK fallback and retries, system prompt, full cache key, truncation,
       no silently dropped documents
 - [ ] Task 03a · reader schemas (no prompts, no API calls)

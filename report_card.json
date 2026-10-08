@@ -520,7 +520,7 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "",
-       "secs": 0.6
+       "secs": 0.7
       },
       {
        "step": "report",
@@ -570,7 +570,7 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "",
-       "secs": 0.6
+       "secs": 0.7
       },
       {
        "step": "report",

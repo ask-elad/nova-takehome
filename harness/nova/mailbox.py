@@ -1,6 +1,7 @@
 """Reads a batch folder into document records."""
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from email.utils import parseaddr, parsedate_to_datetime
@@ -8,6 +9,9 @@ from pathlib import Path
 from typing import Optional
 
 from nova.textlayer import pages_of, pdf_is_image_only, parse_eml, attachments
+
+_IMAGE_EXTS = {"png", "jpg", "jpeg", "tif", "tiff"}
+_READABLE_EXTS = {"pdf", "xlsx"}
 
 
 @dataclass
@@ -20,9 +24,11 @@ class DocRecord:
     pages: list[str]
     is_scan: bool
     parent_id: Optional[str] = None  # email doc_id for attachments; None for emails
+    ext: str = ""
+    unreadable: bool = False
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "doc_id": self.doc_id,
             "received": self.received.isoformat(),
             "sender_addr": self.sender_addr,
@@ -31,7 +37,10 @@ class DocRecord:
             "pages": self.pages,
             "is_scan": self.is_scan,
             "parent_id": self.parent_id,
+            "ext": self.ext,
+            "unreadable": self.unreadable,
         }
+        return d
 
     @classmethod
     def from_dict(cls, d: dict) -> "DocRecord":
@@ -47,6 +56,8 @@ class DocRecord:
             pages=d["pages"],
             is_scan=d["is_scan"],
             parent_id=d.get("parent_id"),
+            ext=d.get("ext", ""),
+            unreadable=d.get("unreadable", False),
         )
 
 
@@ -80,21 +91,64 @@ def load_batch(batch_dir: Path) -> list[DocRecord]:
             pages=eml_pages,
             is_scan=False,
             parent_id=None,
+            ext="eml",
         ))
 
         for att_name, att_data in attachments(data):
             if not att_name:
                 continue
             ext = att_name.rsplit(".", 1)[-1].lower() if "." in att_name else ""
-            if ext not in ("pdf", "xlsx"):
-                continue
             att_id = f"{rel}#{att_name}"
+
+            if ext in _IMAGE_EXTS:
+                records.append(DocRecord(
+                    doc_id=att_id,
+                    received=received,
+                    sender_addr=sender_addr,
+                    sender_name=sender_name,
+                    subject=subject,
+                    pages=[],
+                    is_scan=True,
+                    parent_id=rel,
+                    ext=ext,
+                ))
+                continue
+
+            if ext not in _READABLE_EXTS:
+                print(f"unreadable attachment: {att_id} (ext={ext!r})", file=sys.stderr)
+                records.append(DocRecord(
+                    doc_id=att_id,
+                    received=received,
+                    sender_addr=sender_addr,
+                    sender_name=sender_name,
+                    subject=subject,
+                    pages=[],
+                    is_scan=False,
+                    parent_id=rel,
+                    ext=ext,
+                    unreadable=True,
+                ))
+                continue
+
             try:
                 att_pages = pages_of(att_data, ext)
                 is_scan = ext == "pdf" and pdf_is_image_only(att_data)
-            except Exception:
-                att_pages = []
-                is_scan = False
+            except Exception as exc:
+                print(f"unreadable attachment: {att_id} ({exc})", file=sys.stderr)
+                records.append(DocRecord(
+                    doc_id=att_id,
+                    received=received,
+                    sender_addr=sender_addr,
+                    sender_name=sender_name,
+                    subject=subject,
+                    pages=[],
+                    is_scan=False,
+                    parent_id=rel,
+                    ext=ext,
+                    unreadable=True,
+                ))
+                continue
+
             records.append(DocRecord(
                 doc_id=att_id,
                 received=received,
@@ -104,6 +158,7 @@ def load_batch(batch_dir: Path) -> list[DocRecord]:
                 pages=att_pages,
                 is_scan=is_scan,
                 parent_id=rel,
+                ext=ext,
             ))
 
     return records

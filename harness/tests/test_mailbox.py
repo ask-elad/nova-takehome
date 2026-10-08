@@ -156,3 +156,79 @@ def test_render_pages_labels():
     assert "[p1 L1] hello" in rendered
     assert "[p1 L2] world" in rendered
     assert "[p2 L1] page two" in rendered
+
+
+def _make_eml_with_attachment(date_str: str, att_name: str, att_data: bytes, att_mime: str = "application/octet-stream") -> bytes:
+    """Build an .eml with one attachment."""
+    import base64
+    encoded = base64.b64encode(att_data).decode()
+    boundary = "BOUNDARY123"
+    return (
+        f"From: sender@example.com\r\n"
+        f"To: receiver@example.com\r\n"
+        f"Date: {date_str}\r\n"
+        f"Subject: test\r\n"
+        f"MIME-Version: 1.0\r\n"
+        f"Content-Type: multipart/mixed; boundary=\"{boundary}\"\r\n"
+        f"\r\n"
+        f"--{boundary}\r\n"
+        f"Content-Type: text/plain; charset=utf-8\r\n"
+        f"\r\n"
+        f"Body.\r\n"
+        f"--{boundary}\r\n"
+        f"Content-Type: {att_mime}\r\n"
+        f"Content-Disposition: attachment; filename=\"{att_name}\"\r\n"
+        f"Content-Transfer-Encoding: base64\r\n"
+        f"\r\n"
+        f"{encoded}\r\n"
+        f"--{boundary}--\r\n"
+    ).encode()
+
+
+def test_unknown_attachment_type_produces_unreadable_record(tmp_path: Path):
+    """An attachment with an unknown extension is kept as an unreadable record, not dropped."""
+    batch_dir = tmp_path / "batch_01"
+    batch_dir.mkdir()
+
+    eml = _make_eml_with_attachment(
+        "Mon, 01 Jan 2030 10:00:00 +0000",
+        att_name="report.docx",
+        att_data=b"fake docx content",
+    )
+    (batch_dir / "0001.eml").write_bytes(eml)
+
+    records = load_batch(batch_dir)
+
+    att_records = [r for r in records if r.parent_id is not None]
+    assert len(att_records) == 1, "attachment record must be present, not dropped"
+
+    rec = att_records[0]
+    assert rec.unreadable is True
+    assert rec.ext == "docx"
+    assert rec.pages == []
+    assert rec.is_scan is False
+
+
+def test_image_attachment_gets_is_scan(tmp_path: Path):
+    """An image attachment (png/jpg/etc.) gets is_scan=True."""
+    batch_dir = tmp_path / "batch_01"
+    batch_dir.mkdir()
+
+    eml = _make_eml_with_attachment(
+        "Mon, 01 Jan 2030 10:00:00 +0000",
+        att_name="scan.png",
+        att_data=b"\x89PNG\r\n\x1a\n",
+        att_mime="image/png",
+    )
+    (batch_dir / "0001.eml").write_bytes(eml)
+
+    records = load_batch(batch_dir)
+
+    att_records = [r for r in records if r.parent_id is not None]
+    assert len(att_records) == 1
+
+    rec = att_records[0]
+    assert rec.is_scan is True
+    assert rec.ext == "png"
+    assert rec.pages == []
+    assert rec.unreadable is False
