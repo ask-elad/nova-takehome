@@ -176,7 +176,7 @@ def compare_example(client: LLMClient, example: str) -> dict:
         result = _run_reader(client, typ, rec)
         cmp = compare_dicts(entry["data"], result.data)
         per_doc_rows.append((typ, doc, result.tier_used + ("*" if result.reread else ""),
-                             cmp["matched"], cmp["total"]))
+                             cmp["matched"], cmp["total"], cmp))
         ts = per_type_stats[typ]
         ts["matched"] += cmp["matched"]
         ts["total"] += cmp["total"]
@@ -195,10 +195,10 @@ def compare_example(client: LLMClient, example: str) -> dict:
     # Rules on reader facts
     items = _run_rules_on_facts(mailbox, reader_facts, as_of=expected["as_of"])
     exp_findings = {f["id"]: f for f in expected.get("findings", [])}
-    exp_portfolio_ids = set()
+    exp_portfolio: dict[str, dict] = {}
     for cat in expected.get("portfolio", {}).values():
         for p in cat:
-            exp_portfolio_ids.add(p["id"])
+            exp_portfolio[p["id"]] = p
 
     got_by_id = {it.id: it for it in items}
     rule_rows: list[tuple[str, str, str]] = []
@@ -227,9 +227,12 @@ def compare_example(client: LLMClient, example: str) -> dict:
                 rule_rows.append((fid, "OK", it.verdict))
         else:
             rule_rows.append((fid, "OK", it.verdict))
-    for pid in exp_portfolio_ids:
+    for pid, p in exp_portfolio.items():
         it = got_by_id.get(pid)
-        rule_rows.append((pid, "OK" if it is not None else "MISS", "portfolio"))
+        if p["verdict"] == "no_finding":
+            rule_rows.append((pid, "OK" if it is None else "VERDICT", "portfolio no_finding"))
+        else:
+            rule_rows.append((pid, "OK" if it is not None else "MISS", "portfolio"))
 
     return {
         "example": example,
@@ -243,13 +246,31 @@ def compare_example(client: LLMClient, example: str) -> dict:
 # Printing
 # ---------------------------------------------------------------------------
 
-def print_example(res: dict) -> None:
+def print_example(res: dict, show_diffs: bool = False) -> None:
     ex = res["example"]
     print(f"\n=== {ex} ===")
     print(f"  {'type':15}  {'doc':70}  {'tier':6}  {'matched':>8}")
-    for typ, doc, tier, matched, total in res["per_doc_rows"]:
+    for row in res["per_doc_rows"]:
+        if len(row) == 6:
+            typ, doc, tier, matched, total, _ = row
+        else:
+            typ, doc, tier, matched, total = row
         pct = f"{matched}/{total}" if total else "-"
         print(f"  {typ:15}  {doc[:70]:70}  {tier:6}  {pct:>8}")
+    if show_diffs:
+        for row in res["per_doc_rows"]:
+            if len(row) != 6:
+                continue
+            typ, doc, _, matched, total, cmp = row
+            if cmp["mismatches"] or cmp["missing"]:
+                print(f"  --- diffs for {typ} {doc} ---")
+                for path, exp, got in cmp["mismatches"][:40]:
+                    print(f"    MISMATCH {path}: expected {exp!r}  got {got!r}")
+                for path in cmp["missing"][:40]:
+                    print(f"    MISSING  {path}")
+                extra = cmp.get("extra", [])
+                for path in extra[:10]:
+                    print(f"    EXTRA    {path}")
     print(f"  per-type totals:")
     for typ, s in sorted(res["per_type_stats"].items()):
         pct = f"{s['matched']}/{s['total']}" if s["total"] else "-"
@@ -264,6 +285,8 @@ def main() -> int:
     ap.add_argument("state_dir", help="state directory for the LLM cache / ledger")
     ap.add_argument("--example", action="append", default=None,
                     help="run on this example only (repeat to run several)")
+    ap.add_argument("--diff", action="store_true",
+                    help="print per-doc mismatches (expected vs reader) for debugging")
     args = ap.parse_args()
 
     state_dir = Path(args.state_dir)
@@ -277,7 +300,7 @@ def main() -> int:
     overall_rules_total = 0
     for ex in examples:
         res = compare_example(client, ex)
-        print_example(res)
+        print_example(res, show_diffs=args.diff)
         for s in res["per_type_stats"].values():
             overall_matched += s["matched"]
             overall_total += s["total"]

@@ -57,6 +57,7 @@ to produce the same facts.
 - [x] Task 04c · cashback, conflict, cannot_determine; all eight golden tests green
 
 ## Phase 4 checklist
-- [ ] Task 05a · readers, verification, typed unranked pairs; rules on reader facts reproduce all eight examples
+- [x] Task 05a · readers, verification, typed unranked pairs; rules on reader facts reproduce all eight examples
       - [x] step 1 · typed `unranked_pairs` (schema, overcharge, fixtures, tests)
+      - [x] steps 2–6 · readers, verify+reread, compare_readers, Judge, ledger_summary; 13/13 findings reproduced
 - [ ] Task 05b · ingest and report end to end; first real `make grade` score

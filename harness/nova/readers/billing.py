@@ -6,7 +6,7 @@ from nova.mailbox import DocRecord
 from nova.readers import ReadResult, read_doc
 from nova.schemas import BillingDoc
 
-prompt_version = "billing-1"
+prompt_version = "billing-2"
 
 _INSTRUCTIONS = (
     "This document is an invoice, credit note or statement of account.\n"
@@ -19,10 +19,13 @@ _INSTRUCTIONS = (
     "- `kind`: \"invoice\" | \"credit_note\" | \"statement\".\n"
     "- `issuer`: the issuing party's name as printed in the header.\n"
     "- `currency`: \"USD\", \"INR\" etc., read from the amount column header or totals.\n"
-    "- `lines`: one record per charge line. Fill `charge_label` as printed and\n"
-    "  classify into one of the `category` values. A late-fee line should set\n"
-    "  `category=\"late_fee\"` and `refers_to_invoice` to the invoice id it is\n"
-    "  charged on.\n"
+    "- `lines`: one record per charge line. Fill `charge_label` with the\n"
+    "  charge description as printed, but strip any trailing parenthetical\n"
+    "  cross-reference such as `(ref TE12345678)` or `(ref INV-1)` — these\n"
+    "  are back-references to another document, not part of the charge name.\n"
+    "  Classify each line into one of the `category` values. A late-fee line\n"
+    "  should set `category=\"late_fee\"` and `refers_to_invoice` to the invoice\n"
+    "  id it is charged on.\n"
     "- For each line, record `awb`, `lane`, `pickup_date`, `qty`, `unit`, `rate`\n"
     "  and `amount` whenever they are printed; omit a field if the line does not\n"
     "  show it.\n"
