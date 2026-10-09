@@ -207,15 +207,17 @@ class LLMClient:
     def _real_invoke(self, model: str, messages: list[dict], schema: dict, system: str, max_tokens: int) -> tuple[dict, int, int]:
         import anthropic
         max_retries = 5
+        use_tool_choice = True
         for attempt in range(max_retries):
             try:
                 kwargs: dict[str, Any] = dict(
                     model=model,
                     max_tokens=max_tokens,
                     tools=[{"name": "output", "description": "Structured output", "input_schema": schema}],
-                    tool_choice={"type": "tool", "name": "output"},
                     messages=messages,
                 )
+                if use_tool_choice:
+                    kwargs["tool_choice"] = {"type": "tool", "name": "output"}
                 if system:
                     kwargs["system"] = system
                 resp = self._client.messages.create(**kwargs)
@@ -228,6 +230,14 @@ class LLMClient:
             except TruncatedOutput:
                 raise
             except anthropic.NotFoundError:
+                raise
+            except anthropic.BadRequestError as e:
+                # Some newer models don't support tool_choice:tool/any. Retry
+                # without tool_choice (the single-tool definition is enough).
+                msg = str(e).lower()
+                if "tool_choice" in msg and use_tool_choice:
+                    use_tool_choice = False
+                    continue
                 raise
             except Exception as e:
                 if _is_retryable(e) and attempt < max_retries - 1:

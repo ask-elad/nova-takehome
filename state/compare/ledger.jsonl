@@ -1,0 +1,10 @@
+{"time": "2026-10-09T06:09:11.908839+00:00", "purpose": "read_contract", "model": "claude-sonnet-5-5", "input_tokens": 26653, "output_tokens": 8444, "cached": false}
+{"time": "2026-10-09T06:10:11.334495+00:00", "purpose": "read_contract", "model": "claude-opus-5-5", "input_tokens": 26735, "output_tokens": 8876, "cached": false}
+{"time": "2026-10-09T06:10:16.601313+00:00", "purpose": "read_billing", "model": "claude-sonnet-5-5", "input_tokens": 6740, "output_tokens": 948, "cached": false}
+{"time": "2026-10-09T06:10:22.114090+00:00", "purpose": "read_billing", "model": "claude-sonnet-5-5", "input_tokens": 6736, "output_tokens": 974, "cached": false}
+{"time": "2026-10-09T06:10:23.241682+00:00", "purpose": "read_sheet", "model": "claude-haiku-5-5", "input_tokens": 1810, "output_tokens": 154, "cached": false}
+{"time": "2026-10-09T06:10:45.657534+00:00", "purpose": "read_contract", "model": "claude-sonnet-5-5", "input_tokens": 26653, "output_tokens": 8444, "cached": true}
+{"time": "2026-10-09T06:10:45.667493+00:00", "purpose": "read_contract", "model": "claude-opus-5-5", "input_tokens": 26735, "output_tokens": 8876, "cached": true}
+{"time": "2026-10-09T06:10:45.678639+00:00", "purpose": "read_billing", "model": "claude-sonnet-5-5", "input_tokens": 6740, "output_tokens": 948, "cached": true}
+{"time": "2026-10-09T06:10:45.685288+00:00", "purpose": "read_billing", "model": "claude-sonnet-5-5", "input_tokens": 6736, "output_tokens": 974, "cached": true}
+{"time": "2026-10-09T06:10:45.688195+00:00", "purpose": "read_sheet", "model": "claude-haiku-5-5", "input_tokens": 1810, "output_tokens": 154, "cached": true}
