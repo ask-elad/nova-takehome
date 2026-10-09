@@ -42,8 +42,12 @@ class StateDir:
     def ledger_file(self) -> Path:
         return self.root / "ledger.jsonl"
 
+    @property
+    def facts_dir(self) -> Path:
+        return self.root / "facts"
+
     def ensure(self) -> None:
-        for d in (self.root, self.documents_dir, self.cache_dir, self.reports_dir):
+        for d in (self.root, self.documents_dir, self.cache_dir, self.reports_dir, self.facts_dir):
             d.mkdir(parents=True, exist_ok=True)
 
     def _doc_path(self, doc_id: str) -> Path:
@@ -71,6 +75,39 @@ class StateDir:
 
     def doc_exists(self, doc_id: str) -> bool:
         return self._doc_path(doc_id).is_file()
+
+    def _facts_path(self, doc_id: str) -> Path:
+        safe = doc_id.replace("/", "__").replace("#", "--")
+        return self.facts_dir / f"{safe}.json"
+
+    def facts_exist(self, doc_id: str) -> bool:
+        return self._facts_path(doc_id).is_file()
+
+    def save_facts(self, doc_id: str, type_: str, data: dict, received_at: str) -> None:
+        self.facts_dir.mkdir(parents=True, exist_ok=True)
+        self.write_json(self._facts_path(doc_id), {
+            "type": type_, "doc": doc_id, "data": data, "received_at": received_at,
+        })
+
+    def load_all_facts(self, as_of: date | None = None) -> list[dict]:
+        records: list[dict] = []
+        if not self.facts_dir.exists():
+            return records
+        for f in sorted(self.facts_dir.glob("*.json")):
+            try:
+                entry = json.loads(f.read_text())
+            except Exception:
+                continue
+            if as_of is not None and entry.get("received_at"):
+                try:
+                    from datetime import timezone
+                    rec_date = date.fromisoformat(entry["received_at"][:10])
+                    if rec_date > as_of:
+                        continue
+                except (ValueError, KeyError):
+                    pass
+            records.append(entry)
+        return records
 
     def load_docs(self, as_of: date | None = None) -> list[DocRecord]:
         """Load all saved document records, optionally filtered to received <= as_of."""

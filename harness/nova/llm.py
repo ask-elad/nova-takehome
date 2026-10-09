@@ -106,10 +106,13 @@ class LLMClient:
 
     def __init__(self, state_dir: Path, _client=None):
         self._state = Path(state_dir)
-        self._cache_dir = self._state / "cache"
+        cache_override = os.environ.get("NOVA_CACHE_DIR")
+        self._cache_dir = Path(cache_override) if cache_override else (self._state / "cache")
         self._ledger = self._state / "ledger.jsonl"
         self._ledger_lock = threading.Lock()
         self._fake = os.environ.get("NOVA_LLM", "").lower() == "fake"
+        _max_raw = os.environ.get("NOVA_MAX_PAID_TOKENS")
+        self._max_paid_tokens: int | None = int(_max_raw) if _max_raw else None
         if not self._fake:
             if _client is not None:
                 self._client = _client
@@ -183,6 +186,13 @@ class LLMClient:
             })
             return cached["result"]
 
+        if self._max_paid_tokens is not None:
+            current_paid = self._ledger_paid_total()
+            if current_paid >= self._max_paid_tokens:
+                raise RuntimeError(
+                    f"NOVA_MAX_PAID_TOKENS={self._max_paid_tokens} reached "
+                    f"(paid so far: {current_paid}). Stopping before {purpose}."
+                )
         result, input_tokens, output_tokens = self._invoke(model, messages, schema, system, max_tokens)
         self._write_cache(key, {"result": result, "input_tokens": input_tokens, "output_tokens": output_tokens})
         self._write_ledger({
@@ -267,6 +277,20 @@ class LLMClient:
             except OSError:
                 pass
             raise
+
+    def _ledger_paid_total(self) -> int:
+        """Sum input + output tokens for all non-cached ledger entries."""
+        total = 0
+        try:
+            for line in self._ledger.read_text().splitlines():
+                if not line.strip():
+                    continue
+                entry = json.loads(line)
+                if not entry.get("cached", False):
+                    total += entry.get("input_tokens", 0) + entry.get("output_tokens", 0)
+        except FileNotFoundError:
+            pass
+        return total
 
     def _write_ledger(self, entry: dict) -> None:
         self._state.mkdir(parents=True, exist_ok=True)

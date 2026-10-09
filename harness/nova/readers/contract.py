@@ -6,7 +6,7 @@ from nova.mailbox import DocRecord
 from nova.readers import ReadResult, read_doc
 from nova.schemas import ContractTerms
 
-prompt_version = "contract-1"
+prompt_version = "contract-2"
 
 _INSTRUCTIONS = (
     "This document is a Master Services Agreement (MSA) or a signed Amendment.\n"
@@ -33,7 +33,13 @@ _INSTRUCTIONS = (
     "  and band_max_kg null.\n"
     "- If this instrument refers to other documents (an amendment to its MSA, an\n"
     "  MSA to a referenced annex), list them in `refers_to` with a quote.\n"
-    "- Fill `qs_includes` and `qs_excludes` from the Qualifying Spend definition."
+    "- Fill `qs_includes` and `qs_excludes` from the Qualifying Spend definition.\n"
+    "- Leave `key_clauses` null — the rules engine does not use it.\n"
+    "- `rebate_tier_rule` must be exactly one of: whole, marginal (output the bare\n"
+    "  string without any surrounding quotes, e.g. whole not \"whole\").\n"
+    "- `rebate_period` must be exactly one of: quarter, contract_year (bare string).\n"
+    "- For each `rebate_tiers` row, cite the line that contains the threshold amount\n"
+    "  and rate number — not the section-header line."
 )
 
 
