@@ -113,6 +113,32 @@ def resolve(
         if delta <= 0:
             continue
 
+        if cand.class_ == "cashback":
+            quotes2: list[Evidence] = []
+            seen2: set = set()
+            for ref in cand.evidence:
+                q = resolve_quote(mailbox, ref)
+                if q is None:
+                    continue
+                key = (ref.doc, ref.page, q)
+                if key in seen2:
+                    continue
+                seen2.add(key)
+                quotes2.append(Evidence(doc=ref.doc, page=ref.page, quote=q))
+            action = "internal:track_credit" if cand.deadline else "draft:claim_credit"
+            items.append(Item(
+                id=f"{cand.class_}:{cand.key[1]}",
+                class_=cand.class_,
+                invoice_id=None,
+                verdict="finding",
+                amount_usd=f"{delta.quantize(Decimal('0.01'))}",
+                amount_range=None,
+                deadline=cand.deadline,
+                action=action,
+                evidence=quotes2,
+            ))
+            continue
+
         quotes: list[Evidence] = []
         seen: set = set()
         for ref in cand.evidence:
