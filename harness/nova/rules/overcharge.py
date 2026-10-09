@@ -369,12 +369,11 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
             # Does the MSA list this pair as unranked?
             if msa.terms.unranked_pairs:
                 for pair in msa.terms.unranked_pairs:
-                    toks = {t.strip() for t in pair.replace("vs", " ").split()}
-                    if "rate_notice" in toks and ("amendment" in toks or "signed_amendment" in toks):
+                    kinds = {pair.a, pair.b}
+                    if "rate_notice" in kinds and "amendment" in kinds:
                         unranked_pair = ("rate_notice", "amendment")
-                        if msa.terms.unranked_ref:
-                            unranked_ref = SourceRef.from_ref(msa.doc, msa.terms.unranked_ref)
-                            dedup.append(unranked_ref)
+                        unranked_ref = SourceRef.from_ref(msa.doc, pair.ref)
+                        dedup.append(unranked_ref)
                         break
 
         out.append(Candidate(

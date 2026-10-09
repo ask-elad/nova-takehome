@@ -162,6 +162,20 @@ class KeyClause(BaseModel):
     ref: Ref
 
 
+SourceKind = Literal["msa", "amendment", "rate_notice", "annex", "schedule1_email"]
+
+
+class UnrankedPair(BaseModel):
+    """A pair of source kinds the contract declares as unranked in precedence.
+
+    If both members of the pair carry an authorised disagreeing value, the
+    rules engine reports a conflict rather than picking a winner.
+    """
+    a: SourceKind
+    b: SourceKind
+    ref: Ref   # the clause line that lists this pair
+
+
 # ---------------------------------------------------------------------------
 # ContractTerms (MSA and amendments)
 # ---------------------------------------------------------------------------
@@ -189,8 +203,7 @@ class ContractTerms(BaseModel):
     # Precedence
     precedence_order: Optional[list[str]] = None  # ["signed_amendment", "msa", "annexes"]
     precedence_ref: Optional[Ref] = None
-    unranked_pairs: Optional[list[str]] = None    # ["rate_notice vs amendment"]
-    unranked_ref: Optional[Ref] = None
+    unranked_pairs: Optional[list[UnrankedPair]] = None
 
     # Rates (Annex A)
     rate_periods: list[RatePeriod]

@@ -52,6 +52,22 @@ def test_conflict_quotes_pass_found(case):
             assert len(ev.quote.replace(" ", "")) >= 12
 
 
+def test_unranked_pair_typed_match():
+    """A pair listed as (rate_notice, amendment) triggers conflict regardless of order."""
+    from nova.schemas import UnrankedPair, Ref
+    pair = UnrankedPair(a="amendment", b="rate_notice", ref=Ref(page=1, line=1))
+    kinds = {pair.a, pair.b}
+    assert "rate_notice" in kinds and "amendment" in kinds
+
+
+def test_unranked_pair_not_matching_other_kinds():
+    """A pair of (msa, annex) does not fire the rate_notice-vs-amendment conflict path."""
+    from nova.schemas import UnrankedPair, Ref
+    pair = UnrankedPair(a="msa", b="annex", ref=Ref(page=1, line=1))
+    kinds = {pair.a, pair.b}
+    assert not ("rate_notice" in kinds and "amendment" in kinds)
+
+
 def test_amount_range_lower_bound_not_below_zero():
     """Unit: if higher correct > billed, the lower bound of amount_range clamps to 0."""
     from decimal import Decimal

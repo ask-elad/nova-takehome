@@ -56,12 +56,15 @@
         "line": 3
       },
       "unranked_pairs": [
-        "rate_notice vs amendment"
+        {
+          "a": "rate_notice",
+          "b": "amendment",
+          "ref": {
+            "page": 4,
+            "line": 43
+          }
+        }
       ],
-      "unranked_ref": {
-        "page": 4,
-        "line": 43
-      },
       "rate_periods": [
         {
           "label": "P1",

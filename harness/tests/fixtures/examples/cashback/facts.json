@@ -55,12 +55,15 @@
         "line": 3
       },
       "unranked_pairs": [
-        "rate_notice vs amendment"
+        {
+          "a": "rate_notice",
+          "b": "amendment",
+          "ref": {
+            "page": 4,
+            "line": 43
+          }
+        }
       ],
-      "unranked_ref": {
-        "page": 4,
-        "line": 43
-      },
       "rate_periods": [
         {
           "label": "P1",
@@ -1235,9 +1238,33 @@
         }
       ],
       "rebate_tiers": [
-        {"threshold": "55000.00", "rate": "5", "ref": {"page": 4, "line": 10, "line_end": 11}},
-        {"threshold": "91000.00", "rate": "7.5", "ref": {"page": 4, "line": 10, "line_end": 11}},
-        {"threshold": "150000.00", "rate": "10", "ref": {"page": 4, "line": 10, "line_end": 11}}
+        {
+          "threshold": "55000.00",
+          "rate": "5",
+          "ref": {
+            "page": 4,
+            "line": 10,
+            "line_end": 11
+          }
+        },
+        {
+          "threshold": "91000.00",
+          "rate": "7.5",
+          "ref": {
+            "page": 4,
+            "line": 10,
+            "line_end": 11
+          }
+        },
+        {
+          "threshold": "150000.00",
+          "rate": "10",
+          "ref": {
+            "page": 4,
+            "line": 10,
+            "line_end": 11
+          }
+        }
       ],
       "rebate_tier_rule": "whole",
       "rebate_due_days": {

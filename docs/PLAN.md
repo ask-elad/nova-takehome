@@ -6,9 +6,9 @@ changed by the humans only.
 
 ## Where we are
 
-**Phase 3 · Rules engine.** Tasks 04 and 04a2 are done. Current tasks, in order:
-`docs/tasks/04b-rules-invoice-classes.md`, then `docs/tasks/04c-rules-cashback-conflict.md`.
-The ground rules are in `docs/tasks/04-rules-engine.md`. Commit after each rule class goes green.
+**Phase 4 · Readers.** The rules engine is done: all eight golden tests pass on hand-written facts. Current tasks,
+in order: `docs/tasks/05a-readers.md`, then `docs/tasks/05b-pipeline.md`. Both use the real API: follow the key
+and cost rules in 05a.
 
 ## How work reaches you
 
@@ -31,7 +31,7 @@ to produce the same facts.
 | 0 | Workspace: repo, `CLAUDE.md`, this plan | done |
 | 1 | Census, then the architecture decision | done: `docs/decisions/0001-architecture.md` |
 | 2 | Foundation, then the typed schemas for what each reader returns | done |
-| 3 | Rules engine on hand-written facts, one class at a time | all eight worked examples pass as tests |
+| 3 | Rules engine on hand-written facts, one class at a time | done |
 | 4 | Readers (the model fills the schemas) | quotes found by `grader/extract.py`; invoice lines reconcile; reader facts match the hand-written facts; first `make grade` score |
 | 5 | Verdicts, actions, modes, confidence | invariant tests for the five score-capping mistakes pass |
 | 6 | New documents and feedback | one test per feedback kind, plus tests that feedback doesn't spread |
@@ -55,3 +55,8 @@ to produce the same facts.
 - [x] Task 04a2 · fixes from review: sheet parsing in production, terms in force, overcharge gaps, received_at
 - [x] Task 04b · duplicate, waived_but_billed, late fees, expiry
 - [x] Task 04c · cashback, conflict, cannot_determine; all eight golden tests green
+
+## Phase 4 checklist
+- [ ] Task 05a · readers, verification, typed unranked pairs; rules on reader facts reproduce all eight examples
+      - [x] step 1 · typed `unranked_pairs` (schema, overcharge, fixtures, tests)
+- [ ] Task 05b · ingest and report end to end; first real `make grade` score
