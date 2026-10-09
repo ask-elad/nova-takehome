@@ -29,10 +29,13 @@ from nova.schemas import (
     Accessorial,
     BillingDoc,
     BillingLine,
+    ChargeCodeAlias,
     ContractTerms,
     EmailFacts,
     FXRow,
     FuelRow,
+    RateNoticeDetails,
+    RateNoticeRow,
     RateRow,
     Ref,
     Schedule1Row,
@@ -122,6 +125,61 @@ class ShipmentRecord:
 
 
 # ---------------------------------------------------------------------------
+# Terms-in-force value types
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class TermSource:
+    """Where a term came from, with its authority."""
+    kind: str              # "msa" | "amendment" | "rate_notice"
+    doc: str
+    authority_level: int   # 1 = signed, 2 = authorised email, …
+    rank: int              # higher beats lower per precedence clause
+
+
+@dataclass
+class RateNoticeSource:
+    """A rate notice in force on a date, kept separate from merged terms."""
+    doc: str
+    notice: RateNoticeDetails
+    source: TermSource
+
+
+@dataclass
+class Terms:
+    """Terms in force on a date for one contract, each value carrying its source."""
+    msa: ContractRecord
+    rate_periods: list
+    rate_rows: list              # list[tuple[RateRow, TermSource]]
+    fuel_rows: list              # list[tuple[FuelRow, TermSource]]
+    accessorials: list           # list[tuple[Accessorial, TermSource]]
+    fx_rows: list                # list[tuple[FXRow, TermSource]]
+    rate_notices: list           # list[RateNoticeSource]
+
+    def rate_rows_for(self, lane: str) -> list[tuple[RateRow, TermSource]]:
+        return [rs for rs in self.rate_rows if rs[0].lane == lane]
+
+    def accessorial_by_code(self, code: str) -> Optional[tuple[Accessorial, TermSource]]:
+        for a, s in self.accessorials:
+            if a.code == code:
+                return a, s
+        return None
+
+    def fuel_for_month(self, month: str) -> Optional[tuple[FuelRow, TermSource]]:
+        for fr, s in self.fuel_rows:
+            if fr.month == month:
+                return fr, s
+        return None
+
+    def fx_for_month(self, month: str) -> Optional[tuple[FXRow, TermSource]]:
+        for fx, s in self.fx_rows:
+            if fx.month == month:
+                return fx, s
+        return None
+
+
+# ---------------------------------------------------------------------------
 # Judge interface
 # ---------------------------------------------------------------------------
 
@@ -170,11 +228,17 @@ class Case:
         records: list[dict],
         as_of: str,
         judge: JudgeFn = null_judge,
+        mailbox: Any = None,
     ) -> "Case":
         """Build a case from a list of {type, doc, received_at?, data} dicts.
 
         Entries whose received_at > as_of are dropped. Entries without
         received_at are kept (the fixtures model documents assumed in-scope).
+
+        When a mailbox is given, SheetMap records are parsed into rows using
+        `nova.sheets.rows`, so the rules engine sees tracking events and
+        payment-register rows in production. Explicit `rows` in a record
+        override the parsed rows.
         """
         as_of_d = _parse_date(as_of)
         contracts: list[ContractRecord] = []
@@ -203,8 +267,16 @@ class Case:
             elif cls_name == "EmailFacts":
                 emails.append(EmailRecord(doc=doc, received_at=received, email=obj))
             elif cls_name == "SheetMap":
+                row_data = entry.get("rows")
+                if row_data is None and mailbox is not None:
+                    from nova.sheets import rows as _parse_rows
+                    try:
+                        pages, _scan = mailbox.pages(doc)
+                        row_data = _parse_rows(pages, obj)
+                    except (LookupError, ValueError):
+                        row_data = []
                 sheets.append(SheetRecord(doc=doc, received_at=received, sheet=obj,
-                                          rows=entry.get("rows", [])))
+                                          rows=row_data or []))
             elif cls_name == "ShipmentDoc":
                 shipments.append(ShipmentRecord(doc=doc, received_at=received, ship=obj))
 
@@ -261,6 +333,120 @@ class Case:
                 return a
         return None
 
+    # ----- terms in force -----
+
+    def terms_on(self, contract_id: str, on_date: str) -> Optional["Terms"]:
+        """Return the terms in force on *on_date* for *contract_id*.
+
+        Base is the MSA; signed amendments to it with effective_from ≤ on_date
+        are layered on in effective-date order. A later amendment replaces the
+        rows it restates per (lane, band). Fuel, accessorials and FX fall
+        through to the MSA unless an amendment restates them. Each returned
+        value carries its source, authority level and precedence rank. Rate
+        notices in force on on_date — sent by Schedule 1 `rates` contacts —
+        are returned separately and never merged into rate rows.
+        """
+        msa = self.msa_for(contract_id)
+        if msa is None:
+            return None
+        d = _parse_date(on_date)
+        msa_src = TermSource(kind="msa", doc=msa.doc, authority_level=1,
+                             rank=self._rank_for("msa", msa))
+
+        rate_rows: dict[tuple[str, str], tuple[RateRow, TermSource]] = {}
+        for r in msa.terms.rate_rows:
+            rate_rows[(r.lane, r.band)] = (r, msa_src)
+        fuel_rows: dict[str, tuple[FuelRow, TermSource]] = {
+            fr.month: (fr, msa_src) for fr in (msa.terms.fuel_rows or [])
+        }
+        accessorials: dict[str, tuple[Accessorial, TermSource]] = {
+            a.code: (a, msa_src) for a in (msa.terms.accessorials or [])
+        }
+        fx_rows: dict[str, tuple[FXRow, TermSource]] = {
+            fx.month: (fx, msa_src) for fx in (msa.terms.fx_rows or [])
+        }
+
+        amendments = [
+            c for c in self.contracts
+            if c.is_amendment and c.amends == contract_id
+            and _parse_date(c.effective_from) <= d
+            and (c.end_date is None or _parse_date(c.end_date) >= d)
+        ]
+        amendments.sort(key=lambda c: _parse_date(c.effective_from))
+        for amd in amendments:
+            amd_src = TermSource(kind="amendment", doc=amd.doc, authority_level=1,
+                                 rank=self._rank_for("signed_amendment", msa))
+            for r in amd.terms.rate_rows:
+                rate_rows[(r.lane, r.band)] = (r, amd_src)
+            for fr in amd.terms.fuel_rows or []:
+                fuel_rows[fr.month] = (fr, amd_src)
+            for a in amd.terms.accessorials or []:
+                accessorials[a.code] = (a, amd_src)
+            for fx in amd.terms.fx_rows or []:
+                fx_rows[fx.month] = (fx, amd_src)
+
+        notices = self._rate_notices_in_force(contract_id, on_date)
+
+        return Terms(
+            msa=msa,
+            rate_periods=list(msa.terms.rate_periods),
+            rate_rows=list(rate_rows.values()),
+            fuel_rows=list(fuel_rows.values()),
+            accessorials=list(accessorials.values()),
+            fx_rows=list(fx_rows.values()),
+            rate_notices=notices,
+        )
+
+    def _rank_for(self, source_kind: str, msa: ContractRecord) -> int:
+        """Precedence rank from the MSA's precedence_order (higher wins).
+        source_kind in {"signed_amendment","msa","annexes","rate_notice"}."""
+        order = msa.terms.precedence_order or ["signed_amendment", "msa", "annexes"]
+        if source_kind in order:
+            return len(order) - order.index(source_kind)
+        return 0
+
+    def _rate_notices_in_force(self, contract_id: str, on_date: str) -> list["RateNoticeSource"]:
+        d = _parse_date(on_date)
+        msa = self.msa_for(contract_id)
+        if msa is None:
+            return []
+        out: list[RateNoticeSource] = []
+        for em in self.emails:
+            rn = em.email.rate_notice
+            if rn is None:
+                continue
+            sender_addr = _addr_of(em.email.sender.value)
+            if not self.authority_of(sender_addr, contract_id, "rates"):
+                continue
+            if rn.effective_from and _parse_date(rn.effective_from.value) > d:
+                continue
+            if rn.effective_to and _parse_date(rn.effective_to.value) < d:
+                continue
+            src = TermSource(
+                kind="rate_notice", doc=em.doc, authority_level=2,
+                rank=self._rank_for("rate_notice", msa),
+            )
+            out.append(RateNoticeSource(doc=em.doc, notice=rn, source=src))
+        return out
+
+    def charge_code_for_label(self, msa: ContractRecord, label: str) -> Optional[str]:
+        """Resolve a billed charge label to its Annex E code (case-insensitive).
+
+        Falls through to matching the Annex D label when no alias row applies.
+        """
+        if label is None:
+            return None
+        low = label.strip().lower()
+        for alias in (msa.terms.charge_code_aliases or []):
+            if alias.label.strip().lower() == low:
+                return alias.code
+            if any(a.strip().lower() == low for a in alias.aliases):
+                return alias.code
+        for a in (msa.terms.accessorials or []):
+            if a.label.strip().lower() == low:
+                return a.code
+        return None
+
     def accessorial_by_label(self, msa: ContractRecord, label: str) -> Optional[Accessorial]:
         low = label.strip().lower()
         for a in msa.terms.accessorials or []:
@@ -315,6 +501,17 @@ class Case:
                     return True
         return False
 
+    def contract_for_invoice(self, bill: "BillingRecord") -> Optional[ContractRecord]:
+        """Pick the MSA referenced by the invoice's contract_ref, not by lane."""
+        bd = bill.bill
+        if bd.contract_ref is None:
+            return None
+        want = bd.contract_ref.value.strip()
+        for c in self.contracts:
+            if not c.is_amendment and c.id == want:
+                return c
+        return None
+
     def schedule1_contact(self, contract_id: str, category: str) -> Optional[Schedule1Row]:
         for c in self.contracts:
             if c.id != contract_id and (not c.amends or c.amends != contract_id):
@@ -332,3 +529,13 @@ class Case:
 def _parse_date(iso: str) -> date:
     y, m, d = iso.split("-")
     return date(int(y), int(m), int(d))
+
+
+def _addr_of(sender: str) -> str:
+    """Extract the bare email address from a `Name <addr>` sender string."""
+    s = sender.strip()
+    lt = s.rfind("<")
+    gt = s.rfind(">")
+    if 0 <= lt < gt:
+        return s[lt + 1 : gt].strip()
+    return s

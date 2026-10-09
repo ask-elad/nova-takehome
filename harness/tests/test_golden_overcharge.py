@@ -22,37 +22,12 @@ EXAMPLES_DIR = Path("data/examples") / EXAMPLE
 FIXTURES_DIR = Path("harness/tests/fixtures/examples") / EXAMPLE
 
 
-def _load_tracking_rows(mailbox: Mailbox, doc: str) -> list[dict]:
-    """Parse the tracking export so Case can resolve pickup dates by AWB."""
-    pages, _ = mailbox.pages(doc)
-    header = pages[0].splitlines()[0]
-    cols = [c.strip() for c in header.split("|")]
-    key_of = {name: i for i, name in enumerate(cols)}
-    out = []
-    for i, raw in enumerate(pages[0].splitlines()[1:], start=2):
-        parts = [p.strip() for p in raw.split("|")]
-        if len(parts) < len(cols):
-            continue
-        row = {
-            "awb": parts[key_of["AWB"]],
-            "event": parts[key_of["Event"]],
-            "date": parts[key_of["Date"]],
-            "_line": i,
-        }
-        out.append(row)
-    return out
-
-
 @pytest.fixture(scope="module")
 def case():
     records = json.loads((FIXTURES_DIR / "facts.json").read_text())
     mailbox = Mailbox(EXAMPLES_DIR / "docs")
-    # Attach tracking rows so pickup_date() can resolve PICKED_UP.
-    for e in records:
-        if e["type"] == "SheetMap" and e["data"]["kind"] == "tracking_export":
-            e["rows"] = _load_tracking_rows(mailbox, e["doc"])
     expected = json.loads((EXAMPLES_DIR / "expected_finding.json").read_text())
-    return Case.from_records(records, as_of=expected["as_of"]), mailbox, expected
+    return Case.from_records(records, as_of=expected["as_of"], mailbox=mailbox), mailbox, expected
 
 
 def test_overcharge_golden(case):

@@ -1,0 +1,1105 @@
+ ▐▛███▜▌   Claude Code v2.1.140
+▝▜█████▛▘  Opus 4.7 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/AAtakeHome/nova-takehome
+
+❯ /model                                                                        
+  ⎿  Set model to Opus 4.7
+
+❯ Read CLAUDE.md and docs/PLAN.md, then do the current task.                    
+
+  Read 7 files, listed 3 directories (ctrl+o to expand)
+
+  Read 4 files, listed 3 directories, ran 2 shell commands (ctrl+o to expand)
+
+  Searched for 3 patterns, read 1 file, listed 2 directories, ran 10 shell commands (ctrl+o to expand)
+
+● Now let me create the sheets module and the test.
+
+● Write(harness/nova/sheets.py)
+  ⎿  Wrote 43 lines to harness/nova/sheets.py
+      1 """Parse spreadsheet rows using a SheetMap.
+      2 
+        eader row is
+      4 on the SheetMap's ref line, data rows follow. Cells are joined by
+         " | ".
+        ld names in
+      6 SheetMap.columns. Each row also carries `_page` and `_line` so ca
+        llers can
+      8 """
+      9 from __future__ import annotations
+     … +41 lines (ctrl+o to expand)
+
+● Now wire this into Case so it populates rows from a mailbox:
+
+● Update(harness/nova/case.py)
+  ⎿  Added 6 lines
+      170          records: list[dict],
+      171          as_of: str,
+      172          judge: JudgeFn = null_judge,
+      173 +        mailbox: Any = None,                                  
+      174      ) -> "Case":
+      175          """Build a case from a list of {type, doc, received_at
+           ?, data} dicts.
+      176  
+      177          Entries whose received_at > as_of are dropped. Entries
+            without
+      178          received_at are kept (the fixtures model documents ass
+           umed in-scope).
+      179 +                                                              
+      180 +        When a mailbox is given, SheetMap records are parsed i
+          +nto rows using                                                
+      181 +        `nova.sheets.rows`, so the rules engine sees tracking 
+          +events and                                                    
+      182 +        payment-register rows in production. Explicit `rows` i
+          +n a record                                                    
+      183 +        override the parsed rows.                             
+      184          """
+      185          as_of_d = _parse_date(as_of)
+      186          contracts: list[ContractRecord] = []
+
+● Update(harness/nova/case.py)
+  ⎿  Added 9 lines, removed 1 line
+      209              elif cls_name == "EmailFacts":
+      210                  emails.append(EmailRecord(doc=doc, received_at
+           =received, email=obj))
+      211              elif cls_name == "SheetMap":
+      212 +                row_data = entry.get("rows")                  
+      213 +                if row_data is None and mailbox is not None:  
+      214 +                    from nova.sheets import rows as _parse_row
+          +s                                                             
+      215 +                    try:                                      
+      216 +                        pages, _scan = mailbox.pages(doc)     
+      217 +                        row_data = _parse_rows(pages, obj)    
+      218 +                    except (LookupError, ValueError):         
+      219 +                        row_data = []                         
+      220                  sheets.append(SheetRecord(doc=doc, received_at
+           =received, sheet=obj,
+      213 -                                          rows=entry.get("rows
+          -", [])))                                                      
+      221 +                                          rows=row_data or [])
+          +)                                                             
+      222              elif cls_name == "ShipmentDoc":
+      223                  shipments.append(ShipmentRecord(doc=doc, recei
+           ved_at=received, ship=obj))
+      224  
+
+● Now update pickup_date to use SheetMap-generic field names:
+
+  Read 1 file (ctrl+o to expand)
+
+● Write(harness/tests/test_sheets.py)
+  ⎿  Wrote 82 lines to harness/tests/test_sheets.py
+      1 """Tests for the production sheet-row parser."""
+      2 from __future__ import annotations
+      3 
+      4 from pathlib import Path
+      5 
+      6 from nova.schemas import Ref, SheetMap
+      7 from nova.sheets import rows
+      8 from nova.textlayer import Mailbox
+      9 
+     … +76 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now update the golden overcharge test to use Case's built-in parsing via
+  mailbox:
+
+● Update(harness/tests/test_golden_overcharge.py)
+  ⎿  Added 1 line, removed 26 lines
+      22  FIXTURES_DIR = Path("harness/tests/fixtures/examples") / EXAMPL
+          E
+      23  
+      24  
+      25 -def _load_tracking_rows(mailbox: Mailbox, doc: str) -> list[dic
+         -t]:                                                            
+      26 -    """Parse the tracking export so Case can resolve pickup dat
+         -es by AWB."""                                                  
+      27 -    pages, _ = mailbox.pages(doc)                              
+      28 -    header = pages[0].splitlines()[0]                          
+      29 -    cols = [c.strip() for c in header.split("|")]              
+      30 -    key_of = {name: i for i, name in enumerate(cols)}          
+      31 -    out = []                                                   
+      32 -    for i, raw in enumerate(pages[0].splitlines()[1:], start=2)
+         -:                                                              
+      33 -        parts = [p.strip() for p in raw.split("|")]            
+      34 -        if len(parts) < len(cols):                             
+      35 -            continue                                           
+      36 -        row = {                                                
+      37 -            "awb": parts[key_of["AWB"]],                       
+      38 -            "event": parts[key_of["Event"]],                   
+      39 -            "date": parts[key_of["Date"]],                     
+      40 -            "_line": i,                                        
+      41 -        }                                                      
+      42 -        out.append(row)                                        
+      43 -    return out                                                 
+      44 -                                                               
+      45 -                                                               
+      25  @pytest.fixture(scope="module")
+      26  def case():
+      27      records = json.loads((FIXTURES_DIR / "facts.json").read_tex
+          t())
+      28      mailbox = Mailbox(EXAMPLES_DIR / "docs")
+      50 -    # Attach tracking rows so pickup_date() can resolve PICKED_
+         -UP.                                                            
+      51 -    for e in records:                                          
+      52 -        if e["type"] == "SheetMap" and e["data"]["kind"] == "tr
+         -acking_export":                                                
+      53 -            e["rows"] = _load_tracking_rows(mailbox, e["doc"]) 
+      29      expected = json.loads((EXAMPLES_DIR / "expected_finding.jso
+          n").read_text())
+      55 -    return Case.from_records(records, as_of=expected["as_of"]),
+         - mailbox, expected                                             
+      30 +    return Case.from_records(records, as_of=expected["as_of"], 
+         +mailbox=mailbox), mailbox, expected                            
+      31  
+      32  
+      33  def test_overcharge_golden(case):
+  Ran 1 shell command (ctrl+o to expand)
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Let me check the mailbox for actual received dates:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(harness/tests/fixtures/examples/overcharge/facts.json)
+  ⎿  Added 1 line
+      2    {
+      3      "type": "ContractTerms",
+      4      "doc": "batch_01/0002.eml#MSA-TBX-US-EXP-E60.pdf",
+      5 +    "received_at": "2031-11-25",                                
+      6      "data": {
+      7        "id": {
+      8          "value": "TBX-US-EXP-E60",
+
+● Update(harness/tests/fixtures/examples/overcharge/facts.json)
+  ⎿  Added 1 line
+      1452    {
+      1453      "type": "BillingDoc",
+      1454      "doc": "batch_01/0003.eml#TX-US-2032-5394.pdf",
+      1455 +    "received_at": "2032-01-03",                             
+      1456      "data": {
+      1457        "id": {
+      1458          "value": "TX-US-2032-5394",
+
+● Update(harness/tests/fixtures/examples/overcharge/facts.json)
+  ⎿  Added 1 line
+      1582    {
+      1583      "type": "BillingDoc",
+      1584      "doc": "batch_01/0004.eml#TX-US-2032-5397.pdf",
+      1585 +    "received_at": "2032-01-27",                             
+      1586      "data": {
+      1587        "id": {
+      1588          "value": "TX-US-2032-5397",
+
+● Update(harness/tests/fixtures/examples/overcharge/facts.json)
+  ⎿  Added 1 line
+      1712    {
+      1713      "type": "SheetMap",
+      1714      "doc": "batch_01/0005.eml#tracking-2031-07-01.xlsx",
+      1715 +    "received_at": "2032-02-29",                             
+      1716      "data": {
+      1717        "kind": "tracking_export",
+      1718        "sheet_number": 1,
+
+● Now the as_of filtering test:
+
+● Write(harness/tests/test_as_of_filter.py)
+  ⎿  Wrote 42 lines to harness/tests/test_as_of_filter.py
+       1 """as_of filtering: a record received after as_of changes nothin
+         g."""
+       2 from __future__ import annotations
+       3 
+       4 import copy
+       6 from pathlib import Path
+       7 
+       8 from nova.case import Case
+       9 from nova.resolve import resolve
+      10 from nova.rules.overcharge import run as run_overcharge
+     … +37 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now task 2: terms_on. Let me re-read the spec carefully.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(harness/nova/case.py)
+  ⎿  Added 3 lines
+      29      Accessorial,
+      30      BillingDoc,
+      31      BillingLine,
+      32 +    ChargeCodeAlias,                                           
+      33      ContractTerms,
+      34      EmailFacts,
+      35      FXRow,
+      36      FuelRow,
+      37 +    RateNoticeDetails,                                         
+      38 +    RateNoticeRow,                                             
+      39      RateRow,
+      40      Ref,
+      41      Schedule1Row,
+
+● Now add the TermSource/Terms types and the terms_on method:
+
+● Update(harness/nova/case.py)
+  ⎿  Added 114 lines
+      278                  return a
+      279          return None
+      280  
+      281 +    # ----- terms in force -----                              
+      282 +                                                              
+      283 +    def terms_on(self, contract_id: str, on_date: str) -> Opti
+          +onal["Terms"]:                                                
+      284 +        """Return the terms in force on *on_date* for *contrac
+          +t_id*.                                                        
+      285 +                                                              
+      286 +        Base is the MSA; signed amendments to it with effectiv
+          +e_from ≤ on_date                                              
+      287 +        are layered on in effective-date order. A later amendm
+          +ent replaces the                                              
+      288 +        rows it restates per (lane, band). Fuel, accessorials 
+          +and FX fall                                                   
+      289 +        through to the MSA unless an amendment restates them. 
+          +Each returned                                                 
+      290 +        value carries its source, authority level and preceden
+          +ce rank. Rate                                                 
+      291 +        notices in force on on_date — sent by Schedule 1 `rate
+          +s` contacts —                                                 
+      292 +        are returned separately and never merged into rate row
+          +s.                                                            
+      293 +        """                                                   
+      294 +        msa = self.msa_for(contract_id)                       
+      295 +        if msa is None:                                       
+      296 +            return None                                       
+      297 +        d = _parse_date(on_date)                              
+      298 +        msa_src = TermSource(kind="msa", doc=msa.doc, authorit
+          +y_level=1,                                                    
+      299 +                             rank=self._rank_for("msa", msa)) 
+      300 +                                                              
+      301 +        rate_rows: dict[tuple[str, str], tuple[RateRow, TermSo
+          +urce]] = {}                                                   
+      302 +        for r in msa.terms.rate_rows:                         
+      303 +            rate_rows[(r.lane, r.band)] = (r, msa_src)        
+      304 +        fuel_rows: dict[str, tuple[FuelRow, TermSource]] = {  
+      305 +            fr.month: (fr, msa_src) for fr in (msa.terms.fuel_
+          +rows or [])                                                   
+      306 +        }                                                     
+      307 +        accessorials: dict[str, tuple[Accessorial, TermSource]
+          +] = {                                                         
+      308 +            a.code: (a, msa_src) for a in (msa.terms.accessori
+          +als or [])                                                    
+      309 +        }                                                     
+      310 +        fx_rows: dict[str, tuple[FXRow, TermSource]] = {      
+      311 +            fx.month: (fx, msa_src) for fx in (msa.terms.fx_ro
+          +ws or [])                                                     
+      312 +        }                                                     
+      313 +                                                              
+      314 +        amendments = [                                        
+      315 +            c for c in self.contracts                         
+      316 +            if c.is_amendment and c.amends == contract_id     
+      317 +            and _parse_date(c.effective_from) <= d            
+      318 +            and (c.end_date is None or _parse_date(c.end_date)
+          + >= d)                                                        
+      319 +        ]                                                     
+      320 +        amendments.sort(key=lambda c: _parse_date(c.effective_
+          +from))                                                        
+      321 +        for amd in amendments:                                
+      322 +            amd_src = TermSource(kind="amendment", doc=amd.doc
+          +, authority_level=1,                                          
+      323 +                                 rank=self._rank_for("signed_a
+          +mendment", msa))                                              
+      324 +            for r in amd.terms.rate_rows:                     
+      325 +                rate_rows[(r.lane, r.band)] = (r, amd_src)    
+      326 +            for fr in amd.terms.fuel_rows or []:              
+      327 +                fuel_rows[fr.month] = (fr, amd_src)           
+      328 +            for a in amd.terms.accessorials or []:            
+      329 +                accessorials[a.code] = (a, amd_src)           
+      330 +            for fx in amd.terms.fx_rows or []:                
+      331 +                fx_rows[fx.month] = (fx, amd_src)             
+      332 +                                                              
+      333 +        notices = self._rate_notices_in_force(contract_id, on_
+          +date)                                                         
+      334 +                                                              
+      335 +        return Terms(                                         
+      336 +            msa=msa,                                          
+      337 +            rate_periods=list(msa.terms.rate_periods),        
+      338 +            rate_rows=list(rate_rows.values()),               
+      339 +            fuel_rows=list(fuel_rows.values()),               
+      340 +            accessorials=list(accessorials.values()),         
+      341 +            fx_rows=list(fx_rows.values()),                   
+      342 +            rate_notices=notices,                             
+      343 +        )                                                     
+      344 +                                                              
+      345 +    def _rank_for(self, source_kind: str, msa: ContractRecord)
+          + -> int:                                                      
+      346 +        """Precedence rank from the MSA's precedence_order (hi
+          +gher wins).                                                   
+      347 +        source_kind in {"signed_amendment","msa","annexes","ra
+          +te_notice"}."""                                               
+      348 +        order = msa.terms.precedence_order or ["signed_amendme
+          +nt", "msa", "annexes"]                                        
+      349 +        if source_kind in order:                              
+      350 +            return len(order) - order.index(source_kind)      
+      351 +        return 0                                              
+      352 +                                                              
+      353 +    def _rate_notices_in_force(self, contract_id: str, on_date
+          +: str) -> list["RateNoticeSource"]:                           
+      354 +        d = _parse_date(on_date)                              
+      355 +        msa = self.msa_for(contract_id)                       
+      356 +        if msa is None:                                       
+      357 +            return []                                         
+      358 +        out: list[RateNoticeSource] = []                      
+      359 +        for em in self.emails:                                
+      360 +            rn = em.email.rate_notice                         
+      361 +            if rn is None:                                    
+      362 +                continue                                      
+      363 +            sender_addr = _addr_of(em.email.sender.value)     
+      364 +            if not self.authority_of(sender_addr, contract_id,
+          + "rates"):                                                    
+      365 +                continue                                      
+      366 +            if rn.effective_from and _parse_date(rn.effective_
+          +from.value) > d:                                              
+      367 +                continue                                      
+      368 +            if rn.effective_to and _parse_date(rn.effective_to
+          +.value) < d:                                                  
+      369 +                continue                                      
+      370 +            src = TermSource(                                 
+      371 +                kind="rate_notice", doc=em.doc, authority_leve
+          +l=2,                                                          
+      372 +                rank=self._rank_for("rate_notice", msa),      
+      373 +            )                                                 
+      374 +            out.append(RateNoticeSource(doc=em.doc, notice=rn,
+          + source=src))                                                 
+      375 +        return out                                            
+      376 +                                                              
+      377 +    def charge_code_for_label(self, msa: ContractRecord, label
+          +: str) -> Optional[str]:                                      
+      378 +        """Resolve a billed charge label to its Annex E code (
+          +case-insensitive).                                            
+      379 +                                                              
+      380 +        Falls through to matching the Annex D label when no al
+          +ias row applies.                                              
+      381 +        """                                                   
+      382 +        if label is None:                                     
+      383 +            return None                                       
+      384 +        low = label.strip().lower()                           
+      385 +        for alias in (msa.terms.charge_code_aliases or []):   
+      386 +            if alias.label.strip().lower() == low:            
+      387 +                return alias.code                             
+      388 +            if any(a.strip().lower() == low for a in alias.ali
+          +ases):                                                        
+      389 +                return alias.code                             
+      390 +        for a in (msa.terms.accessorials or []):              
+      391 +            if a.label.strip().lower() == low:                
+      392 +                return a.code                                 
+      393 +        return None                                           
+      394 +                                                              
+      395      def accessorial_by_label(self, msa: ContractRecord, label:
+            str) -> Optional[Accessorial]:
+      396          low = label.strip().lower()
+      397          for a in msa.terms.accessorials or []:
+
+● Now add the dataclass definitions and the _addr_of helper:
+
+● Update(harness/nova/case.py)
+  ⎿  Added 55 lines
+      125  
+      126  
+      127  # ------------------------------------------------------------
+           ---------------
+      128 +# Terms-in-force value types                                  
+      129 +# ------------------------------------------------------------
+          +---------------                                               
+      130 +                                                              
+      131 +                                                              
+      132 +@dataclass(frozen=True)                                       
+      133 +class TermSource:                                             
+      134 +    """Where a term came from, with its authority."""         
+      135 +    kind: str              # "msa" | "amendment" | "rate_notic
+          +e"                                                            
+      136 +    doc: str                                                  
+      137 +    authority_level: int   # 1 = signed, 2 = authorised email,
+          + …                                                            
+      138 +    rank: int              # higher beats lower per precedence
+          + clause                                                       
+      139 +                                                              
+      140 +                                                              
+      141 +@dataclass                                                    
+      142 +class RateNoticeSource:                                       
+      143 +    """A rate notice in force on a date, kept separate from me
+          +rged terms."""                                                
+      144 +    doc: str                                                  
+      145 +    notice: RateNoticeDetails                                 
+      146 +    source: TermSource                                        
+      147 +                                                              
+      148 +                                                              
+      149 +@dataclass                                                    
+      150 +class Terms:                                                  
+      151 +    """Terms in force on a date for one contract, each value c
+          +arrying its source."""                                        
+      152 +    msa: ContractRecord                                       
+      153 +    rate_periods: list                                        
+      154 +    rate_rows: list              # list[tuple[RateRow, TermSou
+          +rce]]                                                         
+      155 +    fuel_rows: list              # list[tuple[FuelRow, TermSou
+          +rce]]                                                         
+      156 +    accessorials: list           # list[tuple[Accessorial, Ter
+          +mSource]]                                                     
+      157 +    fx_rows: list                # list[tuple[FXRow, TermSourc
+          +e]]                                                           
+      158 +    rate_notices: list           # list[RateNoticeSource]     
+      159 +                                                              
+      160 +    def rate_rows_for(self, lane: str) -> list[tuple[RateRow, 
+          +TermSource]]:                                                 
+      161 +        return [rs for rs in self.rate_rows if rs[0].lane == l
+          +ane]                                                          
+      162 +                                                              
+      163 +    def accessorial_by_code(self, code: str) -> Optional[tuple
+          +[Accessorial, TermSource]]:                                   
+      164 +        for a, s in self.accessorials:                        
+      165 +            if a.code == code:                                
+      166 +                return a, s                                   
+      167 +        return None                                           
+      168 +                                                              
+      169 +    def fuel_for_month(self, month: str) -> Optional[tuple[Fue
+          +lRow, TermSource]]:                                           
+      170 +        for fr, s in self.fuel_rows:                          
+      171 +            if fr.month == month:                             
+      172 +                return fr, s                                  
+      173 +        return None                                           
+      174 +                                                              
+      175 +    def fx_for_month(self, month: str) -> Optional[tuple[FXRow
+          +, TermSource]]:                                               
+      176 +        for fx, s in self.fx_rows:                            
+      177 +            if fx.month == month:                             
+      178 +                return fx, s                                  
+      179 +        return None                                           
+      180 +                                                              
+      181 +                                                              
+      182 +# ------------------------------------------------------------
+          +---------------                                               
+      183  # Judge interface
+      184  # ------------------------------------------------------------
+           ---------------
+      185  
+
+● Update(harness/nova/case.py)
+  ⎿  Added 10 lines
+      518  def _parse_date(iso: str) -> date:
+      519      y, m, d = iso.split("-")
+      520      return date(int(y), int(m), int(d))
+      521 +                                                              
+      522 +                                                              
+      523 +def _addr_of(sender: str) -> str:                             
+      524 +    """Extract the bare email address from a `Name <addr>` sen
+          +der string."""                                                
+      525 +    s = sender.strip()                                        
+      526 +    lt = s.rfind("<")                                         
+      527 +    gt = s.rfind(">")                                         
+      528 +    if 0 <= lt < gt:                                          
+      529 +        return s[lt + 1 : gt].strip()                         
+      530 +    return s                                                  
+
+  Ran 1 shell command (ctrl+o to expand)
+● Update(harness/nova/case.py)
+  ⎿  Added 11 lines
+      501                      return True
+      502          return False
+      503  
+      504 +    def contract_for_invoice(self, bill: "BillingRecord") -> O
+          +ptional[ContractRecord]:                                      
+      505 +        """Pick the MSA referenced by the invoice's contract_r
+          +ef, not by lane."""                                           
+      506 +        bd = bill.bill                                        
+      507 +        if bd.contract_ref is None:                           
+      508 +            return None                                       
+      509 +        want = bd.contract_ref.value.strip()                  
+      510 +        for c in self.contracts:                              
+      511 +            if not c.is_amendment and c.id == want:           
+      512 +                return c                                      
+      513 +        return None                                           
+      514 +                                                              
+      515      def schedule1_contact(self, contract_id: str, category: st
+           r) -> Optional[Schedule1Row]:
+      516          for c in self.contracts:
+      517              if c.id != contract_id and (not c.amends or c.amen
+           ds != contract_id):
+
+● Now add tests for terms_on:
+
+● Write(harness/tests/test_terms_on.py)
+  ⎿  Wrote 133 lines to harness/tests/test_terms_on.py
+       1 """Tests for Case.terms_on: amendment layering, rate notices, in
+         voice pick."""
+       2 from __future__ import annotations
+       3 
+       4 import json
+       6 
+       7 from nova.case import Case
+       8 
+       9 
+      10 EXAMPLE_DIR = Path("harness/tests/fixtures/examples/overcharge")
+     … +145 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Now rewrite the overcharge rule:
+
+  Read 1 file (ctrl+o to expand)
+
+● Write(harness/nova/rules/overcharge.py)
+  ⎿  Added 169 lines, removed 80 lines
+       7  Pricing rules (glossary §Amounts, task 04 §3):
+       8    - freight: lane × band containing the chargeable weight × per
+          iod rate,
+       9      with the minimum charge replacing freight when rate × weigh
+          t is lower;
+      10 -  - fuel: pickup-month fuel % × the correct freight on this lin
+         -e's shipment;                                                  
+      11 -  - accessorials: by basis_kind.                               
+      10 +  - fuel: pickup-month fuel % × the correct freight on this lin
+         +e's shipment,                                                  
+      11 +    priced after freight regardless of line order on the invoic
+         +e;                                                             
+      12 +  - accessorials: by basis_kind, with Annex E alias mapping, mo
+         +nths-of-year                                                   
+      13 +    windows, and the Judge for conditional accessorials.       
+      14 +                                                               
+      15 +INR invoices: billed − correct is accumulated in INR, then conv
+         +erted once per                                                 
+      16 +finding using Annex F for the invoice-date month. A missing FX 
+         +month makes                                                    
+      17 +the finding `cannot_determine`.                                
+      18  """
+      19  from __future__ import annotations
+      20  
+      21  from decimal import Decimal
+      22  from typing import Optional
+      23  
+      18 -from nova.case import Case, ContractRecord, SourceRef          
+      19 -from nova.money import round_half_up                           
+      24 +from nova.case import Case, ContractRecord, SourceRef, Terms, T
+         +ermSource                                                      
+      25 +from nova.money import CannotDetermine, inr_to_usd, round_half_
+         +up                                                             
+      26  from nova.rules import Candidate, CorrectAmount
+      21 -from nova.schemas import RateRow                               
+      27 +from nova.schemas import Accessorial, RateRow                  
+      28  
+      29  
+      30  # -------------------------------------------------------------
+          --------------
+     ...
+       52  
+       53  def _correct_freight(
+       54      case: Case,
+       49 -    msa: ContractRecord,                                      
+       55 +    terms: Terms,                                             
+       56      lane: str,
+       57      weight: Decimal,
+       58      pickup_date: str,
+       59  ) -> Optional[tuple[Decimal, list[SourceRef]]]:
+       54 -    period = case.period_for(msa, pickup_date)                
+       55 -    rows = case.rate_rows_for(msa, lane)                      
+       56 -    band_row: Optional[RateRow] = None                        
+       57 -    min_row: Optional[RateRow] = None                         
+       58 -    for r in rows:                                            
+       60 +    period = case.period_for(terms.msa, pickup_date)          
+       61 +    rows = terms.rate_rows_for(lane)                          
+       62 +    band_row: Optional[tuple[RateRow, TermSource]] = None     
+       63 +    min_row: Optional[tuple[RateRow, TermSource]] = None      
+       64 +    for r, src in rows:                                       
+       65          if r.is_minimum_charge:
+       60 -            min_row = r                                       
+       66 +            min_row = (r, src)                                
+       67          elif _band_contains(r, weight):
+       62 -            band_row = r                                      
+       68 +            band_row = (r, src)                               
+       69      if band_row is None:
+       70          return None
+       65 -    rate = _rate_for_period(band_row, period)                 
+       71 +    rate = _rate_for_period(band_row[0], period)              
+       72      if rate is None:
+       73          return None
+       74      computed = round_half_up(rate * weight, 2)
+       69 -    srcs = [SourceRef.from_ref(msa.doc, band_row.ref)]        
+       75 +    srcs = [SourceRef.from_ref(band_row[1].doc, band_row[0].re
+          +f)]                                                           
+       76      if min_row is not None:
+       71 -        min_rate = _rate_for_period(min_row, period)          
+       77 +        min_rate = _rate_for_period(min_row[0], period)       
+       78          if min_rate is not None and computed < min_rate:
+       79              computed = round_half_up(min_rate, 2)
+       74 -            srcs.append(SourceRef.from_ref(msa.doc, min_row.re
+          -f))                                                           
+       80 +            srcs.append(SourceRef.from_ref(min_row[1].doc, min
+          +_row[0].ref))                                                 
+       81      return computed, srcs
+       82  
+       83  
+       84  # ------------------------------------------------------------
+           ---------------
+       85 +# Accessorials                                                
+       86 +# ------------------------------------------------------------
+          +---------------                                               
+       87 +                                                              
+       88 +def _accessorial_applies(                                     
+       89 +    case: Case, acc: Accessorial, pickup_date: str, awb: Optio
+          +nal[str],                                                     
+       90 +) -> bool:                                                    
+       91 +    """Does this accessorial's condition fire on this shipment
+          +?                                                             
+       92 +                                                              
+       93 +    A `months` window applies by calendar month of the pickup 
+          +date. Any other                                               
+       94 +    `condition` is passed to the Judge; when no judge is wired
+          + the condition                                                
+       95 +    is treated as unmet (so the correct amount is zero, surfac
+          +ing an                                                        
+       96 +    overcharge).                                              
+       97 +    """                                                       
+       98 +    if acc.months:                                            
+       99 +        if pickup_date[5:7] not in acc.months:                
+      100 +            return False                                      
+      101 +    if acc.condition:                                         
+      102 +        try:                                                  
+      103 +            answer, _ref = case.judge(                        
+      104 +                f"accessorial_condition:{acc.code}",          
+      105 +                {"awb": awb, "pickup_date": pickup_date, "cond
+          +ition": acc.condition},                                       
+      106 +            )                                                 
+      107 +            return bool(answer)                               
+      108 +        except (NotImplementedError, KeyError):               
+      109 +            return False                                      
+      110 +    return True                                               
+      111 +                                                              
+      112 +                                                              
+      113 +def _correct_accessorial(                                     
+      114 +    case: Case, terms: Terms, line, pickup_date: str,         
+      115 +) -> Optional[tuple[Decimal, list[SourceRef]]]:               
+      116 +    code = case.charge_code_for_label(terms.msa, line.charge_l
+          +abel)                                                         
+      117 +    if code is None:                                          
+      118 +        return None                                           
+      119 +    found = terms.accessorial_by_code(code)                   
+      120 +    if found is None:                                         
+      121 +        return None                                           
+      122 +    acc, src = found                                          
+      123 +    if not _accessorial_applies(case, acc, pickup_date, line.a
+          +wb):                                                          
+      124 +        return Decimal(0), [SourceRef.from_ref(src.doc, acc.re
+          +f)]                                                           
+      125 +    rate = Decimal(acc.rate)                                  
+      126 +    if acc.basis_kind == "per_shipment":                      
+      127 +        amt = round_half_up(rate, 2)                          
+      128 +    elif acc.basis_kind == "per_kg" and line.qty:             
+      129 +        amt = round_half_up(rate * Decimal(line.qty), 2)      
+      130 +    elif acc.basis_kind == "per_piece" and line.qty:          
+      131 +        amt = round_half_up(rate * Decimal(line.qty), 2)      
+      132 +    else:                                                     
+      133 +        return None                                           
+      134 +    return amt, [SourceRef.from_ref(src.doc, acc.ref)]        
+      135 +                                                              
+      136 +                                                              
+      137 +# ------------------------------------------------------------
+          +---------------                                               
+      138  # Rule
+      139  # ------------------------------------------------------------
+           ---------------
+      140  
+     ...
+      147          if bd.kind != "invoice":
+      148              continue
+      149          inv_id = bd.id.value
+      150 +        currency = bd.currency.value.upper() if bd.currency el
+          +se "USD"                                                      
+      151 +        invoice_date = bd.invoice_date.value if bd.invoice_dat
+          +e else None                                                   
+      152  
+       92 -        # Group lines by AWB so we can price fuel on the corre
+          -ct freight.                                                   
+      153 +        # Choose the contract by contract_ref, never by lane. 
+      154 +        msa = case.contract_for_invoice(bill)                 
+      155 +        if msa is None:                                       
+      156 +            continue                                          
+      157 +                                                              
+      158 +        # Group lines by AWB; price freight first, then fuel o
+          +n correct freight.                                            
+      159          by_awb: dict[Optional[str], list] = {}
+      160          for ln in bd.lines:
+      161              by_awb.setdefault(ln.awb, []).append(ln)
+     ...
+      164          correct_total = Decimal(0)
+      165          evidence: list[SourceRef] = []
+      166          wrong = False
+      101 -        all_in_force = True                                   
+      102 -        auth_min = 1                                          
+      167 +        unresolved_fx_month: Optional[str] = None             
+      168  
+      169          for awb, lines in by_awb.items():
+      105 -            # Pickup date for this AWB                        
+      170              pickup = case.pickup_date(awb) if awb else None
+      171              if pickup is None:
+      108 -                # Cannot reprice without a pickup date; skip t
+          -his AWB.                                                      
+      172 +                for ln in lines:                              
+      173 +                    billed_total += Decimal(ln.amount)        
+      174 +                    correct_total += Decimal(ln.amount)       
+      175                  continue
+      176              pickup_date, pickup_ref = pickup
+      177  
+      112 -            # Choose the MSA that is in force on this pickup d
+          -ate and whose                                                 
+      113 -            # Annex A has this lane. The resolve step will pic
+          -k between                                                     
+      114 -            # multiple sources; here we take the single MSA wi
+          -th the lane.                                                  
+      115 -            msa: Optional[ContractRecord] = None              
+      116 -            lane_hint = next((ln.lane for ln in lines if ln.la
+          -ne), None)                                                    
+      117 -            for c in case.contracts_in_force(pickup_date):    
+      118 -                if lane_hint is None or any(r.lane == lane_hin
+          -t for r in c.terms.rate_rows):                                
+      119 -                    msa = c                                   
+      120 -                    break                                     
+      121 -            if msa is None:                                   
+      178 +            terms = case.terms_on(msa.id, pickup_date)        
+      179 +            if terms is None:                                 
+      180 +                for ln in lines:                              
+      181 +                    billed_total += Decimal(ln.amount)        
+      182 +                    correct_total += Decimal(ln.amount)       
+      183                  continue
+      184  
+      124 -            freight_line = next((ln for ln in lines if ln.cate
+          -gory == "freight"), None)                                     
+      125 -            fuel_line = next((ln for ln in lines if ln.categor
+          -y == "fuel"), None)                                           
+      126 -                                                              
+      185 +            correct_by_line: dict[int, tuple[Decimal, list[Sou
+          +rceRef]]] = {}                                                
+      186              correct_freight: Optional[Decimal] = None
+      128 -            for ln in lines:                                  
+      129 -                billed = Decimal(ln.amount)                   
+      130 -                billed_total += billed                        
+      131 -                correct_line: Optional[Decimal] = None        
+      132 -                line_evidence: list[SourceRef] = [SourceRef.fr
+          -om_ref(bill.doc, ln.ref)]                                     
+      187 +            freight_srcs: list[SourceRef] = []                
+      188  
+      189 +            # Pass 1: freight (and anything not depending on f
+          +reight).                                                      
+      190 +            for i, ln in enumerate(lines):                    
+      191                  if ln.category == "freight" and ln.lane and ln
+           .qty:
+      135 -                    weight = Decimal(ln.qty)                  
+      136 -                    result = _correct_freight(case, msa, ln.la
+          -ne, weight, pickup_date)                                      
+      192 +                    result = _correct_freight(case, terms, ln.
+          +lane, Decimal(ln.qty), pickup_date)                           
+      193                      if result is not None:
+      194                          correct_line, srcs = result
+      195 +                        correct_by_line[i] = (correct_line, sr
+          +cs)                                                           
+      196                          correct_freight = correct_line
+      140 -                        line_evidence.extend(srcs)            
+      141 -                elif ln.category == "fuel":                   
+      142 -                    # Needs the correct freight on the same AW
+          -B and the fuel %.                                             
+      143 -                    if correct_freight is None and freight_lin
+          -e is not None:                                                
+      144 -                        # Compute if we skipped above (defensi
+          -ve); shouldn't happen.                                        
+      145 -                        pass                                  
+      146 -                    fp = case.fuel_pct(msa, pickup_date[:7])  
+      147 -                    if fp is not None and correct_freight is n
+          -ot None:                                                      
+      148 -                        pct, pct_ref = fp                     
+      149 -                        correct_line = round_half_up(correct_f
+          -reight * pct / Decimal(100), 2)                               
+      150 -                        line_evidence.append(pct_ref)         
+      151 -                elif ln.category == "security":               
+      152 -                    acc = case.accessorial_by_label(msa, ln.ch
+          -arge_label)                                                   
+      153 -                    if acc and acc.basis_kind == "per_kg" and 
+          -ln.qty:                                                       
+      154 -                        rate = Decimal(acc.rate)              
+      155 -                        correct_line = round_half_up(rate * De
+          -cimal(ln.qty), 2)                                             
+      156 -                        line_evidence.append(SourceRef.from_re
+          -f(msa.doc, acc.ref))                                          
+      157 -                elif ln.category == "accessorial":            
+      158 -                    acc = case.accessorial_by_label(msa, ln.ch
+          -arge_label)                                                   
+      159 -                    if acc:                                   
+      160 -                        if acc.basis_kind == "per_shipment":  
+      161 -                            correct_line = round_half_up(Decim
+          -al(acc.rate), 2)                                              
+      162 -                            line_evidence.append(SourceRef.fro
+          -m_ref(msa.doc, acc.ref))                                      
+      163 -                        elif acc.basis_kind == "per_kg" and ln
+          -.qty:                                                         
+      164 -                            correct_line = round_half_up(Decim
+          -al(acc.rate) * Decimal(ln.qty), 2)                            
+      165 -                            line_evidence.append(SourceRef.fro
+          -m_ref(msa.doc, acc.ref))                                      
+      197 +                        freight_srcs = srcs                   
+      198  
+      167 -                if correct_line is None:                      
+      168 -                    # Cannot reprice this line; count it as bi
+          -lled (no delta).                                              
+      169 -                    correct_line = billed                     
+      170 -                else:                                         
+      171 -                    if correct_line != billed:                
+      199 +            # Pass 2: fuel (needs correct_freight) and accesso
+          +rials.                                                        
+      200 +            for i, ln in enumerate(lines):                    
+      201 +                if i in correct_by_line:                      
+      202 +                    continue                                  
+      203 +                if ln.category == "fuel":                     
+      204 +                    if correct_freight is None:               
+      205 +                        continue                              
+      206 +                    fuel = terms.fuel_for_month(pickup_date[:7
+          +])                                                            
+      207 +                    if fuel is None:                          
+      208 +                        continue                              
+      209 +                    fr, src = fuel                            
+      210 +                    pct = Decimal(fr.rate)                    
+      211 +                    amt = round_half_up(correct_freight * pct 
+          +/ Decimal(100), 2)                                            
+      212 +                    correct_by_line[i] = (                    
+      213 +                        amt,                                  
+      214 +                        [SourceRef.from_ref(src.doc, fr.ref)] 
+          ++ freight_srcs,                                               
+      215 +                    )                                         
+      216 +                elif ln.category in {"security", "accessorial"
+          +}:                                                            
+      217 +                    r = _correct_accessorial(case, terms, ln, 
+          +pickup_date)                                                  
+      218 +                    if r is not None:                         
+      219 +                        correct_by_line[i] = r                
+      220 +                                                              
+      221 +            # Fold into totals.                               
+      222 +            for i, ln in enumerate(lines):                    
+      223 +                billed = Decimal(ln.amount)                   
+      224 +                billed_total += billed                        
+      225 +                if i in correct_by_line:                      
+      226 +                    correct_amt, srcs = correct_by_line[i]    
+      227 +                    correct_total += correct_amt              
+      228 +                    if correct_amt != billed:                 
+      229                          wrong = True
+      173 -                        evidence.extend(line_evidence)        
+      230 +                        evidence.append(SourceRef.from_ref(bil
+          +l.doc, ln.ref))                                               
+      231 +                        evidence.extend(srcs)                 
+      232                          evidence.append(pickup_ref)
+      175 -                correct_total += correct_line                 
+      233 +                else:                                         
+      234 +                    # Can't reprice: pass through billed (no d
+          +elta on this line).                                           
+      235 +                    correct_total += billed                   
+      236  
+      177 -            # Add the pickup ref once if any line produced a d
+          -elta on this AWB.                                             
+      178 -            # (Deduped during assembly below.)                
+      179 -                                                              
+      237          if not wrong:
+      238              continue
+      239          delta = billed_total - correct_total
+      240          if delta <= 0:
+      241              continue
+      242  
+      243 +        # INR → USD conversion once per finding.              
+      244 +        final_billed = billed_total                           
+      245 +        final_correct = correct_total                         
+      246 +        if currency == "INR":                                 
+      247 +            if invoice_date is None:                          
+      248 +                unresolved_fx_month = "unknown"               
+      249 +            else:                                             
+      250 +                fx = {fx_row.month: Decimal(fx_row.rate)      
+      251 +                      for fx_row, _src in (case.terms_on(msa.i
+          +d, invoice_date).fx_rows                                      
+      252 +                                            if case.terms_on(m
+          +sa.id, invoice_date) else [])}                                
+      253 +                try:                                          
+      254 +                    final_billed = inr_to_usd(billed_total, in
+          +voice_date, fx)                                               
+      255 +                    final_correct = inr_to_usd(correct_total, 
+          +invoice_date, fx)                                             
+      256 +                except CannotDetermine:                       
+      257 +                    unresolved_fx_month = invoice_date[:7]    
+      258 +                                                              
+      259          # Dedupe evidence while preserving order.
+      260          seen: set = set()
+      261          dedup = []
+     ...
+      266              seen.add(k)
+      267              dedup.append(e)
+      268  
+      269 +        if unresolved_fx_month is not None:                   
+      270 +            # cannot_determine: FX month missing; emit a candi
+          +date with no                                                  
+      271 +            # resolvable correct amount. The holder is the Sch
+          +edule 1 rates                                                 
+      272 +            # contact of the invoice issuer, which resolve.py 
+          +reads from                                                    
+      273 +            # missing_doc. The current resolve step only handl
+          +es findings; we                                               
+      274 +            # emit a note so the Phase 5 work can wire the ver
+          +dict.                                                         
+      275 +            out.append(Candidate(                             
+      276 +                key=("overcharge", inv_id),                   
+      277 +                class_="overcharge",                          
+      278 +                billed_amount=final_billed,                   
+      279 +                corrects=[],                                  
+      280 +                evidence=dedup,                               
+      281 +                note=f"cannot_determine: no Annex F row for {u
+          +nresolved_fx_month}",                                         
+      282 +            ))                                                
+      283 +            continue                                          
+      284 +                                                              
+      285          out.append(Candidate(
+      286              key=("overcharge", inv_id),
+      287              class_="overcharge",
+      199 -            billed_amount=billed_total,                       
+      288 +            billed_amount=final_billed,                       
+      289              corrects=[CorrectAmount(
+      201 -                amount=correct_total,                         
+      290 +                amount=final_correct,                         
+      291                  sources=dedup,
+      292                  authority_level=1,
+      293                  in_force=True,
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Update(harness/tests/test_overcharge_rule.py)
+  ⎿  Added 1 line
+      65          "kind": "invoice",
+      66          "issuer": {"value": "A", "ref": {"page": 1, "line": 1}}
+          ,
+      67          "currency": {"value": "USD", "ref": {"page": 1, "line":
+           1}},
+      68 +        "contract_ref": {"value": "C1", "ref": {"page": 1, "lin
+         +e": 1}},                                                       
+      69          "invoice_date": {"value": "2032-02-01", "ref": {"page":
+           1, "line": 1}},
+      70          "total": {"value": sum_amount(lines), "ref": {"page": 1
+          , "line": 1}},
+      71          "lines": lines,
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All green. Now add tests for the new overcharge behaviors:
+
+● Write(harness/tests/test_overcharge_fixes.py)
+  ⎿  Wrote 260 lines to harness/tests/test_overcharge_fixes.py
+       1 """Overcharge fixes from task 04a2 review.
+       2 
+       3 Covers:
+         ice
+       5 - Annex E alias mapping (billed label → code → accessorial rate)
+       6 - accessorial `months` window
+       7 - accessorial condition via Judge (OC-02 DG vs dry-ice)
+       8 - INR invoice: compute in INR, convert once at Annex F
+         t)
+      10 """
+     … +299 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(harness/tests/test_overcharge_fixes.py)
+  ⎿  Added 2 lines, removed 2 lines
+      226          ),
+      227          _invoice(
+      228              [_line("freight", "Air freight", amount="80000.00"
+           ,
+      229 -                   qty="100", rate="800.00", lane="L1-L2", lin
+          -e_no=1)],                                                     
+      229 +                   qty="50", rate="1600.00", lane="L1-L2", lin
+          +e_no=1)],                                                     
+      230              currency="INR",
+      231              invoice_date="2032-02-15",
+      232          ),
+     ...
+      248                         "ref": {"page": 10, "line": 1}}]),
+      249          _invoice(
+      250              [_line("freight", "Air freight", amount="80000.00"
+           ,
+      251 -                   qty="100", rate="800.00", lane="L1-L2", lin
+          -e_no=1)],                                                     
+      251 +                   qty="50", rate="1600.00", lane="L1-L2", lin
+          +e_no=1)],                                                     
+      252              currency="INR", invoice_date="2032-02-15",
+      253          ),
+      254          _tracking(),
+
+● Update(harness/tests/test_overcharge_fixes.py)
+  ⎿  Added 5 lines, removed 4 lines
+      235      case = Case.from_records(records, as_of="2032-12-31")
+      236      cands = run_overcharge(case)
+      237      assert len(cands) == 1
+      238 -    # Correct in INR: 100*6.00 = 600; delta in INR = 80000-600
+          - = 79400.                                                     
+      239 -    # USD = round_half_up(79400/80.00) and compute per billed/
+          -correct conversion.                                           
+      240 -    # Billed USD = 1000, correct USD = 7.50 → delta 992.50.   
+      238 +    # Correct in INR: 50*6.00 = 300; billed INR 80000; USD at 
+          +80.00 →                                                       
+      239 +    # billed=1000.00, correct=3.75 → delta 996.25.            
+      240      delta = cands[0].billed_amount - cands[0].corrects[0].amou
+           nt
+      242 -    assert delta == Decimal("992.50")                         
+      241 +    assert cands[0].billed_amount == Decimal("1000.00")       
+      242 +    assert cands[0].corrects[0].amount == Decimal("3.75")     
+      243 +    assert delta == Decimal("996.25")                         
+      244  
+      245  
+      246  def test_inr_invoice_missing_fx_month_is_cannot_determine():
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● All 117 tests pass. Let me update the plan and commit.
+
+● Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      53  
+      54  ## Phase 3 checklist
+      55  - [x] Task 04 · money, case model, overcharge, resolve; overcha
+          rge golden test green
+      56 -- [ ] Task 04a2 · fixes from review: sheet parsing in productio
+         -n, terms in force, overcharge gaps, received_at                
+      56 +- [x] Task 04a2 · fixes from review: sheet parsing in productio
+         +n, terms in force, overcharge gaps, received_at                
+      57  - [ ] Task 04b · duplicate, waived_but_billed, late fees, expir
+          y
+      58  - [ ] Task 04c · cashback, conflict, cannot_determine; all eigh
+          t golden tests green
+      59   No newline at end of file
+
+● Done. Summary of 04a2:
+
+  - nova/sheets.py — rows(pages, sheet_map) parses tracking exports and payment
+  registers in production; Case.from_records(..., mailbox=mb) auto-populates
+  sheet rows. Tested on both mailboxes.
+  - Case.terms_on(contract_id, on_date) — base MSA with signed amendments
+  layered by (lane, band); each value carries TermSource(kind, doc, 
+  authority_level, rank). Rate notices returned separately via
+  Terms.rate_notices, gated by Schedule 1 rates authority.
+  Case.contract_for_invoice picks the MSA by contract_ref, not lane.
+  Case.charge_code_for_label resolves via Annex E aliases.
+  - Overcharge rewrite — two-pass pricing (freight first, then fuel on correct
+  freight regardless of line order); Annex E aliases → accessorial by code;
+  accessorial months + Judge condition (OC-02 DG); INR findings computed in INR
+  and converted once at Annex F; missing FX month → cannot_determine candidate.
+  - received_at fixtures + test — overcharge fixture carries email received
+  dates; new test_as_of_filter confirms a doc received after as_of changes
+  nothing.
+
+  All 117 tests pass (.venv/bin/python -m pytest harness/tests -q).
+
+✻ Crunched for 9m 53s
+
+※ recap: We're on Phase 3 (rules engine). Task 04a2 is complete: sheet parsing, `Case.terms_on`, overcharge fixes (fuel ordering, Annex E aliases, Judge conditions, INR conversion), and received_at filtering, with all 117 tests green. Next: start Task 04b (duplicate, waived_but_billed, late fees, expiry). (disable recaps in /config)

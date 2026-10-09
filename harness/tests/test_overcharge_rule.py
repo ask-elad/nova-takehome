@@ -65,6 +65,7 @@ def _invoice(lines: list[dict], inv_id: str = "INV-1") -> dict:
         "kind": "invoice",
         "issuer": {"value": "A", "ref": {"page": 1, "line": 1}},
         "currency": {"value": "USD", "ref": {"page": 1, "line": 1}},
+        "contract_ref": {"value": "C1", "ref": {"page": 1, "line": 1}},
         "invoice_date": {"value": "2032-02-01", "ref": {"page": 1, "line": 1}},
         "total": {"value": sum_amount(lines), "ref": {"page": 1, "line": 1}},
         "lines": lines,

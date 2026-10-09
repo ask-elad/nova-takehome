@@ -2,6 +2,7 @@
   {
     "type": "ContractTerms",
     "doc": "batch_01/0002.eml#MSA-TBX-US-EXP-E60.pdf",
+    "received_at": "2031-11-25",
     "data": {
       "id": {
         "value": "TBX-US-EXP-E60",
@@ -1451,6 +1452,7 @@
   {
     "type": "BillingDoc",
     "doc": "batch_01/0003.eml#TX-US-2032-5394.pdf",
+    "received_at": "2032-01-03",
     "data": {
       "id": {
         "value": "TX-US-2032-5394",
@@ -1580,6 +1582,7 @@
   {
     "type": "BillingDoc",
     "doc": "batch_01/0004.eml#TX-US-2032-5397.pdf",
+    "received_at": "2032-01-27",
     "data": {
       "id": {
         "value": "TX-US-2032-5397",
@@ -1709,6 +1712,7 @@
   {
     "type": "SheetMap",
     "doc": "batch_01/0005.eml#tracking-2031-07-01.xlsx",
+    "received_at": "2032-02-29",
     "data": {
       "kind": "tracking_export",
       "sheet_number": 1,

@@ -7,7 +7,9 @@ changed by the humans only.
 ## Where we are
 
 **Phase 3 · Rules engine.** Foundation and schemas are done and reviewed. Current task:
-`docs/tasks/04-rules-engine.md`.
+`docs/tasks/04a2-case-model-fixes.md`, then `docs/tasks/04b-rules-invoice-classes.md`, then
+`docs/tasks/04c-rules-cashback-conflict.md`.
+The ground rules are in `docs/tasks/04-rules-engine.md`.
 
 ## How work reaches you
 
@@ -50,4 +52,7 @@ to produce the same facts.
 - [x] Task 03a2 · fixes from review: whole-token number matching, typed fields for the rules engine
 
 ## Phase 3 checklist
-- [ ] Task 04 · rules engine: money, case model, six rule modules, resolve; eight golden tests green
+- [x] Task 04 · money, case model, overcharge, resolve; overcharge golden test green
+- [x] Task 04a2 · fixes from review: sheet parsing in production, terms in force, overcharge gaps, received_at
+- [ ] Task 04b · duplicate, waived_but_billed, late fees, expiry
+- [ ] Task 04c · cashback, conflict, cannot_determine; all eight golden tests green
