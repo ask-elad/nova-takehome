@@ -47,9 +47,9 @@
   {
    "id": "overcharge:CDU-3051286",
    "class": "overcharge",
-   "verdict": "finding",
-   "action": "draft:dispute",
-   "confidence": 0.95,
+   "verdict": "cannot_determine",
+   "action": "draft:request_document",
+   "confidence": 0.5,
    "evidence": [
     {
      "doc": "batch_02/0003.eml#CDU-3051286.pdf",
@@ -57,33 +57,57 @@
      "quote": "USW2-USW1 CA66924094 Air freight 254 kg 5.15 1,308.10 15/09/2030"
     },
     {
-     "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
-     "page": 8,
-     "quote": "USW2-USW1 100-299.5 kg 4.65 4.95"
+     "doc": "batch_01/0004.eml#CDA-US-EXP-E91-AMD-1.pdf",
+     "page": 1,
+     "quote": "2. The Annex A rates for lane(s) USW2-USW1 are deleted and replaced as follows: Annex A rev 2 (attached) applies from\n2030-09-07 to lane(s) USW2-USW1."
     },
     {
      "doc": "batch_02/0022.eml#tracking-2030-09-01.xlsx",
      "page": 1,
      "quote": "CA66924094 | PICKED_UP | 2030-09-15 | USW2 | -"
-    },
+    }
+   ],
+   "amount_usd": null,
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": {
+    "name": "Annex A rev 2",
+    "holder": "Joaquin Rathbone"
+   },
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "CDU-3051286"
+  },
+  {
+   "id": "overcharge:CDU-3051297",
+   "class": "overcharge",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
     {
-     "doc": "batch_02/0003.eml#CDU-3051286.pdf",
+     "doc": "batch_02/0004.eml#CDU-3051297.pdf",
      "page": 1,
-     "quote": "USW2-USW1 CA66924094 Fuel surcharge 1,308.10 19.40% 253.77 15/09/2030"
+     "quote": "USE2-INS2 CA24035181 DG handling 1 shpt 155.65 155.65 20/09/2030"
     },
     {
      "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
-     "page": 9,
-     "quote": "2030-09 19.40%"
+     "page": 10,
+     "quote": "DG Dangerous goods fee 155.65 USD per shipment"
+    },
+    {
+     "doc": "batch_02/0022.eml#tracking-2030-09-01.xlsx",
+     "page": 1,
+     "quote": "CA24035181 | PICKED_UP | 2030-09-20 | USE2 | -"
     }
    ],
-   "amount_usd": "151.64",
+   "amount_usd": "155.65",
    "amount_range": null,
    "deadline": null,
    "missing_doc": null,
    "supersedes": [],
    "learned_at": null,
-   "invoice_id": "CDU-3051286"
+   "invoice_id": "CDU-3051297"
   },
   {
    "id": "overcharge:CDU-3051302",
@@ -118,9 +142,19 @@
      "quote": "2030-09 19.40%"
     },
     {
+     "doc": "batch_01/0004.eml#CDA-US-EXP-E91-AMD-1.pdf",
+     "page": 1,
+     "quote": "USE2-USC3 300+ kg 3.70 USD"
+    },
+    {
+     "doc": "batch_01/0004.eml#CDA-US-EXP-E91-AMD-1.pdf",
+     "page": 1,
+     "quote": "USE2-USC3 0-44.5 kg 4.63 USD"
+    },
+    {
      "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
      "page": 4,
-     "quote": "13.3 Unranked instruments. Where a rate notice under clause 3.5 and an amendment state different rates for the same lane and\nperiod, the parties shall resolve the difference jointly; neither prevails automatically."
+     "quote": "13.3 Unranked instruments. Where a rate notice under clause 3.5 and an amendment state different rates for the same lane and"
     }
    ],
    "amount_usd": null,
@@ -133,6 +167,37 @@
    "supersedes": [],
    "learned_at": null,
    "invoice_id": "CDU-3051302"
+  },
+  {
+   "id": "overcharge:CDI-3031-0306",
+   "class": "overcharge",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0001.eml#MSA-CDA-IN-EXP-E91.pdf",
+     "page": 8,
+     "quote": "INE2-USW1 100-299.5 kg 323.51 308.76"
+    },
+    {
+     "doc": "batch_02/0022.eml#tracking-2030-09-01.xlsx",
+     "page": 1,
+     "quote": "CA68214550 | PICKED_UP | 2031-01-06 | INE2 | -"
+    },
+    {
+     "doc": "batch_01/0001.eml#MSA-CDA-IN-EXP-E91.pdf",
+     "page": 9,
+     "quote": "2031-01 25.33%"
+    }
+   ],
+   "amount_usd": "85.46",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "CDI-3031-0306"
   },
   {
    "id": "duplicate:CDU-3051273",
@@ -159,37 +224,6 @@
    "supersedes": [],
    "learned_at": null,
    "invoice_id": "CDU-3051273"
-  },
-  {
-   "id": "duplicate:CDU-3051313",
-   "class": "duplicate",
-   "verdict": "finding",
-   "action": "draft:dispute",
-   "confidence": 0.95,
-   "evidence": [
-    {
-     "doc": "batch_02/0006.eml#CDU-3051304.pdf",
-     "page": 1,
-     "quote": "USE2-INS2 CA96669138-H1 Delivery fee (MAWB CA96669138) 1 shpt 52.70 52.70 26/09/2030"
-    },
-    {
-     "doc": "batch_02/0007.eml#CDU-3051313.pdf",
-     "page": 1,
-     "quote": "USE2-INS2 CA96669138-H2 Delivery fee (MAWB CA96669138) 1 shpt 52.70 52.70 26/09/2030"
-    },
-    {
-     "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
-     "page": 10,
-     "quote": "Code DLV: Delivery fee; also billed as: Door delivery, Final-mile delivery"
-    }
-   ],
-   "amount_usd": "52.70",
-   "amount_range": null,
-   "deadline": null,
-   "missing_doc": null,
-   "supersedes": [],
-   "learned_at": null,
-   "invoice_id": "CDU-3051313"
   },
   {
    "id": "waived_but_billed:CDU-3051259",
@@ -286,7 +320,71 @@
   }
  ],
  "portfolio": {
-  "cashback": [],
+  "cashback": [
+   {
+    "id": "cashback:CDA-US-EXP-E91/2030-Q3/rebate",
+    "class": "cashback",
+    "verdict": "finding",
+    "action": "draft:claim_credit",
+    "confidence": 0.95,
+    "evidence": [
+     {
+      "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+      "page": 4,
+      "quote": "77,000.00: 5%; QS >= USD 132,000.00: 7.5%; QS >= USD 208,000.00: 10%. The tier rate applies to all QS in the Quarter."
+     },
+     {
+      "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+      "page": 3,
+      "quote": "1.1 Qualifying Spend. Qualifying Spend means freight charges (base freight, fuel, security surcharge and Annex D"
+     },
+     {
+      "doc": "batch_01/0012.eml#CDU-3051268.pdf",
+      "page": 1,
+      "quote": "Charges advice CDU-3051268"
+     },
+     {
+      "doc": "batch_01/0013.eml#CDU-3051273.pdf",
+      "page": 1,
+      "quote": "Charges advice CDU-3051273"
+     },
+     {
+      "doc": "batch_01/0015.eml#CDU-3051277.pdf",
+      "page": 1,
+      "quote": "Charges advice CDU-3051277"
+     },
+     {
+      "doc": "batch_02/0002.eml#CDU-3051292.pdf",
+      "page": 1,
+      "quote": "Charges advice CDU-3051292"
+     },
+     {
+      "doc": "batch_02/0003.eml#CDU-3051286.pdf",
+      "page": 1,
+      "quote": "Charges advice CDU-3051286"
+     },
+     {
+      "doc": "batch_02/0004.eml#CDU-3051297.pdf",
+      "page": 1,
+      "quote": "Charges advice CDU-3051297"
+     },
+     {
+      "doc": "batch_02/0005.eml#CDU-3051302.pdf",
+      "page": 1,
+      "quote": "Charges advice CDU-3051302"
+     }
+    ],
+    "amount_usd": "4307.34",
+    "amount_range": null,
+    "deadline": null,
+    "missing_doc": null,
+    "supersedes": [],
+    "learned_at": null,
+    "contract_id": "CDA-US-EXP-E91",
+    "period": "2030-Q3",
+    "credit_type": "rebate"
+   }
+  ],
   "expiry": [
    {
     "id": "expiry:CDA-US-EXP-E91",

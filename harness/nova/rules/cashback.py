@@ -74,8 +74,14 @@ def _cyn_of(effective_from: date, invoice_date: date) -> int:
 # Qualifying spend
 # ---------------------------------------------------------------------------
 
-def _bill_contract(bill: BillingRecord) -> Optional[str]:
-    return bill.bill.contract_ref.value if bill.bill.contract_ref else None
+def _bill_contract(bill: BillingRecord, case: "Case | None" = None) -> Optional[str]:
+    if bill.bill.contract_ref:
+        return bill.bill.contract_ref.value
+    if case is not None:
+        msa = case.contract_for_invoice(bill)
+        if msa is not None:
+            return msa.id
+    return None
 
 
 def _bill_to_usd(amount: Decimal, bill: BillingRecord, case: Case) -> Optional[Decimal]:
@@ -168,7 +174,7 @@ def _issued_credit(case: Case, contract_id: str, period_label: str,
     for b in case.billings:
         if b.bill.kind != "credit_note":
             continue
-        if _bill_contract(b) != contract_id:
+        if _bill_contract(b, case) != contract_id:
             continue
         if (b.bill.credit_type or "").strip() != credit_type:
             continue
@@ -193,9 +199,16 @@ def _collect_spend_per_quarter(case: Case, msa: ContractRecord) -> dict[str, _Sp
     qs_includes = list(msa.terms.qs_includes or [])
     qs_excludes = list(msa.terms.qs_excludes or [])
     by_q: dict[str, _Spend] = {}
+    seen_invoice_ids: set[str] = set()
     for b in case.billings:
-        if _bill_contract(b) != msa.id:
+        if _bill_contract(b, case) != msa.id:
             continue
+        # Dedupe: a resent invoice (same id) counts once in QS, not twice.
+        if b.bill.kind in ("invoice", "statement"):
+            inv_id = b.bill.id.value
+            if inv_id in seen_invoice_ids:
+                continue
+            seen_invoice_ids.add(inv_id)
         inv_date = b.bill.invoice_date.value if b.bill.invoice_date else None
         if inv_date is None:
             continue
@@ -227,7 +240,7 @@ def _collect_spend_per_cy(case: Case, msa: ContractRecord) -> dict[int, _Spend]:
     eff = _parse(msa.effective_from)
     by_y: dict[int, _Spend] = {}
     for b in case.billings:
-        if _bill_contract(b) != msa.id:
+        if _bill_contract(b, case) != msa.id:
             continue
         inv_date = b.bill.invoice_date.value if b.bill.invoice_date else None
         if inv_date is None:

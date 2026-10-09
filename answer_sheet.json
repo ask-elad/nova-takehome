@@ -4,34 +4,34 @@
  "mode": "supervised",
  "source": "exam_report.json",
  "totals": {
-  "total_overpayment": "3810.93",
-  "cashback_owed": "0.00",
+  "total_overpayment": "3847.70",
+  "cashback_owed": "4307.34",
   "late_fees_avoided": "10.29",
-  "total_savings": "3821.22"
+  "total_savings": "8165.33"
  },
  "classes": {
   "overcharge": {
-   "count": 2,
-   "amount_usd": "396.01",
+   "count": 3,
+   "amount_usd": "485.48",
    "ids": [
+    "CDI-3031-0306",
     "CDU-3051266",
-    "CDU-3051286"
+    "CDU-3051297"
    ],
    "amounts_by_id": {
+    "CDI-3031-0306": "85.46",
     "CDU-3051266": "244.37",
-    "CDU-3051286": "151.64"
+    "CDU-3051297": "155.65"
    }
   },
   "duplicate": {
-   "count": 2,
-   "amount_usd": "3287.94",
+   "count": 1,
+   "amount_usd": "3235.24",
    "ids": [
-    "CDU-3051273",
-    "CDU-3051313"
+    "CDU-3051273"
    ],
    "amounts_by_id": {
-    "CDU-3051273": "3235.24",
-    "CDU-3051313": "52.70"
+    "CDU-3051273": "3235.24"
    }
   },
   "waived_but_billed": {
@@ -57,10 +57,14 @@
    }
   },
   "cashback": {
-   "count": 0,
-   "amount_usd": "0.00",
-   "ids": [],
-   "amounts_by_id": {}
+   "count": 1,
+   "amount_usd": "4307.34",
+   "ids": [
+    "CDA-US-EXP-E91/2030-Q3/rebate"
+   ],
+   "amounts_by_id": {
+    "CDA-US-EXP-E91/2030-Q3/rebate": "4307.34"
+   }
   },
   "late_fee_risk": {
    "count": 1,
@@ -103,6 +107,13 @@
    ]
   }
  ],
- "cannot_determine": [],
+ "cannot_determine": [
+  {
+   "id": "CDU-3051286",
+   "class": "overcharge",
+   "missing_doc": "Annex A rev 2",
+   "holder": "Joaquin Rathbone"
+  }
+ ],
  "mailbox": "exam"
 }

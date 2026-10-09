@@ -274,6 +274,18 @@ class Case:
             if cls_name == "ContractTerms":
                 contracts.append(ContractRecord(doc=doc, received_at=received, terms=obj))
             elif cls_name == "BillingDoc":
+                # Reader quirk: scans and some layouts classify an ordinary
+                # invoice as `credit_note` even though no credit_type /
+                # credited_invoices / credit_period is set and the doc still
+                # asks for payment. Treat those as invoices for the rules.
+                if (
+                    obj.kind == "credit_note"
+                    and not obj.credit_type
+                    and not obj.credit_period
+                    and not obj.credited_invoices
+                    and obj.asks_for_payment
+                ):
+                    obj = obj.model_copy(update={"kind": "invoice"})
                 billings.append(BillingRecord(doc=doc, received_at=received, bill=obj))
             elif cls_name == "EmailFacts":
                 emails.append(EmailRecord(doc=doc, received_at=received, email=obj))
