@@ -1,0 +1,12 @@
+{"schema_version": "1.0", "world": "E1", "after_batch": "batch_01",
+ "decided_at": "2033-07-15T10:00:00Z",
+ "decided_by": {"name": "AP", "role": "AP", "entity": "QMP-US"},
+ "items": [{"item_id": "ev-04-01", "decision": "one_off_approval",
+   "finding_key": {"invoice_id": "TX-US-2033-5337", "class": "waived_but_billed"},
+   "fact": {"type": "waiver_scope",
+            "subject": {"person": "Elspeth Iyengar", "party": "TBX-US"},
+            "value": {"months": ["2033-06"]},
+            "evidence": "AP phone call"},
+   "scope": {"kind": "one_off",
+             "applies_to": {"invoice_id": "TX-US-2033-5337"},
+             "valid_from": "2033-07-15", "valid_to": null}}]}

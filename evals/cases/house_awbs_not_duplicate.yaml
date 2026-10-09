@@ -1,0 +1,10 @@
+name: two house AWBs under one master are not a duplicate
+mailbox: evals/mailboxes/house_awbs_not_duplicate
+as_of: '2032-08-31'
+mode: supervised
+expect:
+  key:
+    invoice_id: TX-US-2032-5394
+    class: duplicate
+  verdict: no_finding
+why: The duplicate rule compares the FULL AWB; -H1 and -H2 under one master are two shipments (glossary decoy DU-05).

@@ -1,0 +1,12 @@
+name: a close decision drops its key and does not spread to its neighbour
+mailbox: evals/mailboxes/feedback_scope_tight
+as_of: '2032-08-31'
+mode: supervised
+feedback:
+  batch_01: evals/feedback/feedback_scope_tight_batch_01.json
+expect:
+  key:
+    invoice_id: TX-US-2032-5394
+    class: overcharge
+  verdict: no_finding
+why: close + dispute_closed drops that specific key only; a different invoice would still be a finding.

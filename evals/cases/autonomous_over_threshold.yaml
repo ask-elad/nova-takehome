@@ -1,0 +1,12 @@
+name: autonomous mode promotes a safe outbound to execute
+mailbox: evals/mailboxes/autonomous_over_threshold
+as_of: '2033-04-30'
+mode: autonomous
+expect:
+  key:
+    invoice_id: TX-US-2032-5441
+    class: duplicate
+  verdict: finding
+  amount_usd: '42.08'
+  action: execute:dispute
+why: Below $5k with all five checks passing; the autonomous mode executes dispute without a human. If any check breaks, the action should fall back to human_review.

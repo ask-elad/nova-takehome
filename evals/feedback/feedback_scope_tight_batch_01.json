@@ -1,0 +1,12 @@
+{"schema_version": "1.0", "world": "E1", "after_batch": "batch_01",
+ "decided_at": "2032-09-01T10:00:00Z",
+ "decided_by": {"name": "AP", "role": "AP", "entity": "QMP-US"},
+ "items": [{"item_id": "ev-11-01", "decision": "close",
+   "finding_key": {"invoice_id": "TX-US-2032-5394", "class": "overcharge"},
+   "fact": {"type": "dispute_closed",
+            "subject": {"invoice_id": "TX-US-2032-5394"},
+            "value": {"status": "closed"},
+            "evidence": "Carrier credit agreed"},
+   "scope": {"kind": "one_off",
+             "applies_to": {"invoice_id": "TX-US-2032-5394"},
+             "valid_from": "2032-09-01", "valid_to": null}}]}

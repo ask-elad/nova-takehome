@@ -1,0 +1,12 @@
+name: rate notice from an unauthorised sender; the amendment governs
+mailbox: evals/mailboxes/rate_notice_unauthorised
+as_of: '2032-08-31'
+mode: supervised
+expect:
+  key:
+    invoice_id: TX-US-2032-5394
+    class: overcharge
+  verdict: finding
+  amount_usd: '196.92'
+  action: draft:dispute
+why: Rowan Outsider is not a Schedule-1 rates contact, so the notice carries no weight; the invoice is still measured against the MSA and the familiar overcharge is produced.

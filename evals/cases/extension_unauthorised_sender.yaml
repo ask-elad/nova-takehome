@@ -1,0 +1,10 @@
+name: an unauthorised extension does not invalidate an authorised one
+mailbox: evals/mailboxes/extension_unauthorised_sender
+as_of: '2033-02-28'
+mode: supervised
+expect:
+  key:
+    invoice_id: TX-US-2032-5496
+    class: late_fee_not_owed
+  verdict: finding
+why: Adding an outsider's extension email next to the real one must not change the answer; late_fee_not_owed still fires at $12.65.

@@ -1,0 +1,12 @@
+name: a renamed tracking-export column header still parses
+mailbox: evals/mailboxes/tracking_renamed_header
+as_of: '2032-08-31'
+mode: supervised
+expect:
+  key:
+    invoice_id: TX-US-2032-5394
+    class: overcharge
+  verdict: finding
+  amount_usd: '196.92'
+  action: draft:dispute
+why: SheetMap drives from the row with headers, not from fixed positions; renaming the header still yields PICKED_UP rows.

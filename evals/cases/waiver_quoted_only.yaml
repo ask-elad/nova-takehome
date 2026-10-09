@@ -1,0 +1,10 @@
+name: a waiver seen only in quoted/forwarded text is cannot_determine
+mailbox: evals/mailboxes/waiver_quoted_only
+as_of: '2033-07-31'
+mode: supervised
+expect:
+  key:
+    invoice_id: TX-US-2033-5337
+    class: waived_but_billed
+  verdict: cannot_determine
+why: The waiver text only exists inside a forward whose original the Schedule-1 sender did not deliver to us.

@@ -1,0 +1,12 @@
+name: a one-off waiver covers only its month, not the next
+mailbox: evals/mailboxes/waiver_one_off_next_month
+as_of: '2033-07-31'
+mode: supervised
+feedback:
+  batch_01: evals/feedback/waiver_one_off_next_month_batch_01.json
+expect:
+  key:
+    invoice_id: TX-US-2033-5337
+    class: waived_but_billed
+  verdict: no_finding
+why: The one_off_approval scoped to 2033-06 drops the June key; a July invoice with the same wrong charge would still be a finding.

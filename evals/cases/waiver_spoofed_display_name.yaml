@@ -1,0 +1,10 @@
+name: a display-name spoof of a Schedule 1 person from another address gives no finding
+mailbox: evals/mailboxes/waiver_spoofed_display_name
+as_of: '2033-07-31'
+mode: supervised
+expect:
+  key:
+    invoice_id: TX-US-2033-5337
+    class: waived_but_billed
+  verdict: no_finding
+why: authority_of matches on the bare email address, not the display name.

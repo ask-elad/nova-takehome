@@ -1,0 +1,12 @@
+name: a reworded waiver from the same Schedule 1 contact still fires
+mailbox: evals/mailboxes/waiver_reworded
+as_of: '2033-07-31'
+mode: supervised
+expect:
+  key:
+    invoice_id: TX-US-2033-5337
+    class: waived_but_billed
+  verdict: finding
+  amount_usd: '133.44'
+  action: draft:dispute
+why: Phrasing varies; the waivers rule reads intent (named AWB + charge), not an exact match.
