@@ -546,6 +546,30 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
         unranked_ref = None
         unranked_pair = None
         if has_notice_in_force and correct_amendment != correct_notice:
+            # When reporting a conflict, make sure the amendment that priced
+            # the band is cited alongside the rate notice, even if the billed
+            # amount happened to match the amendment (so pricing never flagged
+            # a per-line "wrong" and the amendment doc stayed off evidence).
+            for ln in bd.lines:
+                if ln.lane is None or ln.awb is None or ln.qty is None:
+                    continue
+                pk = case.pickup_date(ln.awb)
+                if pk is None:
+                    continue
+                tm = case.terms_on(msa.id, pk[0])
+                if tm is None:
+                    continue
+                qd = _qty_decimal(ln.qty)
+                if qd is None:
+                    continue
+                for r, src in tm.rate_rows_for(ln.lane):
+                    if r.is_minimum_charge or not _band_contains(r, qd):
+                        continue
+                    if src.kind == "amendment":
+                        amd_ref = SourceRef.from_ref(src.doc, r.ref)
+                        if amd_ref not in dedup:
+                            dedup.append(amd_ref)
+                    break
             # Feedback `precedence` or `rate_accepted` can pin the choice for
             # a (contract, lane) in-window: keep only the named source.
             precedence_use = None

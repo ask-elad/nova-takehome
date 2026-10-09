@@ -190,7 +190,19 @@ def _compute_action(
         return _internal_action(class_, item.deadline)
 
     if class_ == "cashback":
-        return _internal_action(class_, item.deadline)
+        internal = _internal_action(class_, item.deadline)
+        # Autonomous: once due, draft:claim_credit can execute when all five
+        # unattended-action checks pass. internal:track_credit (before due)
+        # and human_review (over $5k) stay.
+        if internal != "draft:claim_credit" or mode == "supervised":
+            return internal
+        key = _group_key(item)
+        over_threshold = key is not None and outbound_sum.get(key, Decimal(0)) >= THRESHOLD
+        if over_threshold:
+            return "human_review"
+        if _all_checks_pass(item, flags):
+            return "execute:claim_credit"
+        return "human_review"
 
     # Outbound classes
     base = _OUTBOUND_BASE.get(class_, "dispute")

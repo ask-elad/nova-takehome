@@ -12,11 +12,11 @@
    "batch_02"
   ]
  },
- "score": 97.95,
- "score_uncapped": 97.95,
+ "score": 99.61,
+ "score_uncapped": 99.61,
  "excluded_keys": 0,
  "excluded_answers": 0,
- "points": 97.946,
+ "points": 99.613,
  "points_max": 100,
  "capped_by_hard_gate": false,
  "components": [
@@ -80,23 +80,21 @@
   {
    "component": "conflict",
    "label": "Conflict and abstention",
-   "points": 8.75,
+   "points": 10.0,
    "max": 10,
    "applicable": true,
    "detail": {
     "checks": 2,
-    "points": 1.75,
+    "points": 2.0,
     "precision": 1.0,
     "false": [],
-    "short": [
-     "W1 batch_02 overcharge TX-US-2035-0242: 0.75"
-    ]
+    "short": []
    }
   },
   {
    "component": "gating",
    "label": "Gating (both modes) + confidence",
-   "points": 14.196,
+   "points": 14.613,
    "max": 15,
    "applicable": true,
    "detail": {
@@ -111,14 +109,11 @@
      },
      "autonomous": {
       "actions_expected": 24,
-      "right": 22,
+      "right": 24,
       "unsafe_or_supervised_execute": 0,
       "execute_penalty_each": 2,
-      "fraction": 0.9167,
-      "wrong": [
-       "W1 batch_01 cashback TBX-US-EXP-01/2035-Q1/rebate: draft:claim_credit (expected execute:claim_credit)",
-       "W1 batch_02 cashback TBX-US-EXP-01/2035-Q1/rebate: draft:claim_credit (expected execute:claim_credit)"
-      ]
+      "fraction": 1.0,
+      "wrong": []
      }
     },
     "escalation_rate": 0.0417,
@@ -126,7 +121,7 @@
     "auroc": null,
     "brier": 0.0194,
     "items_scored": 24,
-    "actions_points": 9.583,
+    "actions_points": 10.0,
     "confidence_points": 4.612
    }
   },
@@ -262,8 +257,8 @@
  ],
  "sheets": {
   "W1": {
-   "pass": false,
-   "rows_ok": 8,
+   "pass": true,
+   "rows_ok": 9,
    "rows": 9,
    "totals": [
     {
@@ -406,7 +401,7 @@
     },
     {
      "class": "conflicts",
-     "ok": false,
+     "ok": true,
      "expected": {
       "count": 1
      },
@@ -416,12 +411,7 @@
      "missing": [],
      "extra": [],
      "wrong_amount": [],
-     "problems": [
-      {
-       "id": "TX-US-2035-0242",
-       "problem": "cite the source(s) that disagree: batch_01/0002.eml#TBX-US-EXP-01-AMD-1.pdf"
-      }
-     ]
+     "problems": []
     },
     {
      "class": "cannot_determine",
@@ -459,57 +449,7 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 165 cache hits\n",
-       "secs": 3.9
-      },
-      {
-       "step": "report",
-       "rc": 0,
-       "stderr": "",
-       "secs": 1.7
-      },
-      {
-       "step": "feedback",
-       "rc": 0,
-       "stderr": "",
-       "secs": 0.2
-      }
-     ],
-     "items": 7
-    },
-    {
-     "batch": "batch_02",
-     "as_of": "2035-09-30",
-     "error": null,
-     "steps": [
-      {
-       "step": "ingest",
-       "rc": 0,
-       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 327 cache hits\n",
-       "secs": 4.3
-      },
-      {
-       "step": "report",
-       "rc": 0,
-       "stderr": "",
-       "secs": 1.8
-      }
-     ],
-     "items": 17
-    }
-   ]
-  },
-  "autonomous": {
-   "W1": [
-    {
-     "batch": "batch_01",
-     "as_of": "2035-05-31",
-     "error": null,
-     "steps": [
-      {
-       "step": "ingest",
-       "rc": 0,
-       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 165 cache hits\n",
-       "secs": 3.7
+       "secs": 3.6
       },
       {
        "step": "report",
@@ -535,13 +475,63 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 327 cache hits\n",
+       "secs": 3.9
+      },
+      {
+       "step": "report",
+       "rc": 0,
+       "stderr": "",
+       "secs": 1.9
+      }
+     ],
+     "items": 17
+    }
+   ]
+  },
+  "autonomous": {
+   "W1": [
+    {
+     "batch": "batch_01",
+     "as_of": "2035-05-31",
+     "error": null,
+     "steps": [
+      {
+       "step": "ingest",
+       "rc": 0,
+       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 165 cache hits\n",
        "secs": 3.7
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 1.6
+       "secs": 1.7
+      },
+      {
+       "step": "feedback",
+       "rc": 0,
+       "stderr": "",
+       "secs": 0.2
+      }
+     ],
+     "items": 7
+    },
+    {
+     "batch": "batch_02",
+     "as_of": "2035-09-30",
+     "error": null,
+     "steps": [
+      {
+       "step": "ingest",
+       "rc": 0,
+       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 327 cache hits\n",
+       "secs": 4.6
+      },
+      {
+       "step": "report",
+       "rc": 0,
+       "stderr": "",
+       "secs": 1.9
       }
      ],
      "items": 17
