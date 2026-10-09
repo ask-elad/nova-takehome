@@ -6,8 +6,8 @@ changed by the humans only.
 
 ## Where we are
 
-**Phase 2 · Foundation and schemas.** The architecture is decided: `docs/decisions/0001-architecture.md`.
-Current task: `docs/tasks/03a2-schema-fixes.md` (fixes from the review of task 03a).
+**Phase 3 · Rules engine.** Foundation and schemas are done and reviewed. Current task:
+`docs/tasks/04-rules-engine.md`.
 
 ## How work reaches you
 
@@ -29,7 +29,7 @@ to produce the same facts.
 |---|---|---|
 | 0 | Workspace: repo, `CLAUDE.md`, this plan | done |
 | 1 | Census, then the architecture decision | done: `docs/decisions/0001-architecture.md` |
-| 2 | Foundation, then the typed schemas for what each reader returns | tests green; schemas reviewed by the humans |
+| 2 | Foundation, then the typed schemas for what each reader returns | done |
 | 3 | Rules engine on hand-written facts, one class at a time | all eight worked examples pass as tests |
 | 4 | Readers (the model fills the schemas) | quotes found by `grader/extract.py`; invoice lines reconcile; reader facts match the hand-written facts; first `make grade` score |
 | 5 | Verdicts, actions, modes, confidence | invariant tests for the five score-capping mistakes pass |
@@ -47,4 +47,7 @@ to produce the same facts.
 - [x] Task 02b · fixes from review: real-SDK fallback and retries, system prompt, full cache key, truncation,
       no silently dropped documents
 - [x] Task 03a · reader schemas (no prompts, no API calls)
-- [ ] Task 03a2 · fixes from review: whole-token number matching, typed fields for the rules engine
+- [x] Task 03a2 · fixes from review: whole-token number matching, typed fields for the rules engine
+
+## Phase 3 checklist
+- [ ] Task 04 · rules engine: money, case model, six rule modules, resolve; eight golden tests green
