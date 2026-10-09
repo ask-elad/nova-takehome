@@ -279,6 +279,50 @@ def _price_invoice(
     return billed_total, correct_total, evidence, wrong
 
 
+def _missing_rate_doc_candidate(
+    case: Case, bill, msa,
+) -> Optional[Candidate]:
+    """If any freight line's lane has an active amendment_rate_ref whose
+    referenced document is not held, return a cannot_determine candidate for
+    the whole invoice. Never fall back to the MSA rate.
+    """
+    bd = bill.bill
+    for ln in bd.lines:
+        if ln.category != "freight" or not ln.lane:
+            continue
+        awb = ln.awb
+        pickup = case.pickup_date(awb) if awb else None
+        if pickup is None:
+            continue
+        pickup_date, pickup_ref = pickup
+        terms = case.terms_on(msa.id, pickup_date)
+        if terms is None:
+            continue
+        for arr, src in terms.amendment_rate_refs:
+            if arr.lane != ln.lane:
+                continue
+            if case.is_doc_name_held(arr.document_name):
+                continue
+            rates_contact = case.schedule1_contact(msa.id, "rates")
+            holder = rates_contact.email if rates_contact else ""
+            evidence = [
+                SourceRef.from_ref(bill.doc, ln.ref),
+                SourceRef.from_ref(src.doc, arr.ref),
+                pickup_ref,
+            ]
+            return Candidate(
+                key=("overcharge", bd.id.value),
+                class_="overcharge",
+                billed_amount=Decimal(ln.amount),
+                corrects=[],
+                evidence=evidence,
+                missing_doc=(arr.document_name, holder),
+                note=(f"cannot_determine: amendment hands lane {arr.lane} rates to "
+                      f"{arr.document_name!r} from {arr.effective_from}; doc not held"),
+            )
+    return None
+
+
 def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
     """Return one candidate per invoice that overcharges (billed > correct)."""
     out: list[Candidate] = []
@@ -293,6 +337,13 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
 
         msa = case.contract_for_invoice(bill)
         if msa is None:
+            continue
+
+        # Amendment that hands lane rates to a referenced doc we don't hold:
+        # the whole invoice becomes cannot_determine. Never fall back to MSA.
+        missing = _missing_rate_doc_candidate(case, bill, msa)
+        if missing is not None:
+            out.append(missing)
             continue
 
         # Primary: price with rate_rows (amendments included).

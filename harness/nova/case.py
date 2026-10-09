@@ -156,6 +156,9 @@ class Terms:
     accessorials: list           # list[tuple[Accessorial, TermSource]]
     fx_rows: list                # list[tuple[FXRow, TermSource]]
     rate_notices: list           # list[RateNoticeSource]
+    # Amendment clauses that defer a lane's rates to an external document
+    # whose effective_from <= on_date. Each entry is (AmendmentRateRef, TermSource).
+    amendment_rate_refs: list = field(default_factory=list)
 
     def rate_rows_for(self, lane: str) -> list[tuple[RateRow, TermSource]]:
         return [rs for rs in self.rate_rows if rs[0].lane == lane]
@@ -373,6 +376,7 @@ class Case:
             and (c.end_date is None or _parse_date(c.end_date) >= d)
         ]
         amendments.sort(key=lambda c: _parse_date(c.effective_from))
+        amendment_rate_refs: list = []
         for amd in amendments:
             amd_src = TermSource(kind="amendment", doc=amd.doc, authority_level=1,
                                  rank=self._rank_for("signed_amendment", msa))
@@ -384,6 +388,9 @@ class Case:
                 accessorials[a.code] = (a, amd_src)
             for fx in amd.terms.fx_rows or []:
                 fx_rows[fx.month] = (fx, amd_src)
+            for arr in amd.terms.amendment_rate_refs or []:
+                if _parse_date(arr.effective_from) <= d:
+                    amendment_rate_refs.append((arr, amd_src))
 
         notices = self._rate_notices_in_force(contract_id, on_date)
 
@@ -395,6 +402,7 @@ class Case:
             accessorials=list(accessorials.values()),
             fx_rows=list(fx_rows.values()),
             rate_notices=notices,
+            amendment_rate_refs=amendment_rate_refs,
         )
 
     def _rank_for(self, source_kind: str, msa: ContractRecord) -> int:
@@ -511,6 +519,31 @@ class Case:
             if not c.is_amendment and c.id == want:
                 return c
         return None
+
+    def is_doc_name_held(self, name: str) -> bool:
+        """True iff a contract/amendment with that printed name/id is held.
+
+        Match is loose: ``name`` is compared (case-insensitively) against each
+        held contract's id and the basename of its doc path, as well as any
+        ``refers_to.name`` already captured on another instrument. Used by the
+        overcharge rule when an amendment hands a lane's rate to an external
+        document.
+        """
+        if not name:
+            return False
+        want = name.strip().lower()
+        if not want:
+            return False
+        for c in self.contracts:
+            if c.id and want == c.id.strip().lower():
+                return True
+            # doc path is "<batch>/<eml>#<file>"; try the attachment filename stem.
+            base = c.doc.rsplit("#", 1)[-1].rsplit("/", 1)[-1].lower()
+            if base and want in base:
+                return True
+            if base and base.replace(".pdf", "") == want:
+                return True
+        return False
 
     def schedule1_contact(self, contract_id: str, category: str) -> Optional[Schedule1Row]:
         for c in self.contracts:

@@ -6,9 +6,9 @@ changed by the humans only.
 
 ## Where we are
 
-**Phases 4–5 · Pipeline and policy.** Readers are done (05a): rules on reader facts reproduce all eight examples.
-Current task: `docs/tasks/06-pipeline-and-policy.md` (it replaces 05b). It uses the real API: follow the key and
-cost rules in `docs/tasks/05a-readers.md`.
+**Phases 5–7 · Fix, feedback, evals.** Task 06 is done: first real runs (practice 59.6/100; exam sheet
+hand-checked by the humans and found wrong in five places). Current task: `docs/tasks/07-fix-and-finish.md`.
+The write-up (Phase 8) is done by the humans afterwards.
 
 ## How work reaches you
 
@@ -59,3 +59,6 @@ to produce the same facts.
 ## Phase 4 checklist
 - [x] Task 05a · readers, verification, typed unranked pairs; rules on reader facts reproduce all eight examples
 - [x] Task 06 · cost fixes, ingest and report end to end, policy layer (actions, modes, $5k, confidence); first real `make grade` score
+
+## Phases 5–7 checklist
+- [ ] Task 07 · grader-proof settings, generic fixes from exam hand check and practice card, feedback and history, eval set, final runs

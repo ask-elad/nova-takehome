@@ -155,6 +155,21 @@ class ReferTo(BaseModel):
     quote: Optional[Val] = None  # required for cannot_determine items
 
 
+class AmendmentRateRef(BaseModel):
+    """An amendment clause that hands a lane's rates off to an external document.
+
+    Example: 'Annex A rev 2 (attached) applies from 2031-01-01 to lane USC1-INS1'.
+    For a pickup on or after ``effective_from`` on ``lane`` the rate must come
+    from ``document_name``; the MSA rate for that lane is no longer in force.
+    If we don't hold ``document_name`` the overcharge rule reports
+    ``cannot_determine``.
+    """
+    lane: str
+    effective_from: str       # ISO YYYY-MM-DD
+    document_name: str        # name exactly as cited in the amendment
+    ref: Ref
+
+
 class KeyClause(BaseModel):
     """A clause the rules engine needs to cite in evidence."""
     number: str    # "3.2"
@@ -262,6 +277,11 @@ class ContractTerms(BaseModel):
 
     # Documents this instrument refers to (e.g. an amendment names its MSA)
     refers_to: Optional[list[ReferTo]] = None
+
+    # Amendment clauses that defer a lane's rate to an external document.
+    # When one applies, overcharge pricing must use that document — or report
+    # cannot_determine if we don't hold it. See AmendmentRateRef docstring.
+    amendment_rate_refs: Optional[list[AmendmentRateRef]] = None
 
 
 # ---------------------------------------------------------------------------

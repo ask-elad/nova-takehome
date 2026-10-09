@@ -6,7 +6,7 @@ from nova.mailbox import DocRecord
 from nova.readers import ReadResult, read_doc
 from nova.schemas import ContractTerms
 
-prompt_version = "contract-2"
+prompt_version = "contract-3"
 
 _INSTRUCTIONS = (
     "This document is a Master Services Agreement (MSA) or a signed Amendment.\n"
@@ -33,6 +33,10 @@ _INSTRUCTIONS = (
     "  and band_max_kg null.\n"
     "- If this instrument refers to other documents (an amendment to its MSA, an\n"
     "  MSA to a referenced annex), list them in `refers_to` with a quote.\n"
+    "- If an amendment hands a lane's rates to a named external document from a\n"
+    "  given date (e.g. 'Annex A rev 2 (attached) applies from 2031-01-01 to lane\n"
+    "  USC1-INS1'), add one `amendment_rate_refs` entry per lane with\n"
+    "  `document_name` exactly as cited, the lane and the effective date.\n"
     "- Fill `qs_includes` and `qs_excludes` from the Qualifying Spend definition.\n"
     "- Leave `key_clauses` null — the rules engine does not use it.\n"
     "- `rebate_tier_rule` must be exactly one of: whole, marginal (output the bare\n"

@@ -49,27 +49,29 @@ def load(path: Path | None = None) -> dict:
         return {}
 
 
-def apply(path: Path | None = None) -> dict:
-    """Populate ``os.environ`` from the file. Env vars already set win.
+def apply(path: Path | None = None, environ: dict | None = None) -> dict:
+    """Populate ``environ`` from the file. Env vars already set win.
 
-    Returns the settings dict that was applied (useful for tests).
+    ``environ`` defaults to ``os.environ``; tests can pass a dict to avoid
+    mutating the real environment. Returns the settings dict that was applied.
     """
+    env = environ if environ is not None else os.environ
     settings = load(path)
-    for key, env in _ENV_FOR_KEY.items():
-        if env in os.environ:
+    for key, var in _ENV_FOR_KEY.items():
+        if var in env:
             continue
         if key not in settings:
             continue
-        os.environ[env] = str(settings[key])
+        env[var] = str(settings[key])
     overrides = settings.get("model_overrides") or {}
     if isinstance(overrides, dict):
-        for tier, env in _TIER_ENV.items():
-            if env in os.environ:
+        for tier, var in _TIER_ENV.items():
+            if var in env:
                 continue
             val = overrides.get(tier)
             if not val:
                 continue
             if isinstance(val, list):
                 val = ",".join(str(x) for x in val)
-            os.environ[env] = str(val)
+            env[var] = str(val)
     return settings
