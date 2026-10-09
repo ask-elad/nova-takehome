@@ -27,6 +27,11 @@ DEFAULT_STATE = ".state"
 # Ensure harness/nova is importable regardless of working directory
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+# Load optional repo-local settings (cache dir, max_paid_tokens, model overrides).
+# Env vars already set win over the file; missing file is a no-op.
+from nova.local_settings import apply as _apply_local_settings
+_apply_local_settings()
+
 
 # ---------------------------------------------------------------------------
 # Reader dispatch
