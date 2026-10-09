@@ -6,7 +6,7 @@ from nova.mailbox import DocRecord
 from nova.readers import ReadResult, read_doc
 from nova.schemas import BillingDoc
 
-prompt_version = "billing-2"
+prompt_version = "billing-3"
 
 _INSTRUCTIONS = (
     "This document is an invoice, credit note or statement of account.\n"
@@ -41,6 +41,6 @@ _INSTRUCTIONS = (
 def read(client: LLMClient, record: DocRecord) -> ReadResult:
     return read_doc(
         client, record, BillingDoc,
-        tier="main", purpose="read_billing", prompt_version=prompt_version,
+        tier="fast", purpose="read_billing", prompt_version=prompt_version,
         instructions=_INSTRUCTIONS, max_tokens=8192,
     )

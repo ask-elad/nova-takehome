@@ -59,8 +59,19 @@ class ReadResult:
     data: dict = field(default_factory=dict)
 
 
-def _user_message(doc_id: str, pages: list[str], instructions: str) -> list[dict]:
+def _user_message(doc_id: str, pages: list[str], instructions: str, max_doc_lines: Optional[int] = None) -> list[dict]:
     rendered = render_pages(pages)
+    if max_doc_lines is not None:
+        lines = rendered.split("\n")
+        kept: list[str] = []
+        page_line_count = 0
+        for line in lines:
+            if line.startswith("[p"):
+                if page_line_count >= max_doc_lines:
+                    break
+                page_line_count += 1
+            kept.append(line)
+        rendered = "\n".join(kept)
     content = (
         f"{instructions}\n\n"
         f"<document doc=\"{doc_id}\">\n"
@@ -120,13 +131,14 @@ def read_doc(
     prompt_version: str,
     instructions: str,
     max_tokens: int = 8192,
+    max_doc_lines: Optional[int] = None,
 ) -> ReadResult:
     """Call Claude to fill *Model* for *record*, verify, and re-read one tier up on failure."""
     schema = flatten_schema(Model.model_json_schema())
     result = ReadResult(doc_id=record.doc_id, model_name=Model.__name__, tier_used=tier)
 
     def _attempt(current_tier: str, extra: str = "") -> None:
-        messages = _user_message(record.doc_id, record.pages, instructions + extra)
+        messages = _user_message(record.doc_id, record.pages, instructions + extra, max_doc_lines=max_doc_lines)
         try:
             raw = client.call(
                 tier=current_tier,

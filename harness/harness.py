@@ -117,35 +117,87 @@ def ingest(batch_dir: str, state_dir: str, estimate: bool = False) -> None:
     records = load_batch(Path(batch_dir))
 
     if estimate:
-        # Count by extension; multiply by 05a ledger averages (paid, non-cached).
-        # Averages per paid call from the 05a run:
-        AVG_TOKENS = {
-            "eml":   (6219, 405),   # email reader
-            "pdf":   (7117, 1702),  # billing reader (most PDFs)
-            "xlsx":  (1643, 190),   # sheet reader
+        # Schema overhead in tokens (measured from flatten_schema output sizes).
+        SCHEMA_TOK = {
+            "classify": 253,
+            "email":    3345,
+            "billing":  3613,
+            "contract": 8656,
+            "sheet":    653,
+            "shipment": 2628,
         }
-        classify_avg = (1500, 100)  # fast classifier for each non-email
+        # Output token averages from the 05a real run, per document type.
+        OUT_AVG = {
+            "classify": 50,
+            "email":    405,
+            "billing":  1702,
+            "contract": 7694,
+            "sheet":    190,
+            "shipment": 312,
+        }
+        # Classify contract vs billing: long PDFs (> 3000 text tokens) are likely contracts.
+        CONTRACT_TEXT_THRESHOLD = 3000
+
+        def _text_tokens(pages: list[str]) -> int:
+            return sum(len(p) for p in pages) // 4
+
+        def _truncated_tokens(pages: list[str], max_lines: int) -> int:
+            chars = 0
+            line_count = 0
+            for page in pages:
+                for line in page.split("\n"):
+                    if line_count >= max_lines:
+                        break
+                    chars += len(line) + 1  # +1 for newline
+                    line_count += 1
+                if line_count >= max_lines:
+                    break
+            return chars // 4
+
         total_in = total_out = 0
         counts: dict[str, int] = {}
         for rec in records:
             if state.facts_exist(rec.doc_id):
-                continue  # already read
+                continue
             ext = rec.ext.lower() if rec.ext else "other"
+            text_tok = _text_tokens(rec.pages)
+            cls_tok = _truncated_tokens(rec.pages, 40)
+
             if ext == "eml":
-                i, o = AVG_TOKENS["eml"]
+                i = text_tok + SCHEMA_TOK["email"]
+                o = OUT_AVG["email"]
+                label = "eml"
             elif ext == "pdf":
-                i, o = AVG_TOKENS["pdf"]
-                ci, co = classify_avg
-                i += ci; o += co
+                # Classify (fast, 40-line truncation) + reader
+                classify_i = cls_tok + SCHEMA_TOK["classify"]
+                classify_o = OUT_AVG["classify"]
+                if text_tok > CONTRACT_TEXT_THRESHOLD:
+                    reader_i = text_tok + SCHEMA_TOK["contract"]
+                    reader_o = OUT_AVG["contract"]
+                    label = "pdf_contract"
+                else:
+                    reader_i = text_tok + SCHEMA_TOK["billing"]
+                    reader_o = OUT_AVG["billing"]
+                    label = "pdf_billing"
+                i = classify_i + reader_i
+                o = classify_o + reader_o
             elif ext == "xlsx":
-                i, o = AVG_TOKENS["xlsx"]
-                ci, co = classify_avg
-                i += ci; o += co
+                # Classify (fast, 40-line truncation) + sheet (fast, 4-line truncation)
+                classify_i = cls_tok + SCHEMA_TOK["classify"]
+                classify_o = OUT_AVG["classify"]
+                sheet_tok = _truncated_tokens(rec.pages, 4)
+                sheet_i = sheet_tok + SCHEMA_TOK["sheet"]
+                sheet_o = OUT_AVG["sheet"]
+                i = classify_i + sheet_i
+                o = classify_o + sheet_o
+                label = "xlsx"
             else:
-                i, o = 0, 0
+                i = o = 0
+                label = ext or "other"
             total_in += i
             total_out += o
-            counts[ext] = counts.get(ext, 0) + 1
+            counts[label] = counts.get(label, 0) + 1
+
         print(
             f"ESTIMATE: {sum(counts.values())} unread docs "
             f"({', '.join(f'{v} {k}' for k, v in sorted(counts.items()))})\n"

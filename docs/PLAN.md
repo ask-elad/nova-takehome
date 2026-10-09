@@ -6,9 +6,9 @@ changed by the humans only.
 
 ## Where we are
 
-**Phase 4 · Readers.** The rules engine is done: all eight golden tests pass on hand-written facts. Current tasks,
-in order: `docs/tasks/05a-readers.md`, then `docs/tasks/05b-pipeline.md`. Both use the real API: follow the key
-and cost rules in 05a.
+**Phases 4–5 · Pipeline and policy.** Readers are done (05a): rules on reader facts reproduce all eight examples.
+Current task: `docs/tasks/06-pipeline-and-policy.md` (it replaces 05b). It uses the real API: follow the key and
+cost rules in `docs/tasks/05a-readers.md`.
 
 ## How work reaches you
 
@@ -32,7 +32,7 @@ to produce the same facts.
 | 1 | Census, then the architecture decision | done: `docs/decisions/0001-architecture.md` |
 | 2 | Foundation, then the typed schemas for what each reader returns | done |
 | 3 | Rules engine on hand-written facts, one class at a time | done |
-| 4 | Readers (the model fills the schemas) | quotes found by `grader/extract.py`; invoice lines reconcile; reader facts match the hand-written facts; first `make grade` score |
+| 4 | Readers (the model fills the schemas) | done: rules on reader facts reproduce all eight examples |
 | 5 | Verdicts, actions, modes, confidence | invariant tests for the five score-capping mistakes pass |
 | 6 | New documents and feedback | one test per feedback kind, plus tests that feedback doesn't spread |
 | 7 | Our own eval set, exam run | `make eval` green; answer sheet checked against the documents |
@@ -58,6 +58,4 @@ to produce the same facts.
 
 ## Phase 4 checklist
 - [x] Task 05a · readers, verification, typed unranked pairs; rules on reader facts reproduce all eight examples
-      - [x] step 1 · typed `unranked_pairs` (schema, overcharge, fixtures, tests)
-      - [x] steps 2–6 · readers, verify+reread, compare_readers, Judge, ledger_summary; 13/13 findings reproduced
-- [ ] Task 05b · ingest and report end to end; first real `make grade` score
+- [x] Task 06 · cost fixes, ingest and report end to end, policy layer (actions, modes, $5k, confidence); first real `make grade` score

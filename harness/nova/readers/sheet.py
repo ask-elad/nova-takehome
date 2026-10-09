@@ -10,7 +10,7 @@ from nova.mailbox import DocRecord
 from nova.readers import ReadResult, read_doc
 from nova.schemas import SheetMap
 
-prompt_version = "sheet-2"
+prompt_version = "sheet-3"
 
 _INSTRUCTIONS = (
     "This document is a spreadsheet rendered page-by-sheet, one row per line.\n"
@@ -38,5 +38,5 @@ def read(client: LLMClient, record: DocRecord) -> ReadResult:
     return read_doc(
         client, record, SheetMap,
         tier="fast", purpose="read_sheet", prompt_version=prompt_version,
-        instructions=_INSTRUCTIONS, max_tokens=1024,
+        instructions=_INSTRUCTIONS, max_tokens=1024, max_doc_lines=4,
     )

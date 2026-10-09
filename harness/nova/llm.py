@@ -193,7 +193,7 @@ class LLMClient:
                     f"NOVA_MAX_PAID_TOKENS={self._max_paid_tokens} reached "
                     f"(paid so far: {current_paid}). Stopping before {purpose}."
                 )
-        result, input_tokens, output_tokens = self._invoke(model, messages, schema, system, max_tokens)
+        result, input_tokens, output_tokens, cache_read, cache_creation = self._invoke(model, messages, schema, system, max_tokens)
         self._write_cache(key, {"result": result, "input_tokens": input_tokens, "output_tokens": output_tokens})
         self._write_ledger({
             "time": datetime.now(timezone.utc).isoformat(),
@@ -201,20 +201,22 @@ class LLMClient:
             "model": model,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
+            "cache_read_tokens": cache_read,
+            "cache_creation_tokens": cache_creation,
             "cached": False,
         })
         return result
 
-    def _invoke(self, model: str, messages: list[dict], schema: dict, system: str, max_tokens: int) -> tuple[dict, int, int]:
+    def _invoke(self, model: str, messages: list[dict], schema: dict, system: str, max_tokens: int) -> tuple[dict, int, int, int, int]:
         if self._fake:
             return self._fake_invoke(model, schema)
         return self._real_invoke(model, messages, schema, system, max_tokens)
 
-    def _fake_invoke(self, model: str, schema: dict) -> tuple[dict, int, int]:
+    def _fake_invoke(self, model: str, schema: dict) -> tuple[dict, int, int, int, int]:
         result = _fake_responses.get(model) or _fake_responses.get("*") or {}
-        return result, 10, 5
+        return result, 10, 5, 0, 0
 
-    def _real_invoke(self, model: str, messages: list[dict], schema: dict, system: str, max_tokens: int) -> tuple[dict, int, int]:
+    def _real_invoke(self, model: str, messages: list[dict], schema: dict, system: str, max_tokens: int) -> tuple[dict, int, int, int, int]:
         import anthropic
         max_retries = 5
         use_tool_choice = True
@@ -223,19 +225,26 @@ class LLMClient:
                 kwargs: dict[str, Any] = dict(
                     model=model,
                     max_tokens=max_tokens,
-                    tools=[{"name": "output", "description": "Structured output", "input_schema": schema}],
+                    tools=[{
+                        "name": "output",
+                        "description": "Structured output",
+                        "input_schema": schema,
+                        "cache_control": {"type": "ephemeral"},
+                    }],
                     messages=messages,
                 )
                 if use_tool_choice:
                     kwargs["tool_choice"] = {"type": "tool", "name": "output"}
                 if system:
-                    kwargs["system"] = system
+                    kwargs["system"] = [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
                 resp = self._client.messages.create(**kwargs)
                 if resp.stop_reason == "max_tokens":
                     raise TruncatedOutput(f"model {model} hit max_tokens={max_tokens}")
                 for block in resp.content:
                     if block.type == "tool_use" and block.name == "output":
-                        return block.input, resp.usage.input_tokens, resp.usage.output_tokens
+                        cache_read = getattr(resp.usage, "cache_read_input_tokens", 0) or 0
+                        cache_creation = getattr(resp.usage, "cache_creation_input_tokens", 0) or 0
+                        return block.input, resp.usage.input_tokens, resp.usage.output_tokens, cache_read, cache_creation
                 raise ValueError("no tool_use block in response")
             except TruncatedOutput:
                 raise

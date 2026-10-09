@@ -46,6 +46,6 @@ def read(client: LLMClient, record: DocRecord) -> Classification | None:
     result = read_doc(
         client, record, Classification,
         tier="fast", purpose="classify", prompt_version=prompt_version,
-        instructions=_INSTRUCTIONS, max_tokens=512,
+        instructions=_INSTRUCTIONS, max_tokens=512, max_doc_lines=40,
     )
     return result.instance
