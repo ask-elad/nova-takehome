@@ -448,14 +448,14 @@
       {
        "step": "ingest",
        "rc": 0,
-       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 165 cache hits\n",
-       "secs": 3.6
+       "stderr": "LEDGER: 29 paid calls (52,633 in + 46,102 out = 98,735 tokens), 138 cache hits\n",
+       "secs": 58.4
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 1.5
+       "secs": 1.8
       },
       {
        "step": "feedback",
@@ -474,8 +474,8 @@
       {
        "step": "ingest",
        "rc": 0,
-       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 327 cache hits\n",
-       "secs": 3.9
+       "stderr": "LEDGER: 61 paid calls (104,670 in + 85,466 out = 190,136 tokens), 269 cache hits\n",
+       "secs": 26.1
       },
       {
        "step": "report",
@@ -498,14 +498,14 @@
       {
        "step": "ingest",
        "rc": 0,
-       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 165 cache hits\n",
-       "secs": 3.7
+       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 167 cache hits\n",
+       "secs": 3.8
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 1.7
+       "secs": 1.5
       },
       {
        "step": "feedback",
@@ -524,14 +524,14 @@
       {
        "step": "ingest",
        "rc": 0,
-       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 327 cache hits\n",
-       "secs": 4.6
+       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 330 cache hits\n",
+       "secs": 4.3
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 1.9
+       "secs": 1.6
       }
      ],
      "items": 17

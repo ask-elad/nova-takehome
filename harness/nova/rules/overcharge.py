@@ -414,7 +414,11 @@ def _missing_rate_doc_candidate(
             if case.is_doc_name_held(arr.document_name):
                 continue
             rates_contact = case.schedule1_contact(msa.id, "rates")
-            holder = rates_contact.name if rates_contact else ""
+            holder = (
+                {"person": rates_contact.name, "party": rates_contact.party,
+                 "role": rates_contact.title}
+                if rates_contact else {"party": ""}
+            )
             evidence = [
                 SourceRef.from_ref(bill.doc, ln.ref),
                 SourceRef.from_ref(src.doc, arr.ref),
@@ -525,8 +529,12 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
 
         if unresolved_fx_month is not None:
             treasury = case.schedule1_contact(msa.id, "treasury")
-            missing = (f"Annex F row for {unresolved_fx_month}",
-                       treasury.email if treasury else "")
+            holder = (
+                {"person": treasury.name, "party": treasury.party,
+                 "role": treasury.title}
+                if treasury else {"party": ""}
+            )
+            missing = (f"Annex F row for {unresolved_fx_month}", holder)
             out.append(Candidate(
                 key=("overcharge", inv_id),
                 class_="overcharge",

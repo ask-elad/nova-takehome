@@ -72,7 +72,11 @@
    "deadline": null,
    "missing_doc": {
     "name": "Annex A rev 2",
-    "holder": "Joaquin Rathbone"
+    "holder": {
+     "person": "Joaquin Rathbone",
+     "party": "CDA-US",
+     "role": "Pricing Manager"
+    }
    },
    "supersedes": [],
    "learned_at": null,

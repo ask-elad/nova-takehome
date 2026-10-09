@@ -23,7 +23,7 @@ def test_candidate_with_missing_doc_becomes_cannot_determine():
     assert items[0].verdict == "cannot_determine"
     assert items[0].missing_doc == {
         "name": "Annex F row for 2033-05",
-        "holder": "treasury@carrier.example",
+        "holder": {"person": "treasury@carrier.example"},
     }
 
 

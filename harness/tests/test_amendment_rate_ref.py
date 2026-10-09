@@ -124,7 +124,7 @@ def test_missing_referenced_doc_yields_cannot_determine():
     assert c.missing_doc is not None
     name, holder = c.missing_doc
     assert name == "Annex A rev 2"
-    assert holder == "Rhea Rates"
+    assert holder.get("person") == "Rhea Rates"
     assert "cannot_determine" in (c.note or "")
 
 

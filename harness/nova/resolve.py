@@ -93,7 +93,16 @@ def resolve(
                     quotes_cd.append(Evidence(doc=ref.doc, page=ref.page, quote=q))
                 missing = None
                 if cand.missing_doc:
-                    missing = {"name": cand.missing_doc[0], "holder": cand.missing_doc[1]}
+                    name, holder = cand.missing_doc
+                    if isinstance(holder, dict):
+                        holder_obj = {k: v for k, v in holder.items() if v}
+                    else:
+                        holder_obj = {"person": holder} if holder else {}
+                    # Schema requires person or party on holder; default to a
+                    # placeholder party when neither is known.
+                    if not holder_obj:
+                        holder_obj = {"party": ""}
+                    missing = {"name": name, "holder": holder_obj}
                 items.append(Item(
                     id=f"{cand.class_}:{cand.key[1]}",
                     class_=cand.class_,

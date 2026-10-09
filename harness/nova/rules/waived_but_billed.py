@@ -197,13 +197,14 @@ def run(case: Case) -> list[Candidate]:
             if not matched:
                 continue
             # Holder: issuing party's KAM (notices).
-            holder_email = ""
+            holder: dict = {"party": ""}
             for c in case.contracts:
                 if c.id != cid:
                     continue
                 for row in c.terms.schedule1_rows:
                     if "notices" in row.categories:
-                        holder_email = row.email
+                        holder = {"person": row.name, "party": row.party,
+                                   "role": row.title}
                         break
                 break
             out.append(Candidate(
@@ -212,7 +213,7 @@ def run(case: Case) -> list[Candidate]:
                 billed_amount=Decimal(0),
                 corrects=[],
                 evidence=[SourceRef.from_ref(em.doc, w.ref)],
-                missing_doc=(f"original of waiver on {w.awb or w.month}", holder_email),
+                missing_doc=(f"original of waiver on {w.awb or w.month}", holder),
                 note="cannot_determine: quoted-only waiver",
             ))
     return out

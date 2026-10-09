@@ -111,5 +111,5 @@ def test_quoted_only_waiver_is_cannot_determine():
     c = cands[0]
     assert c.corrects == []
     assert c.missing_doc is not None
-    assert c.missing_doc[1] == "kam@carrier.example"
+    assert c.missing_doc[1].get("person") == "Kam"
     assert "cannot_determine" in c.note

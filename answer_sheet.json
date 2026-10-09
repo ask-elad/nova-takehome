@@ -112,7 +112,11 @@
    "id": "CDU-3051286",
    "class": "overcharge",
    "missing_doc": "Annex A rev 2",
-   "holder": "Joaquin Rathbone"
+   "holder": {
+    "person": "Joaquin Rathbone",
+    "party": "CDA-US",
+    "role": "Pricing Manager"
+   }
   }
  ],
  "mailbox": "exam"
