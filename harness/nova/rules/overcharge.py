@@ -128,29 +128,42 @@ def _notice_row_for(terms: Terms, lane: str, weight: Decimal) -> Optional[tuple[
 # Accessorials
 # ---------------------------------------------------------------------------
 
+def _is_dg_condition(text: str) -> bool:
+    """Rough test for a dangerous-goods accessorial condition."""
+    t = (text or "").lower()
+    return ("dangerous good" in t) or ("iata dgr" in t) or ("dg " in t) or t.endswith(" dg")
+
+
 def _accessorial_applies(
     case: Case, acc: Accessorial, pickup_date: str, awb: Optional[str],
 ) -> bool:
     """Does this accessorial's condition fire on this shipment?
 
-    A `months` window applies by calendar month of the pickup date. Any other
-    `condition` is passed to the Judge; when no judge is wired the condition
-    is treated as unmet (so the correct amount is zero, surfacing an
-    overcharge).
+    A `months` window applies by calendar month of the pickup date. For a DG
+    accessorial we read the DG declaration directly: a declaration that is
+    refrigerant-only (dry ice, UN1845 alone) means the fee does not apply
+    (MSA 5.2/5.3); any other UN number means it does. For any other
+    conditional accessorial we fall back to the Judge; when no judge is wired
+    the condition is treated as unmet.
     """
     if acc.months:
         if pickup_date[5:7] not in acc.months:
             return False
-    if acc.condition:
-        try:
-            answer, _ref = case.judge(
-                f"accessorial_condition:{acc.code}",
-                {"awb": awb, "pickup_date": pickup_date, "condition": acc.condition},
-            )
-            return bool(answer)
-        except (NotImplementedError, KeyError):
-            return False
-    return True
+    if not acc.condition:
+        return True
+    if awb and _is_dg_condition(acc.condition):
+        status = case.dg_status_for(awb)
+        if status is not None:
+            return status[0] == "dg"
+        # No DG declaration: fall through to the Judge.
+    try:
+        answer, _ref = case.judge(
+            f"accessorial_condition:{acc.code}",
+            {"awb": awb, "pickup_date": pickup_date, "condition": acc.condition},
+        )
+        return bool(answer)
+    except (NotImplementedError, KeyError):
+        return False
 
 
 def _correct_accessorial(

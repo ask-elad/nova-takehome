@@ -96,12 +96,21 @@ def _bill_to_usd(amount: Decimal, bill: BillingRecord, case: Case) -> Optional[D
 
 def _qs_from_bill(bill: BillingRecord, qs_includes: list[str], qs_excludes: list[str],
                   case: Case) -> Optional[Decimal]:
-    """Qualifying spend from one invoice: invoice total minus the lines whose
-    category is in qs_excludes. Taking it from the total avoids rate drift
-    when the reader hasn't surfaced every freight line."""
+    """Qualifying spend from one invoice (glossary §Cashback and credits).
+
+    Take the invoice total and subtract the categories that cannot count:
+    ``qs_excludes`` from the contract, plus the glossary's hard defaults
+    (tax, duty, late fees, credits). This matches "total minus the bits that
+    don't count" more robustly than summing includes — a billing reader that
+    tags a freight-equivalent as ``minimum_charge`` or ``other`` still contributes
+    to spend. Rebate/improvement credit notes are handled separately in the
+    quarter/CY walk; they must never enter the per-invoice QS.
+    """
+    DEFAULT_EXCLUDES = {"tax", "duty", "late_fee", "credit"}
+    excluded_cats = set(qs_excludes or []) | DEFAULT_EXCLUDES
     excluded = Decimal(0)
     for ln in bill.bill.lines:
-        if qs_excludes and ln.category in qs_excludes:
+        if ln.category in excluded_cats:
             excluded += Decimal(ln.amount)
     total = Decimal(bill.bill.total.value) - excluded
     return _bill_to_usd(total, bill, case)

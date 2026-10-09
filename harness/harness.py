@@ -69,10 +69,14 @@ def _read_record(client, record):
             return None
         return ("EmailFacts", result.data)
 
-    # Image-only PDFs: scan reader
+    # Image-only PDFs: scan reader (needs the raw PDF bytes).
     if record.is_scan:
-        # scan reader needs raw PDF bytes — unavailable here; skip for now
-        return None
+        if record.ext != "pdf" or not getattr(record, "raw_bytes", None):
+            return None
+        result = scan_mod.read(client, record, pdf_bytes=record.raw_bytes)
+        if result.instance is None:
+            return None
+        return ("BillingDoc", result.data)
 
     # Skip unreadable
     if record.unreadable or not record.pages:

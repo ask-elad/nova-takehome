@@ -495,6 +495,46 @@ class Case:
                     return ln.pickup_date, SourceRef.from_ref(b.doc, ln.ref)
         return None
 
+    # ----- dangerous goods status -----
+
+    def dg_status_for(self, awb: str) -> Optional[tuple[str, SourceRef]]:
+        """Return the dangerous-goods status of a shipment from its DG declaration.
+
+        The returned string is one of:
+          - ``"refrigerant_only"`` — the declaration says the refrigerant is
+            the only hazard, or lists only UN1845 (dry ice). The DG fee does
+            not apply (MSA 5.2/5.3): the full DG fee billed is an overcharge.
+          - ``"dg"`` — the declaration lists one or more dangerous goods, with
+            or without dry ice (a mixed shipment). The DG fee applies **once**.
+          - ``None`` — no DG declaration is held for this AWB.
+        """
+        for sh in self.shipments:
+            if sh.ship.kind != "dg_declaration":
+                continue
+            if sh.ship.awb.value != awb:
+                continue
+            un_nums = {u.value.upper() for u in (sh.ship.un_numbers or [])}
+            if sh.ship.refrigerant_only is True:
+                ref_src = SourceRef.from_ref(
+                    sh.doc,
+                    sh.ship.refrigerant_only_ref or sh.ship.awb.ref,
+                )
+                return "refrigerant_only", ref_src
+            if un_nums and un_nums <= {"UN1845"}:
+                # Only dry ice is listed.
+                any_ref = next(
+                    (u.ref for u in (sh.ship.un_numbers or [])),
+                    sh.ship.awb.ref,
+                )
+                return "refrigerant_only", SourceRef.from_ref(sh.doc, any_ref)
+            if un_nums:
+                any_ref = next(
+                    (u.ref for u in (sh.ship.un_numbers or [])),
+                    sh.ship.awb.ref,
+                )
+                return "dg", SourceRef.from_ref(sh.doc, any_ref)
+        return None
+
     # ----- authority (Schedule 1) -----
 
     def authority_of(self, email_addr: str, contract_id: str, category: str) -> bool:

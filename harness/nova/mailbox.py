@@ -26,6 +26,9 @@ class DocRecord:
     parent_id: Optional[str] = None  # email doc_id for attachments; None for emails
     ext: str = ""
     unreadable: bool = False
+    # In-memory raw bytes for image-only PDFs, kept only during ingest so the
+    # scan reader can transcribe them. Never persisted to disk.
+    raw_bytes: Optional[bytes] = field(default=None, repr=False, compare=False)
 
     def to_dict(self) -> dict:
         d = {
@@ -159,6 +162,7 @@ def load_batch(batch_dir: Path) -> list[DocRecord]:
                 is_scan=is_scan,
                 parent_id=rel,
                 ext=ext,
+                raw_bytes=att_data if is_scan else None,
             ))
 
     return records
