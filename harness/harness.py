@@ -316,8 +316,25 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
     # Apply policy (actions, $5k rule, five checks).
     items = apply_policy(items, mode=mode)
 
+    # Apply scoped feedback (reject / close / one_off_approval / override_amount)
+    # and compute learned_at / supersedes against the latest saved report.
+    from nova.feedback import load_feedback, apply_post_items
+    feedback_items = load_feedback(state.root)
+    items, annotations = apply_post_items(
+        items, feedback_items, report_dir=state.reports_dir,
+    )
+
     # Serialise to report JSON.
-    return _build_report(items, as_of, mode, conf_score)
+    report_obj = _build_report(items, as_of, mode, conf_score,
+                                annotations=annotations)
+    # Persist the report snapshot so later batches can diff for supersedes.
+    try:
+        state.reports_dir.mkdir(parents=True, exist_ok=True)
+        snapshot = state.reports_dir / f"{as_of}_{mode}.json"
+        snapshot.write_text(json.dumps(report_obj, indent=1))
+    except OSError:
+        pass
+    return report_obj
 
 
 def _build_mailbox(state_dir: str, facts: list[dict]):
@@ -380,15 +397,22 @@ def _make_judge(state_dir: str):
     return _judge
 
 
-def _build_report(items, as_of: str, mode: str, conf_score) -> dict:
+def _build_report(items, as_of: str, mode: str, conf_score,
+                  annotations: dict | None = None) -> dict:
     """Convert resolved+policy Items to report JSON."""
     findings = []
     cashback = []
     expiry = []
     late_fee_risk = []
+    annotations = annotations or {}
 
     for item in items:
         serialised = _item_to_dict(item, conf_score)
+        ann = annotations.get(item.id) or {}
+        if ann.get("learned_at"):
+            serialised["learned_at"] = ann["learned_at"]
+        if ann.get("supersedes"):
+            serialised["supersedes"] = ann["supersedes"]
         if item.class_ in ("overcharge", "duplicate", "waived_but_billed", "late_fee_not_owed"):
             findings.append(serialised)
         elif item.class_ == "cashback":
