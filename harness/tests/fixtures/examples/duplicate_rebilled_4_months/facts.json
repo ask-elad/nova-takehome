@@ -1565,6 +1565,21 @@
             "line": 12
           },
           "category": "accessorial"
+        },
+        {
+          "line_no": "5",
+          "awb": "TE16812897",
+          "charge_label": "Screening fee (adj.)",
+          "lane": "USC3-USE2",
+          "qty": "263",
+          "unit": "kg",
+          "rate": "0.16",
+          "amount": "42.08",
+          "ref": {
+            "page": 1,
+            "line": 13
+          },
+          "category": "security"
         }
       ]
     }

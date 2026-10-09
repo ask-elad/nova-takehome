@@ -6,10 +6,9 @@ changed by the humans only.
 
 ## Where we are
 
-**Phase 3 · Rules engine.** Foundation and schemas are done and reviewed. Current task:
-`docs/tasks/04a2-case-model-fixes.md`, then `docs/tasks/04b-rules-invoice-classes.md`, then
-`docs/tasks/04c-rules-cashback-conflict.md`.
-The ground rules are in `docs/tasks/04-rules-engine.md`.
+**Phase 3 · Rules engine.** Tasks 04 and 04a2 are done. Current tasks, in order:
+`docs/tasks/04b-rules-invoice-classes.md`, then `docs/tasks/04c-rules-cashback-conflict.md`.
+The ground rules are in `docs/tasks/04-rules-engine.md`. Commit after each rule class goes green.
 
 ## How work reaches you
 
