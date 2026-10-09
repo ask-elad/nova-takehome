@@ -53,5 +53,5 @@ to produce the same facts.
 ## Phase 3 checklist
 - [x] Task 04 · money, case model, overcharge, resolve; overcharge golden test green
 - [x] Task 04a2 · fixes from review: sheet parsing in production, terms in force, overcharge gaps, received_at
-- [ ] Task 04b · duplicate, waived_but_billed, late fees, expiry
-- [ ] Task 04c · cashback, conflict, cannot_determine; all eight golden tests green
+- [x] Task 04b · duplicate, waived_but_billed, late fees, expiry
+- [x] Task 04c · cashback, conflict, cannot_determine; all eight golden tests green
