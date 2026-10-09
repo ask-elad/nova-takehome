@@ -78,6 +78,40 @@ def resolve(
         corrects = [c for c in cand.corrects if c.in_force]
         if not corrects:
             continue
+
+        # Conflict: two authorised in-force sources with different correct
+        # amounts and the precedence clause doesn't rank them.
+        distinct = {c.amount for c in corrects}
+        if cand.unranked_pair and len(distinct) > 1:
+            amounts = sorted(distinct)
+            lower, higher = amounts[0], amounts[-1]
+            lo = max(Decimal(0), cand.billed_amount - higher)
+            hi = cand.billed_amount - lower
+            quotes_c: list[Evidence] = []
+            seen_c: set = set()
+            for ref in cand.evidence:
+                q = resolve_quote(mailbox, ref)
+                if q is None:
+                    continue
+                k = (ref.doc, ref.page, q)
+                if k in seen_c:
+                    continue
+                seen_c.add(k)
+                quotes_c.append(Evidence(doc=ref.doc, page=ref.page, quote=q))
+            items.append(Item(
+                id=f"{cand.class_}:{cand.key[1]}",
+                class_=cand.class_,
+                invoice_id=cand.key[1],
+                verdict="conflict",
+                amount_usd=None,
+                amount_range=[f"{lo.quantize(Decimal('0.01'))}",
+                              f"{hi.quantize(Decimal('0.01'))}"],
+                deadline=None,
+                action="escalate",
+                evidence=quotes_c,
+            ))
+            continue
+
         # Apply precedence: higher authority wins (lower level number = stronger).
         # When ties on authority, prefer higher rank.
         corrects.sort(key=lambda c: (c.authority_level, -(c.rank or 0)))

@@ -22,6 +22,7 @@ class CorrectAmount:
     authority_level: int
     in_force: bool
     rank: Optional[int] = None   # higher = beats lower in the precedence clause
+    source_kind: Optional[str] = None   # "msa" | "amendment" | "rate_notice" | …
 
 
 @dataclass
@@ -35,3 +36,9 @@ class Candidate:
     missing_doc: Optional[tuple[str, str]] = None  # (name, holder email) if cannot_determine
     deadline: Optional[str] = None
     note: str = ""
+    # When the MSA's precedence clause lists this pair of source kinds as
+    # unranked (e.g. "rate_notice vs amendment"), set this to the pair text
+    # along with a Ref to that clause. Resolve emits `conflict` instead of a
+    # finding when corrects disagree.
+    unranked_pair: Optional[tuple[str, str]] = None   # (pair_text, ) stored in a 1-tuple-ish
+    unranked_ref: Optional[SourceRef] = None

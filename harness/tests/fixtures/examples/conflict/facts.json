@@ -1904,6 +1904,22 @@
           "category": "freight"
         },
         {
+          "line_no": "2",
+          "awb": "TE92942629",
+          "pickup_date": "2032-06-17",
+          "charge_label": "Fuel surcharge",
+          "lane": "USW1-USC3",
+          "qty": "342.39",
+          "unit": "%",
+          "rate": "23.14",
+          "amount": "79.23",
+          "ref": {
+            "page": 1,
+            "line": 10
+          },
+          "category": "fuel"
+        },
+        {
           "line_no": "3",
           "awb": "TE92942629",
           "pickup_date": "2032-06-17",
