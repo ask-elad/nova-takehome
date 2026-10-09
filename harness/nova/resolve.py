@@ -77,6 +77,38 @@ def resolve(
     for cand in candidates:
         corrects = [c for c in cand.corrects if c.in_force]
         if not corrects:
+            # No in-force correct amount. If the rule emitted a missing_doc or
+            # a cannot_determine note, surface it as a cannot_determine item.
+            if cand.note.startswith("cannot_determine") or cand.missing_doc:
+                quotes_cd: list[Evidence] = []
+                seen_cd: set = set()
+                for ref in cand.evidence:
+                    q = resolve_quote(mailbox, ref)
+                    if q is None:
+                        continue
+                    k = (ref.doc, ref.page, q)
+                    if k in seen_cd:
+                        continue
+                    seen_cd.add(k)
+                    quotes_cd.append(Evidence(doc=ref.doc, page=ref.page, quote=q))
+                missing = None
+                if cand.missing_doc:
+                    missing = {"name": cand.missing_doc[0], "holder": cand.missing_doc[1]}
+                items.append(Item(
+                    id=f"{cand.class_}:{cand.key[1]}",
+                    class_=cand.class_,
+                    invoice_id=cand.key[1] if cand.class_ in {
+                        "overcharge", "duplicate", "waived_but_billed",
+                        "late_fee_not_owed",
+                    } else None,
+                    verdict="cannot_determine",
+                    amount_usd=None,
+                    amount_range=None,
+                    deadline=None,
+                    action="draft:request_document",
+                    evidence=quotes_cd,
+                    missing_doc=missing,
+                ))
             continue
 
         # Conflict: two authorised in-force sources with different correct

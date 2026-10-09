@@ -339,12 +339,16 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
             dedup.append(e)
 
         if unresolved_fx_month is not None:
+            treasury = case.schedule1_contact(msa.id, "treasury")
+            missing = (f"Annex F row for {unresolved_fx_month}",
+                       treasury.email if treasury else "")
             out.append(Candidate(
                 key=("overcharge", inv_id),
                 class_="overcharge",
                 billed_amount=final_billed,
                 corrects=[],
                 evidence=dedup,
+                missing_doc=missing,
                 note=f"cannot_determine: no Annex F row for {unresolved_fx_month}",
             ))
             continue
