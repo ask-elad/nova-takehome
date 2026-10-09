@@ -1,5 +1,6 @@
 .venv/
 .state/
+state/
 out/state_*/
 __pycache__/
 .env
