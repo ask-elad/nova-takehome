@@ -222,6 +222,13 @@ class Case:
     sheets: list[SheetRecord]
     shipments: list[ShipmentRecord]
     judge: JudgeFn
+    # Pre-rules facts from feedback.json (see nova.feedback). Each entry is a
+    # dict with its own date window. These layer in on top of Schedule 1 and
+    # authored rate notices so later rules see them without having to know
+    # about feedback themselves.
+    extra_authorities: list[dict] = field(default_factory=list)
+    rate_accepted_facts: list[dict] = field(default_factory=list)
+    precedence_facts: list[dict] = field(default_factory=list)
 
     # ----- construction -----
 
@@ -232,6 +239,7 @@ class Case:
         as_of: str,
         judge: JudgeFn = null_judge,
         mailbox: Any = None,
+        pre_rule_facts: Optional[dict] = None,
     ) -> "Case":
         """Build a case from a list of {type, doc, received_at?, data} dicts.
 
@@ -283,6 +291,7 @@ class Case:
             elif cls_name == "ShipmentDoc":
                 shipments.append(ShipmentRecord(doc=doc, received_at=received, ship=obj))
 
+        prf = pre_rule_facts or {}
         return cls(
             as_of=as_of,
             contracts=contracts,
@@ -291,6 +300,9 @@ class Case:
             sheets=sheets,
             shipments=shipments,
             judge=judge,
+            extra_authorities=list(prf.get("sender_authority") or []),
+            rate_accepted_facts=list(prf.get("rate_accepted") or []),
+            precedence_facts=list(prf.get("precedence") or []),
         )
 
     # ----- contracts & terms -----
@@ -424,8 +436,18 @@ class Case:
             if rn is None:
                 continue
             sender_addr = _addr_of(em.email.sender.value)
-            if not self.authority_of(sender_addr, contract_id, "rates"):
-                continue
+            if not self.authority_of(sender_addr, contract_id, "rates",
+                                     on_date=on_date):
+                # Feedback `rate_accepted` can admit a notice whose sender
+                # isn't on Schedule 1: when the human has told us to treat
+                # this notice as the rate for one of its lanes.
+                accepted = False
+                for row in (rn.rows or []):
+                    if self.rate_accepted_for(contract_id, row.lane, on_date):
+                        accepted = True
+                        break
+                if not accepted:
+                    continue
             if rn.effective_from and _parse_date(rn.effective_from.value) > d:
                 continue
             if rn.effective_to and _parse_date(rn.effective_to.value) < d:
@@ -537,9 +559,15 @@ class Case:
 
     # ----- authority (Schedule 1) -----
 
-    def authority_of(self, email_addr: str, contract_id: str, category: str) -> bool:
-        """True iff the exact email address is a Schedule 1 contact for the
-        category on the contract. Exact match (case-insensitive)."""
+    def authority_of(self, email_addr: str, contract_id: str, category: str,
+                     on_date: Optional[str] = None) -> bool:
+        """True iff *email_addr* is authorised for *category* on *contract_id*.
+
+        Schedule 1 wins first. Feedback standing facts (``sender_authority`` and
+        ``rate_accepted``) grant the category to a person inside their dates;
+        if *on_date* is given it must sit within valid_from → valid_to, else
+        the fact's dates are only sanity-checked against ``as_of``.
+        """
         addr = email_addr.strip().lower()
         for c in self.contracts:
             if c.id != contract_id and (not c.amends or c.amends != contract_id):
@@ -547,7 +575,51 @@ class Case:
             for row in c.terms.schedule1_rows:
                 if row.email.strip().lower() == addr and category in row.categories:
                     return True
+        probe = on_date or self.as_of
+        probe_d = _parse_date(probe) if probe else None
+        for ex in self.extra_authorities:
+            if ex.get("contract_id") != contract_id:
+                continue
+            if category not in (ex.get("categories") or []):
+                continue
+            if ex.get("email", "").strip().lower() != addr:
+                continue
+            if not _within_window(probe_d, ex.get("valid_from"), ex.get("valid_to")):
+                continue
+            return True
         return False
+
+    def precedence_fact_for(self, contract_id: str, lane: str,
+                            on_date: str) -> Optional[str]:
+        """Feedback-level precedence override for a (contract, lane) at a date.
+
+        Returns the source kind (e.g. ``"amendment"``) the human picked, or
+        None. Used by the overcharge rule to resolve a conflict pair.
+        """
+        d = _parse_date(on_date)
+        for pf in self.precedence_facts:
+            if pf.get("contract_id") != contract_id:
+                continue
+            if pf.get("lane") != lane:
+                continue
+            if not _within_window(d, pf.get("valid_from"), pf.get("valid_to")):
+                continue
+            return pf.get("use")
+        return None
+
+    def rate_accepted_for(self, contract_id: str, lane: str,
+                          on_date: str) -> Optional[dict]:
+        """Feedback ``rate_accepted`` fact in force for (contract, lane) at a date."""
+        d = _parse_date(on_date)
+        for ra in self.rate_accepted_facts:
+            if ra.get("contract_id") != contract_id:
+                continue
+            if ra.get("lane") != lane:
+                continue
+            if not _within_window(d, ra.get("valid_from"), ra.get("valid_to")):
+                continue
+            return ra
+        return None
 
     def contract_for_invoice(self, bill: "BillingRecord") -> Optional[ContractRecord]:
         """Pick the MSA referenced by the invoice's contract_ref, not by lane."""
@@ -604,6 +676,23 @@ def _parse_date(iso: str) -> date:
     s = iso.split("T")[0]
     y, m, d = s.split("-")
     return date(int(y), int(m), int(d))
+
+
+def _within_window(probe: Optional[date], valid_from: Optional[str],
+                   valid_to: Optional[str]) -> bool:
+    """Half-open-ish window: probe must sit within [valid_from, valid_to].
+
+    None on either side opens that end. None probe passes (used when the
+    caller doesn't know the on-date — the feedback is treated as potentially
+    active and the rule layer must still enforce its own date checks).
+    """
+    if probe is None:
+        return True
+    if valid_from and probe < _parse_date(valid_from):
+        return False
+    if valid_to and probe > _parse_date(valid_to):
+        return False
+    return True
 
 
 def _addr_of(sender: str) -> str:

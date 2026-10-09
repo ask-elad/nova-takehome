@@ -297,32 +297,76 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
     # Build mailbox for quote resolution.
     mailbox = _build_mailbox(state_dir, facts)
 
+    # Load feedback once; standing facts feed into Case, post-rules decisions
+    # fold in after apply_policy.
+    from nova.feedback import load_feedback, pre_rule_facts, apply_post_items
+    feedback_items = load_feedback(state.root)
+    prf = pre_rule_facts(feedback_items)
+
+    def _run(case) -> list:
+        candidates = []
+        candidates.extend(run_overcharge(case))
+        candidates.extend(run_duplicate(case))
+        candidates.extend(run_waived(case))
+        candidates.extend(run_late_fees(case))
+        candidates.extend(run_cashback(case))
+        candidates.extend(run_expiry(case))
+        xs = resolve(candidates, mailbox)
+        return apply_policy(xs, mode=mode)
+
     # Build Case with Claude Judge (uses LLM client for judge calls, cached).
     judge_fn = _make_judge(state_dir)
-    case = Case.from_records(facts, as_of=as_of, judge=judge_fn, mailbox=mailbox)
+    case = Case.from_records(facts, as_of=as_of, judge=judge_fn, mailbox=mailbox,
+                              pre_rule_facts=prf)
+    items = _run(case)
 
-    # Run all rule modules.
-    candidates = []
-    candidates.extend(run_overcharge(case))
-    candidates.extend(run_duplicate(case))
-    candidates.extend(run_waived(case))
-    candidates.extend(run_late_fees(case))
-    candidates.extend(run_cashback(case))
-    candidates.extend(run_expiry(case))
-
-    # Resolve candidates to items.
-    items = resolve(candidates, mailbox)
-
-    # Apply policy (actions, $5k rule, five checks).
-    items = apply_policy(items, mode=mode)
+    # If any pre-rules feedback exists, run again without it and diff to
+    # mark learned_at on keys whose verdict/amount/action moved. The diff
+    # is cheap: a judge call is cached by LLMClient so no extra API spend.
+    pre_rules_items: dict[str, "Item"] = {}
+    if any(prf.get(k) for k in ("sender_authority", "rate_accepted", "precedence")):
+        base_case = Case.from_records(facts, as_of=as_of, judge=judge_fn,
+                                       mailbox=mailbox)
+        for it in _run(base_case):
+            pre_rules_items[it.id] = it
 
     # Apply scoped feedback (reject / close / one_off_approval / override_amount)
     # and compute learned_at / supersedes against the latest saved report.
-    from nova.feedback import load_feedback, apply_post_items
-    feedback_items = load_feedback(state.root)
     items, annotations = apply_post_items(
         items, feedback_items, report_dir=state.reports_dir,
     )
+
+    # Pre-rules learned_at: for each item that differs from the no-feedback run.
+    if pre_rules_items:
+        from nova.feedback import _finding_key_matches  # type: ignore
+        for it in items:
+            base = pre_rules_items.get(it.id)
+            if base is None:
+                continue
+            changed = (
+                base.verdict != it.verdict
+                or base.amount_usd != it.amount_usd
+                or base.action != it.action
+            )
+            if not changed:
+                continue
+            # Point at the first standing feedback item that could have caused it.
+            # Match on contract/lane in id string, else first standing item.
+            fb_match = None
+            for fb in feedback_items:
+                if fb.scope_kind != "standing":
+                    continue
+                cid = (fb.applies_to or {}).get("contract_id")
+                lane = (fb.applies_to or {}).get("lane")
+                if cid and cid not in it.id and (it.invoice_id or "") == "":
+                    continue
+                fb_match = fb
+                break
+            if fb_match is not None:
+                annotations.setdefault(it.id, {})["learned_at"] = {
+                    "feedback_item_id": fb_match.item_id,
+                    "batch": fb_match.batch,
+                }
 
     # Serialise to report JSON.
     report_obj = _build_report(items, as_of, mode, conf_score,

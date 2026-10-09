@@ -449,20 +449,41 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
         unranked_ref = None
         unranked_pair = None
         if has_notice_in_force and correct_amendment != correct_notice:
-            corrects.append(CorrectAmount(
-                amount=final_correct_rn, sources=dedup,
-                authority_level=2, in_force=True,
-                source_kind="rate_notice",
-            ))
-            # Does the MSA list this pair as unranked?
-            if msa.terms.unranked_pairs:
-                for pair in msa.terms.unranked_pairs:
-                    kinds = {pair.a, pair.b}
-                    if "rate_notice" in kinds and "amendment" in kinds:
-                        unranked_pair = ("rate_notice", "amendment")
-                        unranked_ref = SourceRef.from_ref(msa.doc, pair.ref)
-                        dedup.append(unranked_ref)
-                        break
+            # Feedback `precedence` can resolve the conflict for a (contract,
+            # lane) in-window: keep only the named source.
+            precedence_use = None
+            for ln in bd.lines:
+                if not ln.lane or not ln.awb:
+                    continue
+                pk = case.pickup_date(ln.awb)
+                if pk is None:
+                    continue
+                use = case.precedence_fact_for(msa.id, ln.lane, pk[0])
+                if use:
+                    precedence_use = use
+                    break
+            if precedence_use == "amendment":
+                pass  # keep the single amendment-sourced correct only
+            elif precedence_use == "rate_notice":
+                corrects = [CorrectAmount(
+                    amount=final_correct_rn, sources=dedup,
+                    authority_level=2, in_force=True,
+                    source_kind="rate_notice",
+                )]
+            else:
+                corrects.append(CorrectAmount(
+                    amount=final_correct_rn, sources=dedup,
+                    authority_level=2, in_force=True,
+                    source_kind="rate_notice",
+                ))
+                if msa.terms.unranked_pairs:
+                    for pair in msa.terms.unranked_pairs:
+                        kinds = {pair.a, pair.b}
+                        if "rate_notice" in kinds and "amendment" in kinds:
+                            unranked_pair = ("rate_notice", "amendment")
+                            unranked_ref = SourceRef.from_ref(msa.doc, pair.ref)
+                            dedup.append(unranked_ref)
+                            break
 
         out.append(Candidate(
             key=("overcharge", inv_id),

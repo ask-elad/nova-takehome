@@ -324,39 +324,64 @@ def _annotate_supersedes(
 # ---------------------------------------------------------------------------
 
 def pre_rule_facts(feedback_items: list[FeedbackItem]) -> dict:
-    """Return a dict of standing feedback facts that modify rule inputs:
+    """Return standing-scope facts the Case consumes:
 
-    - ``sender_authority``: ``{(email, contract_id, category): (valid_from, valid_to)}``
-    - ``rate_accepted``: ``{(contract_id, lane): {rate, valid_from, valid_to}}``
-    - ``precedence``: ``{(contract_id, lane): (source_kind, valid_from)}``
+    - ``sender_authority``: list of ``{email, contract_id, categories, valid_from, valid_to}``
+    - ``rate_accepted``: list of ``{contract_id, lane, sent_by, sent_on,
+      effective_from, effective_to, valid_from, valid_to}``
+    - ``precedence``: list of ``{contract_id, lane, use, valid_from, valid_to}``
+
+    ``close`` + ``rate_accepted`` and ``confirm`` + ``rate_accepted`` both
+    produce a standing rate_accepted fact (the ``close`` only decides what to
+    do with the historic finding; the standing rate still carries forward).
     """
-    out: dict[str, dict] = {"sender_authority": {}, "rate_accepted": {},
-                             "precedence": {}}
+    out: dict[str, list] = {"sender_authority": [], "rate_accepted": [],
+                             "precedence": []}
     for fb in feedback_items:
         if fb.scope_kind != "standing":
             continue
-        at = fb.applies_to
+        at = fb.applies_to or {}
+        subject = (fb.raw.get("fact") or {}).get("subject") or {}
         if fb.fact_type == "sender_authority":
-            person = (fb.raw.get("fact") or {}).get("subject", {}).get("person")
-            email = at.get("email") or person or ""
+            # The person's email may live in applies_to or in subject.email.
+            email = (at.get("email") or subject.get("email")
+                     or subject.get("person") or "")
             cid = at.get("contract_id") or ""
-            cat = at.get("category") or ""
-            if email and cid and cat:
-                out["sender_authority"][(email.lower(), cid, cat)] = (
-                    fb.valid_from, fb.valid_to)
-        elif fb.fact_type == "rate_accepted":
-            cid = at.get("contract_id") or ""
-            lane = at.get("lane") or ""
-            if cid and lane:
-                out["rate_accepted"][(cid, lane)] = {
-                    "value": fb.fact_value,
+            cats = fb.fact_value.get("categories") or []
+            if not cats and at.get("category"):
+                cats = [at["category"]]
+            if email and cid and cats:
+                out["sender_authority"].append({
+                    "email": email,
+                    "contract_id": cid,
+                    "categories": list(cats),
                     "valid_from": fb.valid_from,
                     "valid_to": fb.valid_to,
-                }
-        elif fb.fact_type == "precedence":
-            cid = at.get("contract_id") or ""
-            lane = at.get("lane") or ""
+                })
+        elif fb.fact_type == "rate_accepted":
+            cid = at.get("contract_id") or subject.get("contract_id") or ""
+            lane = at.get("lane") or subject.get("lane") or ""
             if cid and lane:
-                out["precedence"][(cid, lane)] = (
-                    fb.fact_value.get("use"), fb.valid_from)
+                val = fb.fact_value or {}
+                out["rate_accepted"].append({
+                    "contract_id": cid,
+                    "lane": lane,
+                    "sent_by": val.get("sent_by"),
+                    "sent_on": val.get("sent_on"),
+                    "effective_from": val.get("effective_from"),
+                    "effective_to": val.get("effective_to"),
+                    "valid_from": fb.valid_from,
+                    "valid_to": fb.valid_to,
+                })
+        elif fb.fact_type == "precedence":
+            cid = at.get("contract_id") or subject.get("contract_id") or ""
+            lane = at.get("lane") or subject.get("lane") or ""
+            if cid and lane:
+                out["precedence"].append({
+                    "contract_id": cid,
+                    "lane": lane,
+                    "use": (fb.fact_value or {}).get("use"),
+                    "valid_from": fb.valid_from,
+                    "valid_to": fb.valid_to,
+                })
     return out
