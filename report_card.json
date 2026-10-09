@@ -12,111 +12,83 @@
    "batch_02"
   ]
  },
- "score": 59.6,
- "score_uncapped": 59.6,
+ "score": 97.95,
+ "score_uncapped": 97.95,
  "excluded_keys": 0,
  "excluded_answers": 0,
- "points": 59.599,
+ "points": 97.946,
  "points_max": 100,
  "capped_by_hard_gate": false,
  "components": [
   {
    "component": "detection",
    "label": "Detection F1 with evidence",
-   "points": 17.778,
+   "points": 25.0,
    "max": 25,
    "applicable": true,
    "detail": {
-    "precision": 0.6957,
-    "recall": 0.7273,
-    "f1": 0.7111,
-    "hits": 16,
-    "hits_weighted": 16.0,
-    "false_positives": 7,
-    "misses": 6,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "hits": 22,
+    "hits_weighted": 22.0,
+    "false_positives": 0,
+    "misses": 0,
     "hits_without_evidence": [],
-    "false": [
-     "W1 batch_01 overcharge TX-US-2034-0383: false finding",
-     "W1 batch_01 overcharge TX-US-2035-0188: false finding",
-     "W1 batch_02 overcharge TX-US-2034-0383: false finding",
-     "W1 batch_02 overcharge TX-US-2035-0188: false finding",
-     "W1 batch_02 overcharge TX-US-2035-0210: false finding",
-     "W1 batch_02 overcharge TX-US-2035-0265: false finding",
-     "W1 batch_02 overcharge TX-US-2035-0267: false finding"
-    ],
-    "missed": [
-     "W1 batch_01 overcharge TX-US-2035-0198: missed finding",
-     "W1 batch_02 late_fee_risk TX-US-2035-0252: missed finding",
-     "W1 batch_02 overcharge TX-US-2035-0198: missed finding",
-     "W1 batch_02 overcharge TX-US-2035-0236: missed finding",
-     "W1 batch_02 overcharge TX-US-2035-0256: missed finding",
-     "W1 batch_02 waived_but_billed TX-US-2035-0267: missed finding"
-    ]
+    "false": [],
+    "missed": []
    }
   },
   {
    "component": "amount",
    "label": "Amount accuracy (recovered - 2 x wrong)",
-   "points": 17.598,
+   "points": 20.0,
    "max": 20,
    "applicable": true,
    "detail": {
     "at_stake_usd": "14140.09",
-    "recovered_usd": "13158.82",
-    "wrongly_disputed_usd": "358.55",
-    "ratio": 0.8799,
-    "wrong_amounts": [
-     "W1 batch_01 cashback TBX-US-EXP-01/2035-Q1/rebate: 4236.09 (expected 4450.07)",
-     "W1 batch_02 cashback TBX-US-EXP-01/2035-Q1/rebate: 4236.09 (expected 4450.07)"
-    ]
+    "recovered_usd": "14140.09",
+    "wrongly_disputed_usd": "0.00",
+    "ratio": 1.0,
+    "wrong_amounts": []
    }
   },
   {
    "component": "adaptation",
    "label": "Adaptation to new documents",
-   "points": 8.182,
+   "points": 15.0,
    "max": 15,
    "applicable": true,
    "detail": {
     "events": 11,
-    "passed": 6,
-    "failed": [
-     "W1 batch_02 overcharge TX-US-2035-0210",
-     "W1 batch_02 waived_but_billed TX-US-2035-0267",
-     "W1 batch_02 overcharge TX-US-2035-0237",
-     "W1 batch_02 overcharge TX-US-2035-0236",
-     "W1 batch_02 late_fee_risk TX-US-2035-0252"
-    ]
+    "passed": 11,
+    "failed": []
    }
   },
   {
    "component": "learning",
    "label": "Learning from feedback",
-   "points": 3.333,
+   "points": 10.0,
    "max": 10,
    "applicable": true,
    "detail": {
     "checks": 3,
-    "passed": 1,
-    "failed": [
-     "W1 batch_02 overcharge TX-US-2035-0210",
-     "W1 batch_02 overcharge TX-US-2035-0256"
-    ]
+    "passed": 3,
+    "failed": []
    }
   },
   {
    "component": "conflict",
    "label": "Conflict and abstention",
-   "points": 3.75,
+   "points": 8.75,
    "max": 10,
    "applicable": true,
    "detail": {
     "checks": 2,
-    "points": 0.75,
+    "points": 1.75,
     "precision": 1.0,
     "false": [],
     "short": [
-     "W1 batch_02 overcharge TX-US-2035-0237: 0.00",
      "W1 batch_02 overcharge TX-US-2035-0242: 0.75"
     ]
    }
@@ -124,44 +96,38 @@
   {
    "component": "gating",
    "label": "Gating (both modes) + confidence",
-   "points": 3.958,
+   "points": 14.196,
    "max": 15,
    "applicable": true,
    "detail": {
     "modes": {
      "supervised": {
       "actions_expected": 24,
-      "right": 17,
+      "right": 24,
       "unsafe_or_supervised_execute": 0,
       "execute_penalty_each": 1,
-      "fraction": 0.7083,
+      "fraction": 1.0,
       "wrong": []
      },
      "autonomous": {
       "actions_expected": 24,
-      "right": 14,
-      "unsafe_or_supervised_execute": 6,
+      "right": 22,
+      "unsafe_or_supervised_execute": 0,
       "execute_penalty_each": 2,
-      "fraction": 0.0833,
+      "fraction": 0.9167,
       "wrong": [
-       "W1 batch_01 overcharge TX-US-2034-0383: execute:dispute (expected none)",
-       "W1 batch_01 overcharge TX-US-2035-0188: execute:dispute (expected none)",
        "W1 batch_01 cashback TBX-US-EXP-01/2035-Q1/rebate: draft:claim_credit (expected execute:claim_credit)",
-       "W1 batch_02 overcharge TX-US-2034-0383: execute:dispute (expected none)",
-       "W1 batch_02 overcharge TX-US-2035-0188: execute:dispute (expected none)",
-       "W1 batch_02 overcharge TX-US-2035-0210: execute:dispute (expected none)",
-       "W1 batch_02 overcharge TX-US-2035-0267: execute:dispute (expected none)",
        "W1 batch_02 cashback TBX-US-EXP-01/2035-Q1/rebate: draft:claim_credit (expected execute:claim_credit)"
       ]
      }
     },
-    "escalation_rate": 0.0435,
+    "escalation_rate": 0.0417,
     "unsafe_autonomous_cases": 0,
-    "auroc": 0.4667,
-    "brier": 0.3466,
+    "auroc": null,
+    "brier": 0.0194,
     "items_scored": 24,
-    "actions_points": 3.958,
-    "confidence_points": 0.0
+    "actions_points": 9.583,
+    "confidence_points": 4.612
    }
   },
   {
@@ -218,7 +184,7 @@
    "misses": 0,
    "f1": 1.0,
    "truth_usd": "8900.14",
-   "recovered_usd": "8472.18",
+   "recovered_usd": "8900.14",
    "wrong_usd": "0.00"
   },
   {
@@ -253,32 +219,32 @@
   },
   {
    "class": "late_fee_risk",
-   "hits": 0,
+   "hits": 1,
    "false_positives": 0,
-   "misses": 1,
-   "f1": 0.0,
+   "misses": 0,
+   "f1": 1.0,
    "truth_usd": "19.61",
-   "recovered_usd": "0.00",
+   "recovered_usd": "19.61",
    "wrong_usd": "0.00"
   },
   {
    "class": "overcharge",
-   "hits": 5,
-   "false_positives": 7,
-   "misses": 4,
-   "f1": 0.4762,
+   "hits": 9,
+   "false_positives": 0,
+   "misses": 0,
+   "f1": 1.0,
    "truth_usd": "1079.93",
-   "recovered_usd": "662.36",
-   "wrong_usd": "358.55"
+   "recovered_usd": "1079.93",
+   "wrong_usd": "0.00"
   },
   {
    "class": "waived_but_billed",
-   "hits": 2,
+   "hits": 3,
    "false_positives": 0,
-   "misses": 1,
-   "f1": 0.8,
+   "misses": 0,
+   "f1": 1.0,
    "truth_usd": "348.39",
-   "recovered_usd": "232.26",
+   "recovered_usd": "348.39",
    "wrong_usd": "0.00"
   }
  ],
@@ -290,65 +256,55 @@
   },
   {
    "probe": "feedback",
-   "keys_right_every_batch": 2,
+   "keys_right_every_batch": 4,
    "keys": 4
   }
  ],
  "sheets": {
   "W1": {
    "pass": false,
-   "rows_ok": 3,
+   "rows_ok": 8,
    "rows": 9,
    "totals": [
     {
      "name": "total_overpayment",
      "expected": "3478.26",
-     "yours": "3352.02",
-     "ok": false
+     "yours": "3478.26",
+     "ok": true
     },
     {
      "name": "cashback_owed",
      "expected": "4450.07",
-     "yours": "4236.09",
-     "ok": false
+     "yours": "4450.07",
+     "ok": true
     },
     {
      "name": "late_fees_avoided",
      "expected": "19.61",
-     "yours": "0.00",
-     "ok": false
+     "yours": "19.61",
+     "ok": true
     },
     {
      "name": "total_savings",
      "expected": "7947.94",
-     "yours": "7588.11",
-     "ok": false
+     "yours": "7947.94",
+     "ok": true
     }
    ],
    "classes": [
     {
      "class": "overcharge",
-     "ok": false,
+     "ok": true,
      "expected": {
       "count": 6,
       "amount_usd": "830.88"
      },
      "yours": {
-      "count": 8,
-      "amount_usd": "820.77"
+      "count": 6,
+      "amount_usd": "830.88"
      },
-     "missing": [
-      "TX-US-2035-0198",
-      "TX-US-2035-0236",
-      "TX-US-2035-0256"
-     ],
-     "extra": [
-      "TX-US-2034-0383",
-      "TX-US-2035-0188",
-      "TX-US-2035-0210",
-      "TX-US-2035-0265",
-      "TX-US-2035-0267"
-     ],
+     "missing": [],
+     "extra": [],
      "wrong_amount": [],
      "wrong_deadline": []
     },
@@ -370,18 +326,16 @@
     },
     {
      "class": "waived_but_billed",
-     "ok": false,
+     "ok": true,
      "expected": {
       "count": 2,
       "amount_usd": "232.26"
      },
      "yours": {
-      "count": 1,
-      "amount_usd": "116.13"
+      "count": 2,
+      "amount_usd": "232.26"
      },
-     "missing": [
-      "TX-US-2035-0267"
-     ],
+     "missing": [],
      "extra": [],
      "wrong_amount": [],
      "wrong_deadline": []
@@ -404,40 +358,32 @@
     },
     {
      "class": "cashback",
-     "ok": false,
+     "ok": true,
      "expected": {
       "count": 1,
       "amount_usd": "4450.07"
      },
      "yours": {
       "count": 1,
-      "amount_usd": "4236.09"
+      "amount_usd": "4450.07"
      },
      "missing": [],
      "extra": [],
-     "wrong_amount": [
-      {
-       "id": "TBX-US-EXP-01/2035-Q1/rebate",
-       "expected": "4450.07",
-       "yours": "4236.09"
-      }
-     ],
+     "wrong_amount": [],
      "wrong_deadline": []
     },
     {
      "class": "late_fee_risk",
-     "ok": false,
+     "ok": true,
      "expected": {
       "count": 1,
       "amount_usd": "19.61"
      },
      "yours": {
-      "count": 0,
-      "amount_usd": "0.00"
+      "count": 1,
+      "amount_usd": "19.61"
      },
-     "missing": [
-      "TX-US-2035-0252"
-     ],
+     "missing": [],
      "extra": [],
      "wrong_amount": [],
      "wrong_deadline": []
@@ -479,25 +425,18 @@
     },
     {
      "class": "cannot_determine",
-     "ok": false,
+     "ok": true,
      "expected": {
       "count": 1
      },
      "yours": {
-      "count": 0
+      "count": 1
      },
-     "missing": [
-      "TX-US-2035-0237"
-     ],
+     "missing": [],
      "extra": [],
      "wrong_amount": [],
      "problems": [],
-     "missing_detail": {
-      "TX-US-2035-0237": {
-       "missing_doc": "Annex A rev 2",
-       "holder": "Fintan Corrigan"
-      }
-     }
+     "missing_detail": {}
     }
    ],
    "key": "W1 batch_02",
@@ -519,23 +458,23 @@
       {
        "step": "ingest",
        "rc": 0,
-       "stderr": "LEDGER: 166 paid calls (223,715 in + 107,621 out = 331,336 tokens), 0 cache hits\n",
-       "secs": 89.3
+       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 165 cache hits\n",
+       "secs": 3.9
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 3.4
+       "secs": 1.7
       },
       {
        "step": "feedback",
        "rc": 0,
        "stderr": "",
-       "secs": 0.1
+       "secs": 0.2
       }
      ],
-     "items": 8
+     "items": 7
     },
     {
      "batch": "batch_02",
@@ -545,17 +484,17 @@
       {
        "step": "ingest",
        "rc": 0,
-       "stderr": "LEDGER: 328 paid calls (398,479 in + 181,416 out = 579,895 tokens), 2 cache hits\n",
-       "secs": 62.4
+       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 327 cache hits\n",
+       "secs": 4.3
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 6.1
+       "secs": 1.8
       }
      ],
-     "items": 16
+     "items": 17
     }
    ]
   },
@@ -569,14 +508,14 @@
       {
        "step": "ingest",
        "rc": 0,
-       "stderr": "LEDGER: 164 paid calls (221,796 in + 107,051 out = 328,847 tokens), 0 cache hits\n",
-       "secs": 89.4
+       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 165 cache hits\n",
+       "secs": 3.7
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 3.8
+       "secs": 1.5
       },
       {
        "step": "feedback",
@@ -585,7 +524,7 @@
        "secs": 0.1
       }
      ],
-     "items": 8
+     "items": 7
     },
     {
      "batch": "batch_02",
@@ -595,17 +534,17 @@
       {
        "step": "ingest",
        "rc": 0,
-       "stderr": "LEDGER: 326 paid calls (396,063 in + 179,818 out = 575,881 tokens), 2 cache hits\n",
-       "secs": 54.1
+       "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 327 cache hits\n",
+       "secs": 3.7
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 3.0
+       "secs": 1.6
       }
      ],
-     "items": 14
+     "items": 17
     }
    ]
   }

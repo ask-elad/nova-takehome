@@ -134,6 +134,78 @@ def _is_dg_condition(text: str) -> bool:
     return ("dangerous good" in t) or ("iata dgr" in t) or ("dg " in t) or t.endswith(" dg")
 
 
+def _is_dg_accessorial(acc: Accessorial) -> bool:
+    """True iff this accessorial is the DG fee by code or label.
+
+    The reader often doesn't capture a condition for DG (the rule lives in
+    the prose above Annex D). We still want to consult the DG declaration
+    whenever a DG-coded fee is billed — dry ice alone must not attract it.
+    """
+    code = (acc.code or "").upper()
+    if code == "DG":
+        return True
+    label = (acc.label or "").lower()
+    return "dangerous good" in label
+
+
+_MONTH_WORDS = {
+    "january": "01", "jan": "01", "february": "02", "feb": "02",
+    "march": "03", "mar": "03", "april": "04", "apr": "04",
+    "may": "05", "june": "06", "jun": "06", "july": "07", "jul": "07",
+    "august": "08", "aug": "08", "september": "09", "sep": "09", "sept": "09",
+    "october": "10", "oct": "10", "november": "11", "nov": "11",
+    "december": "12", "dec": "12",
+}
+
+
+def _months_from_condition(text: str) -> Optional[list[str]]:
+    """Parse a month window out of a free-text accessorial condition.
+
+    Handles the two shapes we see in practice:
+    - "for pickups in September to November only"
+    - "September-November", "Sep to Nov"
+    Returns a sorted list of ``MM`` strings, or None if the condition doesn't
+    look like a month window at all. "December through February" wraps the
+    year and is handled.
+    """
+    if not text:
+        return None
+    low = text.lower()
+    # Find two month words with a "to"/"-"/"through"/"until" between them.
+    words = re.findall(r"[a-z]+", low)
+    found: list[tuple[int, str]] = []
+    for i, w in enumerate(words):
+        if w in _MONTH_WORDS:
+            found.append((i, _MONTH_WORDS[w]))
+    if not found:
+        return None
+    if len(found) == 1:
+        return [found[0][1]]
+    # Pick the first two near-adjacent month mentions (within 5 words of each
+    # other) as the range endpoints.
+    for a_idx, (i_a, m_a) in enumerate(found):
+        for i_b, m_b in found[a_idx + 1:]:
+            if 0 < (i_b - i_a) <= 5:
+                return _range_months(m_a, m_b)
+    return [m for _i, m in found]
+
+
+def _range_months(start: str, end: str) -> list[str]:
+    """Return every month in [start, end], wrapping across year end."""
+    s = int(start)
+    e = int(end)
+    out: list[str] = []
+    m = s
+    while True:
+        out.append(f"{m:02d}")
+        if m == e:
+            break
+        m = 1 if m == 12 else m + 1
+        if len(out) >= 12:
+            break
+    return out
+
+
 def _accessorial_applies(
     case: Case, acc: Accessorial, pickup_date: str, awb: Optional[str],
 ) -> bool:
@@ -146,16 +218,31 @@ def _accessorial_applies(
     conditional accessorial we fall back to the Judge; when no judge is wired
     the condition is treated as unmet.
     """
-    if acc.months:
-        if pickup_date[5:7] not in acc.months:
+    # DG fee: always consult the DG declaration, even when the reader didn't
+    # surface a condition. Dry-ice-only (UN1845) means the fee doesn't apply.
+    if awb and _is_dg_accessorial(acc):
+        status = case.dg_status_for(awb)
+        if status is not None:
+            return status[0] == "dg"
+        # No declaration: fall through to Judge, else presume applies.
+    months = list(acc.months or [])
+    if not months and acc.condition:
+        parsed = _months_from_condition(acc.condition)
+        if parsed:
+            months = parsed
+    if months:
+        if pickup_date[5:7] not in months:
             return False
+        # Months pass: the condition is a date window; don't double-check.
+        return True
     if not acc.condition:
         return True
     if awb and _is_dg_condition(acc.condition):
         status = case.dg_status_for(awb)
         if status is not None:
             return status[0] == "dg"
-        # No DG declaration: fall through to the Judge.
+        # No DG declaration held: fall through to the Judge; if the Judge
+        # can't decide either, presume the DG fee applies.
     try:
         answer, _ref = case.judge(
             f"accessorial_condition:{acc.code}",
@@ -163,7 +250,11 @@ def _accessorial_applies(
         )
         return bool(answer)
     except (NotImplementedError, KeyError):
-        return False
+        # No evidence to rebut the carrier's claim: assume the accessorial
+        # legitimately applies. Overcharges should rest on evidence we hold,
+        # not on the Judge's silence (which produced false positives on the
+        # practice set for Delivery fee / Peak season / Dry-ice handling).
+        return True
 
 
 def _correct_accessorial(
@@ -255,6 +346,12 @@ def _price_invoice(
                     correct_freight = correct_line
                     freight_srcs = srcs
 
+        # Lines covered by an authorised own-text waiver are handled by the
+        # waived_but_billed rule, not here. Treat them as billed = correct.
+        for i, ln in enumerate(lines):
+            if case.is_line_waived(msa, ln):
+                correct_by_line[i] = (Decimal(ln.amount), [])
+
         for i, ln in enumerate(lines):
             if i in correct_by_line:
                 continue
@@ -317,7 +414,7 @@ def _missing_rate_doc_candidate(
             if case.is_doc_name_held(arr.document_name):
                 continue
             rates_contact = case.schedule1_contact(msa.id, "rates")
-            holder = rates_contact.email if rates_contact else ""
+            holder = rates_contact.name if rates_contact else ""
             evidence = [
                 SourceRef.from_ref(bill.doc, ln.ref),
                 SourceRef.from_ref(src.doc, arr.ref),
@@ -449,8 +546,8 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
         unranked_ref = None
         unranked_pair = None
         if has_notice_in_force and correct_amendment != correct_notice:
-            # Feedback `precedence` can resolve the conflict for a (contract,
-            # lane) in-window: keep only the named source.
+            # Feedback `precedence` or `rate_accepted` can pin the choice for
+            # a (contract, lane) in-window: keep only the named source.
             precedence_use = None
             for ln in bd.lines:
                 if not ln.lane or not ln.awb:
@@ -461,6 +558,11 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
                 use = case.precedence_fact_for(msa.id, ln.lane, pk[0])
                 if use:
                     precedence_use = use
+                    break
+                # rate_accepted makes the notice THE rate for that lane in
+                # the window — no conflict, no amendment fallback.
+                if case.rate_accepted_for(msa.id, ln.lane, pk[0]) is not None:
+                    precedence_use = "rate_notice"
                     break
             if precedence_use == "amendment":
                 pass  # keep the single amendment-sourced correct only

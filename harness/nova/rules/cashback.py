@@ -200,7 +200,7 @@ def _collect_spend_per_quarter(case: Case, msa: ContractRecord) -> dict[str, _Sp
         if inv_date is None:
             continue
         qlabel = _quarter_of(inv_date)
-        if b.bill.kind == "invoice":
+        if b.bill.kind in ("invoice", "statement"):
             qs = _qs_from_bill(b, qs_includes, qs_excludes, case)
             if qs is None:
                 continue
@@ -233,7 +233,7 @@ def _collect_spend_per_cy(case: Case, msa: ContractRecord) -> dict[int, _Spend]:
         if inv_date is None:
             continue
         cy = _cyn_of(eff, _parse(inv_date))
-        if b.bill.kind == "invoice":
+        if b.bill.kind in ("invoice", "statement"):
             qs = _qs_from_bill(b, qs_includes, qs_excludes, case)
             if qs is None:
                 continue

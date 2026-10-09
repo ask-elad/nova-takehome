@@ -1,0 +1,354 @@
+{
+ "schema_version": "1.0.0",
+ "as_of": "2035-05-31",
+ "mode": "supervised",
+ "findings": [
+  {
+   "id": "overcharge:TX-US-2034-0379",
+   "class": "overcharge",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0005.eml#TX-US-2034-0379.pdf",
+     "page": 1,
+     "quote": "4 TX46602456 2034-11-17 Peak season surcharge USS2-INW2 299 kg 0.29 86.71"
+    },
+    {
+     "doc": "batch_01/0001.eml#MSA-TBX-US-EXP-01.pdf",
+     "page": 10,
+     "quote": "PEAK Peak season surcharge 0.29 USD per chargeable kg, for pickups in\nSeptember to November only"
+    },
+    {
+     "doc": "batch_01/0040.eml#tracking-2034-10-01.xlsx",
+     "page": 1,
+     "quote": "TX46602456 | PICKED_UP | 2034-11-17 | USS2 | -"
+    }
+   ],
+   "amount_usd": "86.71",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "TX-US-2034-0379"
+  },
+  {
+   "id": "overcharge:TX-US-2034-0383",
+   "class": "overcharge",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0006.eml#TX-US-2034-0383.pdf",
+     "page": 1,
+     "quote": "4 TX45998993 2034-11-19 Peak season surcharge USE1-USW2 180 kg 0.29 52.20"
+    },
+    {
+     "doc": "batch_01/0001.eml#MSA-TBX-US-EXP-01.pdf",
+     "page": 10,
+     "quote": "PEAK Peak season surcharge 0.29 USD per chargeable kg, for pickups in\nSeptember to November only"
+    },
+    {
+     "doc": "batch_01/0040.eml#tracking-2034-10-01.xlsx",
+     "page": 1,
+     "quote": "TX45998993 | PICKED_UP | 2034-11-19 | USE1 | -"
+    }
+   ],
+   "amount_usd": "52.20",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "TX-US-2034-0383"
+  },
+  {
+   "id": "overcharge:TX-US-2035-0188",
+   "class": "overcharge",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0012.eml#TX-US-2035-0188.pdf",
+     "page": 1,
+     "quote": "4 TX23827044 2034-11-04 Peak season surcharge USS2-INN1 79 kg 0.29 22.91"
+    },
+    {
+     "doc": "batch_01/0001.eml#MSA-TBX-US-EXP-01.pdf",
+     "page": 10,
+     "quote": "PEAK Peak season surcharge 0.29 USD per chargeable kg, for pickups in\nSeptember to November only"
+    },
+    {
+     "doc": "batch_01/0040.eml#tracking-2034-10-01.xlsx",
+     "page": 1,
+     "quote": "TX23827044 | PICKED_UP | 2034-11-04 | USS2 | -"
+    }
+   ],
+   "amount_usd": "22.91",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "TX-US-2035-0188"
+  },
+  {
+   "id": "overcharge:TX-US-2035-0204",
+   "class": "overcharge",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0027.eml#TX-US-2035-0204.pdf",
+     "page": 1,
+     "quote": "1 TX67932891 2035-03-18 Air freight USS2-INW2 244 kg 3.14 766.16"
+    },
+    {
+     "doc": "batch_01/0001.eml#MSA-TBX-US-EXP-01.pdf",
+     "page": 8,
+     "quote": "USS2-INW2 100-299.5 kg 2.84 2.83"
+    },
+    {
+     "doc": "batch_01/0040.eml#tracking-2034-10-01.xlsx",
+     "page": 1,
+     "quote": "TX67932891 | PICKED_UP | 2035-03-18 | USS2 | -"
+    },
+    {
+     "doc": "batch_01/0027.eml#TX-US-2035-0204.pdf",
+     "page": 1,
+     "quote": "2 TX67932891 2035-03-18 Fuel surcharge USS2-INW2 766.16 21.53% 164.95"
+    },
+    {
+     "doc": "batch_01/0001.eml#MSA-TBX-US-EXP-01.pdf",
+     "page": 9,
+     "quote": "2035-03 21.53%"
+    }
+   ],
+   "amount_usd": "88.96",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "TX-US-2035-0204"
+  },
+  {
+   "id": "overcharge:TX-US-2035-0210",
+   "class": "overcharge",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0034.eml#TX-US-2035-0210.pdf",
+     "page": 1,
+     "quote": "1 TX13648356 2035-04-10 Air freight USC3-INS1 91 kg 5.03 457.73"
+    },
+    {
+     "doc": "batch_01/0001.eml#MSA-TBX-US-EXP-01.pdf",
+     "page": 8,
+     "quote": "USC3-INS1 45-99.5 kg 4.71 4.69"
+    },
+    {
+     "doc": "batch_01/0040.eml#tracking-2034-10-01.xlsx",
+     "page": 1,
+     "quote": "TX13648356 | PICKED_UP | 2035-04-10 | USC3 | -"
+    },
+    {
+     "doc": "batch_01/0034.eml#TX-US-2035-0210.pdf",
+     "page": 1,
+     "quote": "2 TX13648356 2035-04-10 Fuel surcharge USC3-INS1 457.73 23.87% 109.26"
+    },
+    {
+     "doc": "batch_01/0001.eml#MSA-TBX-US-EXP-01.pdf",
+     "page": 9,
+     "quote": "2035-04 23.87%"
+    }
+   ],
+   "amount_usd": "36.07",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "TX-US-2035-0210"
+  },
+  {
+   "id": "duplicate:TX-US-2034-0386",
+   "class": "duplicate",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0041.eml#ap-register-2035-05-31.xlsx",
+     "page": 1,
+     "quote": "TX-US-2034-0386 | 2034-12-31 | due 2035-02-14 | USD 1363.36 | paid | 2035-01-18"
+    },
+    {
+     "doc": "batch_01/0016.eml#TX-US-2034-0386.pdf",
+     "page": 1,
+     "quote": "Total USD 1363.36"
+    }
+   ],
+   "amount_usd": "1363.36",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "TX-US-2034-0386"
+  },
+  {
+   "id": "waived_but_billed:TX-US-2034-0383",
+   "class": "waived_but_billed",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0004.eml",
+     "page": 1,
+     "quote": "Following our call, we waive the Delivery fee on AWB TX45998993."
+    },
+    {
+     "doc": "batch_01/0001.eml#MSA-TBX-US-EXP-01.pdf",
+     "page": 11,
+     "quote": "Signe Underhill, Customer Finance Lead, TBX-US: waivers, payment_terms <signe.underhill@tarrowby.example>"
+    },
+    {
+     "doc": "batch_01/0006.eml#TX-US-2034-0383.pdf",
+     "page": 1,
+     "quote": "5 TX45998993 2034-11-19 Delivery fee USE1-USW2 1 shpt 116.13 116.13"
+    }
+   ],
+   "amount_usd": "116.13",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "TX-US-2034-0383"
+  },
+  {
+   "id": "late_fee_not_owed:TX-US-2035-0215",
+   "class": "late_fee_not_owed",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0032.eml",
+     "page": 1,
+     "quote": "We extend the due date of invoice TX-US-2035-0202 to 2035-05-07."
+    },
+    {
+     "doc": "batch_01/0041.eml#ap-register-2035-05-31.xlsx",
+     "page": 1,
+     "quote": "TX-US-2035-0202 | 2035-03-10 | due 2035-04-24 | USD 683.82 | paid | 2035-05-01"
+    },
+    {
+     "doc": "batch_01/0038.eml#TX-US-2035-0215.pdf",
+     "page": 1,
+     "quote": "14 - - Late fee on TX-US-2035-0202: USD 683.82 overdue, month 1 @ 1.98% - 1 month 1.98% 13.54"
+    }
+   ],
+   "amount_usd": "13.54",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "TX-US-2035-0215"
+  }
+ ],
+ "portfolio": {
+  "cashback": [
+   {
+    "id": "cashback:TBX-US-EXP-01/2035-Q1/rebate",
+    "class": "cashback",
+    "verdict": "finding",
+    "action": "draft:claim_credit",
+    "confidence": 0.95,
+    "evidence": [
+     {
+      "doc": "batch_01/0001.eml#MSA-TBX-US-EXP-01.pdf",
+      "page": 4,
+      "quote": "79,000.00: 5%; QS >= USD 120,000.00: 7.5%; QS >= USD 202,000.00: 10%. The tier rate applies to all QS in the Quarter."
+     },
+     {
+      "doc": "batch_01/0001.eml#MSA-TBX-US-EXP-01.pdf",
+      "page": 3,
+      "quote": "1.1 Qualifying Spend. Qualifying Spend means freight charges (base freight, fuel, security surcharge and Annex D\naccessorials) on invoices dated in the period, net of all credit notes dated in the period whatever invoice they reference (rebate\nand improvement credits excepted). It excludes taxes (sales tax, GST), duties and disbursements, late fees, and rebate or\nimprovement credits. INR amounts are converted per invoice at the Annex F rate for the month of the invoice date."
+     },
+     {
+      "doc": "batch_01/0011.eml#TX-US-2035-0184.pdf",
+      "page": 1,
+      "quote": "INVOICE TX-US-2035-0184"
+     },
+     {
+      "doc": "batch_01/0012.eml#TX-US-2035-0188.pdf",
+      "page": 1,
+      "quote": "INVOICE TX-US-2035-0188"
+     },
+     {
+      "doc": "batch_01/0013.eml#TX-US-2035-0189.pdf",
+      "page": 1,
+      "quote": "INVOICE TX-US-2035-0189"
+     },
+     {
+      "doc": "batch_01/0014.eml#TX-US-2035-0190.pdf",
+      "page": 1,
+      "quote": "INVOICE TX-US-2035-0190"
+     },
+     {
+      "doc": "batch_01/0015.eml#TX-US-2035-0191.pdf",
+      "page": 1,
+      "quote": "INVOICE TX-US-2035-0191"
+     },
+     {
+      "doc": "batch_01/0018.eml#TX-US-2035-0195.pdf",
+      "page": 1,
+      "quote": "INVOICE TX-US-2035-0195"
+     },
+     {
+      "doc": "batch_01/0019.eml#TX-US-2035-0196.pdf",
+      "page": 1,
+      "quote": "INVOICE TX-US-2035-0196"
+     },
+     {
+      "doc": "batch_01/0022.eml#TX-US-2035-0198.pdf",
+      "page": 1,
+      "quote": "INVOICE TX-US-2035-0198"
+     },
+     {
+      "doc": "batch_01/0026.eml#TX-US-2035-0202.pdf",
+      "page": 1,
+      "quote": "INVOICE TX-US-2035-0202"
+     },
+     {
+      "doc": "batch_01/0027.eml#TX-US-2035-0204.pdf",
+      "page": 1,
+      "quote": "INVOICE TX-US-2035-0204"
+     }
+    ],
+    "amount_usd": "4236.09",
+    "amount_range": null,
+    "deadline": null,
+    "missing_doc": null,
+    "supersedes": [],
+    "learned_at": null,
+    "contract_id": "TBX-US-EXP-01",
+    "period": "2035-Q1",
+    "credit_type": "rebate"
+   }
+  ],
+  "expiry": [],
+  "late_fee_risk": []
+ }
+}

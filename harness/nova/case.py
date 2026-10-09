@@ -622,15 +622,78 @@ class Case:
         return None
 
     def contract_for_invoice(self, bill: "BillingRecord") -> Optional[ContractRecord]:
-        """Pick the MSA referenced by the invoice's contract_ref, not by lane."""
+        """Pick the MSA referenced by the invoice's contract_ref.
+
+        When the reader missed the contract_ref (some invoice layouts put it
+        on a line of its own), fall back to the single MSA whose issuer
+        matches the invoice issuer. This never guesses when more than one
+        MSA could fit.
+        """
         bd = bill.bill
-        if bd.contract_ref is None:
+        if bd.contract_ref is not None:
+            want = bd.contract_ref.value.strip()
+            for c in self.contracts:
+                if not c.is_amendment and c.id == want:
+                    return c
+        issuer = (bd.issuer.value if bd.issuer else "").strip().lower()
+        if not issuer:
             return None
-        want = bd.contract_ref.value.strip()
+        matches: list[ContractRecord] = []
         for c in self.contracts:
-            if not c.is_amendment and c.id == want:
-                return c
+            if c.is_amendment:
+                continue
+            for party in c.terms.parties or []:
+                if party.strip().lower() == issuer:
+                    matches.append(c)
+                    break
+        if len(matches) == 1:
+            return matches[0]
         return None
+
+    def is_line_waived(self, msa: "ContractRecord", line) -> bool:
+        """Does an authorised own-text waiver cover this invoice line?
+
+        True iff some email from a Schedule 1 ``waivers`` contact (or a person
+        granted that category by feedback) waives the line's charge code (or
+        label) for the line's AWB or pickup month. Used by the overcharge
+        rule so a waived accessorial doesn't double as a false overcharge.
+        """
+        from nova.case import _addr_of  # local import to avoid cycles
+        if line is None:
+            return False
+        waiver_code = None
+        if line.charge_label:
+            waiver_code = self.charge_code_for_label(msa, line.charge_label)
+        for em in self.emails:
+            waivers = em.email.waivers or []
+            if not waivers:
+                continue
+            sender = _addr_of(em.email.sender.value)
+            if not self.authority_of(sender, msa.id, "waivers",
+                                     on_date=line.pickup_date):
+                continue
+            own_blocks = em.email.own_lines or []
+            for w in waivers:
+                in_own = any(
+                    (b.ref.line <= w.ref.line <= (b.ref.line_end or b.ref.line))
+                    for b in own_blocks
+                )
+                if not in_own and own_blocks:
+                    continue
+                w_code = self.charge_code_for_label(msa, w.charge)
+                if waiver_code and w_code and waiver_code != w_code:
+                    continue
+                if (not waiver_code or not w_code):
+                    if w.charge.strip().lower() != line.charge_label.strip().lower():
+                        continue
+                if w.awb and line.awb and w.awb != line.awb:
+                    continue
+                if w.month:
+                    pickup = line.pickup_date or line.collected_date
+                    if pickup and pickup[:7] != w.month:
+                        continue
+                return True
+        return False
 
     def is_doc_name_held(self, name: str) -> bool:
         """True iff a contract/amendment with that printed name/id is held.
