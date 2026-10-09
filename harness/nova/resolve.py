@@ -82,6 +82,33 @@ def resolve(
         # When ties on authority, prefer higher rank.
         corrects.sort(key=lambda c: (c.authority_level, -(c.rank or 0)))
         best = corrects[0]
+
+        # Expiry carries no money.
+        if cand.class_ == "expiry":
+            quotes: list[Evidence] = []
+            seen: set = set()
+            for ref in cand.evidence:
+                q = resolve_quote(mailbox, ref)
+                if q is None:
+                    continue
+                key = (ref.doc, ref.page, q)
+                if key in seen:
+                    continue
+                seen.add(key)
+                quotes.append(Evidence(doc=ref.doc, page=ref.page, quote=q))
+            items.append(Item(
+                id=f"{cand.class_}:{cand.key[1]}",
+                class_=cand.class_,
+                invoice_id=None,
+                verdict="finding",
+                amount_usd=None,
+                amount_range=None,
+                deadline=cand.deadline,
+                action="internal:alert",
+                evidence=quotes,
+            ))
+            continue
+
         delta = cand.billed_amount - best.amount
         if delta <= 0:
             continue
