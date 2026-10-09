@@ -1607,6 +1607,21 @@
             "line": 20
           },
           "category": "accessorial"
+        },
+        {
+          "line_no": "13",
+          "awb": null,
+          "charge_label": "Late fee on TX-US-2032-5494",
+          "refers_to_invoice": "TX-US-2032-5494",
+          "qty": "1",
+          "unit": "month",
+          "rate": "1.86",
+          "amount": "12.65",
+          "ref": {
+            "page": 1,
+            "line": 21
+          },
+          "category": "late_fee"
         }
       ]
     }
@@ -1879,8 +1894,43 @@
             "line": 18
           },
           "category": "accessorial"
+        },
+        {
+          "line_no": "11",
+          "awb": null,
+          "charge_label": "Late fee on TX-US-2032-5498",
+          "refers_to_invoice": "TX-US-2032-5498",
+          "qty": "1",
+          "unit": "month",
+          "rate": "1.86",
+          "amount": "78.12",
+          "ref": {
+            "page": 1,
+            "line": 19
+          },
+          "category": "late_fee"
         }
       ]
+    }
+  },
+  {
+    "type": "SheetMap",
+    "doc": "batch_02/0006.eml#ap-register-2033-02-28.xlsx",
+    "data": {
+      "kind": "payment_register",
+      "sheet_number": 1,
+      "columns": {
+        "invoice_id": "Invoice no.",
+        "invoice_date": "Invoice date",
+        "due_date": "Due date",
+        "amount": "Amount",
+        "status": "Status",
+        "paid_date": "Paid date"
+      },
+      "ref": {
+        "page": 1,
+        "line": 1
+      }
     }
   },
   {
