@@ -21,10 +21,26 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Optional
 
+import re
+
 from nova.case import Case, ContractRecord, SourceRef, Terms, TermSource
 from nova.money import CannotDetermine, inr_to_usd, round_half_up
 from nova.rules import Candidate, CorrectAmount
 from nova.schemas import Accessorial, RateRow
+
+
+def _qty_decimal(s: str) -> Optional[Decimal]:
+    """Parse a qty string to Decimal, tolerating units ('600 kg') and commas ('1,234.56')."""
+    if not s:
+        return None
+    cleaned = s.replace(",", "")
+    m = re.match(r'^-?[\d.]+', cleaned.strip())
+    if not m:
+        return None
+    try:
+        return Decimal(m.group())
+    except Exception:
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -153,9 +169,15 @@ def _correct_accessorial(
     if acc.basis_kind == "per_shipment":
         amt = round_half_up(rate, 2)
     elif acc.basis_kind == "per_kg" and line.qty:
-        amt = round_half_up(rate * Decimal(line.qty), 2)
+        qty_d = _qty_decimal(line.qty)
+        if qty_d is None:
+            return None
+        amt = round_half_up(rate * qty_d, 2)
     elif acc.basis_kind == "per_piece" and line.qty:
-        amt = round_half_up(rate * Decimal(line.qty), 2)
+        qty_d = _qty_decimal(line.qty)
+        if qty_d is None:
+            return None
+        amt = round_half_up(rate * qty_d, 2)
     else:
         return None
     return amt, [SourceRef.from_ref(src.doc, acc.ref)]
@@ -204,14 +226,15 @@ def _price_invoice(
         freight_srcs: list[SourceRef] = []
 
         for i, ln in enumerate(lines):
-            if ln.category == "freight" and ln.lane and ln.qty:
+            qty_d = _qty_decimal(ln.qty) if ln.qty else None
+            if ln.category == "freight" and ln.lane and qty_d is not None:
                 override = None
                 if use_notice:
-                    nr = _notice_row_for(terms, ln.lane, Decimal(ln.qty))
+                    nr = _notice_row_for(terms, ln.lane, qty_d)
                     if nr is not None:
                         rate, src, _rns = nr
                         override = (rate, src)
-                result = _correct_freight(case, terms, ln.lane, Decimal(ln.qty),
+                result = _correct_freight(case, terms, ln.lane, qty_d,
                                           pickup_date, rate_override=override)
                 if result is not None:
                     correct_line, srcs = result
@@ -295,7 +318,8 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
             if terms is None:
                 continue
             try:
-                nr = _notice_row_for(terms, ln.lane, Decimal(ln.qty))
+                qty_d2 = _qty_decimal(ln.qty)
+                nr = _notice_row_for(terms, ln.lane, qty_d2) if qty_d2 is not None else None
             except Exception:
                 nr = None
             if nr is not None:

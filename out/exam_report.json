@@ -1,0 +1,342 @@
+{
+ "schema_version": "1.0.0",
+ "as_of": "2031-02-28",
+ "mode": "supervised",
+ "findings": [
+  {
+   "id": "overcharge:CDU-3051266",
+   "class": "overcharge",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0010.eml#CDU-3051266.pdf",
+     "page": 1,
+     "quote": "USC1-INW1 CA53442004 Air freight 547 kg 7.16 3,916.52 19/06/2030"
+    },
+    {
+     "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+     "page": 8,
+     "quote": "USC1-INW1 300+ kg 6.79 7.24"
+    },
+    {
+     "doc": "batch_01/0016.eml#tracking-2030-01-01.xlsx",
+     "page": 1,
+     "quote": "CA53442004 | PICKED_UP | 2030-06-19 | USC1 | -"
+    },
+    {
+     "doc": "batch_01/0010.eml#CDU-3051266.pdf",
+     "page": 1,
+     "quote": "USC1-INW1 CA53442004 Fuel surcharge 3,916.52 20.74% 812.29 19/06/2030"
+    },
+    {
+     "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+     "page": 9,
+     "quote": "2030-06 20.74%"
+    }
+   ],
+   "amount_usd": "244.37",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "CDU-3051266"
+  },
+  {
+   "id": "overcharge:CDU-3051286",
+   "class": "overcharge",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_02/0003.eml#CDU-3051286.pdf",
+     "page": 1,
+     "quote": "USW2-USW1 CA66924094 Air freight 254 kg 5.15 1,308.10 15/09/2030"
+    },
+    {
+     "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+     "page": 8,
+     "quote": "USW2-USW1 100-299.5 kg 4.65 4.95"
+    },
+    {
+     "doc": "batch_02/0022.eml#tracking-2030-09-01.xlsx",
+     "page": 1,
+     "quote": "CA66924094 | PICKED_UP | 2030-09-15 | USW2 | -"
+    },
+    {
+     "doc": "batch_02/0003.eml#CDU-3051286.pdf",
+     "page": 1,
+     "quote": "USW2-USW1 CA66924094 Fuel surcharge 1,308.10 19.40% 253.77 15/09/2030"
+    },
+    {
+     "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+     "page": 9,
+     "quote": "2030-09 19.40%"
+    }
+   ],
+   "amount_usd": "151.64",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "CDU-3051286"
+  },
+  {
+   "id": "overcharge:CDU-3051302",
+   "class": "overcharge",
+   "verdict": "conflict",
+   "action": "escalate",
+   "confidence": 0.6,
+   "evidence": [
+    {
+     "doc": "batch_02/0005.eml#CDU-3051302.pdf",
+     "page": 1,
+     "quote": "USE2-USC3 CA60423720 Air freight 133 kg 4.38 582.54 21/09/2030"
+    },
+    {
+     "doc": "batch_01/0004.eml#CDA-US-EXP-E91-AMD-1.pdf",
+     "page": 1,
+     "quote": "USE2-USC3 100-299.5 kg 3.99 USD"
+    },
+    {
+     "doc": "batch_02/0022.eml#tracking-2030-09-01.xlsx",
+     "page": 1,
+     "quote": "CA60423720 | PICKED_UP | 2030-09-21 | USE2 | -"
+    },
+    {
+     "doc": "batch_02/0005.eml#CDU-3051302.pdf",
+     "page": 1,
+     "quote": "USE2-USC3 CA60423720 Fuel surcharge 582.54 19.40% 113.01 21/09/2030"
+    },
+    {
+     "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+     "page": 9,
+     "quote": "2030-09 19.40%"
+    },
+    {
+     "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+     "page": 4,
+     "quote": "13.3 Unranked instruments. Where a rate notice under clause 3.5 and an amendment state different rates for the same lane and\nperiod, the parties shall resolve the difference jointly; neither prevails automatically."
+    }
+   ],
+   "amount_usd": null,
+   "amount_range": [
+    "0.00",
+    "61.93"
+   ],
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "CDU-3051302"
+  },
+  {
+   "id": "duplicate:CDU-3051273",
+   "class": "duplicate",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0018.eml#ap-register-2030-08-31.xlsx",
+     "page": 1,
+     "quote": "CDU-3051273 | 2030-07-29 | due 2030-08-28 | USD 3235.24 | paid | 2030-08-27"
+    },
+    {
+     "doc": "batch_01/0017.eml#CDU-3051273.pdf",
+     "page": 1,
+     "quote": "Total payable USD 3,235.24"
+    }
+   ],
+   "amount_usd": "3235.24",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "CDU-3051273"
+  },
+  {
+   "id": "duplicate:CDU-3051313",
+   "class": "duplicate",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_02/0006.eml#CDU-3051304.pdf",
+     "page": 1,
+     "quote": "USE2-INS2 CA96669138-H1 Delivery fee (MAWB CA96669138) 1 shpt 52.70 52.70 26/09/2030"
+    },
+    {
+     "doc": "batch_02/0007.eml#CDU-3051313.pdf",
+     "page": 1,
+     "quote": "USE2-INS2 CA96669138-H2 Delivery fee (MAWB CA96669138) 1 shpt 52.70 52.70 26/09/2030"
+    },
+    {
+     "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+     "page": 10,
+     "quote": "Code DLV: Delivery fee; also billed as: Door delivery, Final-mile delivery"
+    }
+   ],
+   "amount_usd": "52.70",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "CDU-3051313"
+  },
+  {
+   "id": "waived_but_billed:CDU-3051259",
+   "class": "waived_but_billed",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0007.eml",
+     "page": 1,
+     "quote": "Please treat the Delivery fee on AWB CA10343321 as waived.\nWe will not pursue payment of that line."
+    },
+    {
+     "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+     "page": 11,
+     "quote": "Thea Kapadia, Customer Finance Lead, CDA-US: waivers, payment_terms <thea.kapadia@caldrith.example>"
+    },
+    {
+     "doc": "batch_01/0008.eml#CDU-3051259.pdf",
+     "page": 1,
+     "quote": "USE2-INS2 CA10343321 Delivery fee 1 shpt 52.70 52.70 07/06/2030"
+    }
+   ],
+   "amount_usd": "52.70",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "CDU-3051259"
+  },
+  {
+   "id": "waived_but_billed:CDU-3051323",
+   "class": "waived_but_billed",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_02/0009.eml",
+     "page": 1,
+     "quote": "The Delivery fee billed against AWB CA75329761 is waived, with our apologies."
+    },
+    {
+     "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+     "page": 11,
+     "quote": "Thea Kapadia, Customer Finance Lead, CDA-US: waivers, payment_terms <thea.kapadia@caldrith.example>"
+    },
+    {
+     "doc": "batch_02/0011.eml#CDU-3051323.pdf",
+     "page": 1,
+     "quote": "USE2-INW1 CA75329761 Delivery fee 1 shpt 52.70 52.70 14/10/2030"
+    }
+   ],
+   "amount_usd": "52.70",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "CDU-3051323"
+  },
+  {
+   "id": "late_fee_not_owed:CDU-3051277",
+   "class": "late_fee_not_owed",
+   "verdict": "finding",
+   "action": "draft:dispute",
+   "confidence": 0.95,
+   "evidence": [
+    {
+     "doc": "batch_01/0011.eml",
+     "page": 1,
+     "quote": "Invoice CDU-3051262 now falls due on 2030-07-25 (extended under clause 10.5)."
+    },
+    {
+     "doc": "batch_01/0018.eml#ap-register-2030-08-31.xlsx",
+     "page": 1,
+     "quote": "CDU-3051262 | 2030-06-15 | due 2030-07-15 | USD 1448.48 | paid | 2030-07-23"
+    },
+    {
+     "doc": "batch_01/0015.eml#CDU-3051277.pdf",
+     "page": 1,
+     "quote": "- - Late fee on CDU-3051262: USD 1448.48 overdue, month 1 @ 1.49% 1 month 1.49% 21.58 -"
+    }
+   ],
+   "amount_usd": "21.58",
+   "amount_range": null,
+   "deadline": null,
+   "missing_doc": null,
+   "supersedes": [],
+   "learned_at": null,
+   "invoice_id": "CDU-3051277"
+  }
+ ],
+ "portfolio": {
+  "cashback": [],
+  "expiry": [
+   {
+    "id": "expiry:CDA-US-EXP-E91",
+    "class": "expiry",
+    "verdict": "finding",
+    "action": "internal:alert",
+    "confidence": 0.95,
+    "evidence": [
+     {
+      "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+      "page": 3,
+      "quote": "2.2 Initial term. The initial term runs for 12 months and expires on 2031-04-01."
+     }
+    ],
+    "amount_usd": null,
+    "amount_range": null,
+    "deadline": "2031-04-01",
+    "missing_doc": null,
+    "supersedes": [],
+    "learned_at": null,
+    "contract_id": "CDA-US-EXP-E91"
+   }
+  ],
+  "late_fee_risk": [
+   {
+    "id": "late_fee_risk:CDU-3151571",
+    "class": "late_fee_risk",
+    "verdict": "finding",
+    "action": "internal:payment_reminder",
+    "confidence": 0.95,
+    "evidence": [
+     {
+      "doc": "batch_02/0020.eml#CDU-3151571.pdf",
+      "page": 1,
+      "quote": "Total payable USD 690.34"
+     },
+     {
+      "doc": "batch_01/0003.eml#MSA-CDA-US-EXP-E91.pdf",
+      "page": 4,
+      "quote": "10.2 Late fee. Undisputed amounts outstanding for more than 0 days past the due date incur a late fee of 1.49% per month or"
+     }
+    ],
+    "amount_usd": "10.29",
+    "amount_range": null,
+    "deadline": "2031-03-10",
+    "missing_doc": null,
+    "supersedes": [],
+    "learned_at": null,
+    "invoice_id": "CDU-3151571"
+   }
+  ]
+ }
+}

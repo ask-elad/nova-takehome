@@ -527,7 +527,9 @@ class Case:
 # ---------------------------------------------------------------------------
 
 def _parse_date(iso: str) -> date:
-    y, m, d = iso.split("-")
+    # Accept both "YYYY-MM-DD" and full ISO datetimes "YYYY-MM-DDTHH:..."
+    s = iso.split("T")[0]
+    y, m, d = s.split("-")
     return date(int(y), int(m), int(d))
 
 
