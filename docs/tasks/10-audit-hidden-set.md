@@ -29,6 +29,13 @@
    - Normalise precedence `use` values.
    - A later signed amendment beats feedback.
 6. **Scan evidence.** Save the scan transcription with the document's facts, so scan findings carry evidence.
+7. **Finish B1 from task 09.**
+   - The open-conflict check covers any open conflict on the **same contract and lane (and the same rate
+     period)**, not just the same invoice (GLOSSARY, unattended-action test, check 2).
+   - The pickup-source check (tracking or a carrier pickup email) applies to every class that relies on a pickup
+     date, not only overcharge.
+   - Add an eval: a clean dispute on a lane that has an open conflict on another invoice must be `human_review`
+     in autonomous mode.
 
 ## Done when
 Gates hold and the new evals pass. Show the outputs and one line per item.

@@ -414,6 +414,13 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
                     "batch": fb_match.batch or "",
                 }
 
+    # retro: a key that only exists because of a document received after the
+    # prior report but dated/effective-from before that prior as_of (audit B5).
+    try:
+        _annotate_retro(items, annotations, state.reports_dir, case, docs)
+    except Exception as e:
+        print(f"retro annotation failed: {e!r}", file=sys.stderr)
+
     # Per-item signals for the confidence score (audit M1).
     inv_currency = {}
     inv_awbs = {}
@@ -458,6 +465,59 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
     except OSError:
         pass
     return report_obj
+
+
+def _annotate_retro(items, annotations: dict, report_dir, case, docs) -> None:
+    """Mark ``retro: true`` on items that only exist because of a backdated
+    document (GLOSSARY §New documents, audit B5). The deciding document must
+    have been received after the previous report's ``as_of``, and the fact it
+    carries must be effective/dated before that cutoff.
+    """
+    from nova.feedback import _latest_prev_report, _iter_prev_items
+
+    prev = _latest_prev_report(report_dir)
+    if prev is None:
+        return
+    prev_as_of = prev.get("as_of")
+    if not prev_as_of:
+        return
+    prev_ids = {pf["id"].split("@")[0] for pf in _iter_prev_items(prev)}
+    doc_received: dict[str, str] = {}
+    for d in docs or []:
+        try:
+            doc_received[d.doc_id] = d.received.strftime("%Y-%m-%d")
+        except Exception:
+            continue
+    # Doc id -> "stated date": contract.effective_from, amendment.effective_from,
+    # invoice.invoice_date. If stated < prev_as_of, the doc is backdated.
+    stated: dict[str, str] = {}
+    for c in case.contracts:
+        try:
+            stated[c.doc] = c.effective_from
+        except Exception:
+            pass
+    for b in case.billings:
+        inv_d = b.bill.invoice_date.value if b.bill.invoice_date else None
+        if inv_d:
+            stated[b.doc] = inv_d
+    for item in items:
+        base_id = item.id.split("@")[0]
+        if base_id in prev_ids:
+            continue
+        if annotations.get(item.id, {}).get("supersedes"):
+            continue
+        found = False
+        for ev in item.evidence:
+            rec = doc_received.get(ev.doc)
+            if rec is None or rec <= prev_as_of:
+                continue
+            dt = stated.get(ev.doc)
+            if dt is None or dt >= prev_as_of:
+                continue
+            found = True
+            break
+        if found:
+            annotations.setdefault(item.id, {})["retro"] = True
 
 
 def _flags_from_case(items, case, feedback_items) -> dict:
@@ -621,6 +681,8 @@ def _build_report(items, as_of: str, mode: str, conf_score,
             serialised["learned_at"] = ann["learned_at"]
         if ann.get("supersedes"):
             serialised["supersedes"] = ann["supersedes"]
+        if ann.get("retro"):
+            serialised["retro"] = True
         if item.class_ in ("overcharge", "duplicate", "waived_but_billed", "late_fee_not_owed"):
             findings.append(serialised)
         elif item.class_ == "cashback":

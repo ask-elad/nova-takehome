@@ -284,7 +284,9 @@ def apply_post_items(
         out.append(current)
         if changed and learned_at:
             annotations[current.id] = {"learned_at": learned_at}
-    # supersedes: compare against the previous report (if any)
+    # supersedes: compare against the previous report (if any). ``retro`` is
+    # annotated by the harness, which can see fact dates (effective_from /
+    # invoice_date) that aren't on the DocRecord alone.
     if report_dir is not None:
         prev = _latest_prev_report(report_dir)
         if prev is not None:

@@ -28,22 +28,51 @@ def operative_date(msa: ContractRecord) -> Optional[str]:
     return end.isoformat()
 
 
+def _latest_end_source(case: Case, msa: ContractRecord) -> tuple[ContractRecord, bool]:
+    """Return the contract to use for end_date and renewal terms.
+
+    An amendment that restates the end date or renewal terms replaces the MSA
+    values on those fields (audit B5). The latest-effective amendment with a
+    stated end_date wins; otherwise fall back to the MSA. ``had_amendment``
+    is True iff an amendment supplied the end_date.
+    """
+    best = msa
+    best_eff = None
+    had_amendment = False
+    for c in case.contracts:
+        if not c.is_amendment or c.amends != msa.id:
+            continue
+        if not c.end_date:
+            continue
+        eff = _parse(c.effective_from)
+        if best_eff is None or eff > best_eff:
+            best = c
+            best_eff = eff
+            had_amendment = True
+    return best, had_amendment
+
+
 def run(case: Case) -> list[Candidate]:
     out: list[Candidate] = []
     as_of = _parse(case.as_of)
     for c in case.contracts:
         if c.is_amendment:
             continue
-        op = operative_date(c)
+        source, had_amendment = _latest_end_source(case, c)
+        op = operative_date(source)
         if op is None:
             continue
         days = (_parse(op) - as_of).days
         if not (0 <= days <= 60):
             continue
-        # Evidence: the end-date clause, and the auto-renewal/notice clause when relevant.
-        evidence = [SourceRef.from_ref(c.doc, c.terms.end_date.ref)]
-        if c.terms.auto_renewal and c.terms.renewal_notice_ref:
-            evidence.append(SourceRef.from_ref(c.doc, c.terms.renewal_notice_ref))
+        evidence = [SourceRef.from_ref(source.doc, source.terms.end_date.ref)]
+        if source.terms.auto_renewal and source.terms.renewal_notice_ref:
+            evidence.append(SourceRef.from_ref(source.doc, source.terms.renewal_notice_ref))
+        if had_amendment:
+            # Cite the MSA's end-date clause too so the evidence shows the
+            # thing being replaced.
+            if c.terms.end_date:
+                evidence.append(SourceRef.from_ref(c.doc, c.terms.end_date.ref))
         out.append(Candidate(
             key=("expiry", c.id),
             class_="expiry",
