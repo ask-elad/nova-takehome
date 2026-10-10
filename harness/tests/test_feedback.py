@@ -337,6 +337,30 @@ def test_sender_authority_resolves_person_name_to_email_via_docs():
         assert row["valid_from"] == "2035-04-01"
 
 
+def test_learned_at_batch_is_always_a_string(tmp_path):
+    """The report schema requires learned_at.batch to be a string. When the
+    envelope's after_batch is missing we coerce to '' so JSON validation
+    always passes (audit M11)."""
+    item = _item("overcharge", "INV-11")
+    fb_env = {
+        "schema_version": "1.0", "world": "W1",
+        "decided_at": "2032-06-01T10:00:00Z",
+        "decided_by": {"name": "AP", "role": "AP", "entity": "QMP"},
+        "items": [{
+            "item_id": "fb-99", "decision": "override_amount",
+            "finding_key": {"invoice_id": "INV-11", "class": "overcharge"},
+            "fact": {"type": "dispute_closed", "subject": {},
+                     "value": {"amount_usd": "7.00"}, "evidence": ""},
+            "scope": {"kind": "one_off",
+                      "applies_to": {"invoice_id": "INV-11"},
+                      "valid_from": "2032-06-01", "valid_to": None},
+        }],
+    }
+    fb = [FeedbackItem.from_envelope(fb_env, fb_env["items"][0])]
+    _out, ann = apply_post_items([item], fb)
+    assert isinstance(ann["overcharge:INV-11"]["learned_at"]["batch"], str)
+
+
 def test_sender_authority_without_docs_or_match_emits_nothing():
     """A person-only sender_authority with no matching display name produces
     no authority rows (don't fall back to using the name as an email)."""

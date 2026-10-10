@@ -371,22 +371,29 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
             )
             if not changed:
                 continue
-            # Point at the first standing feedback item that could have caused it.
-            # Match on contract/lane in id string, else first standing item.
+            # Attribute to the standing feedback whose scope actually
+            # matches this item's key or contract (audit M11): never the
+            # mere "first standing" item.
             fb_match = None
             for fb in feedback_items:
                 if fb.scope_kind != "standing":
                     continue
-                cid = (fb.applies_to or {}).get("contract_id")
-                lane = (fb.applies_to or {}).get("lane")
-                if cid and cid not in it.id and (it.invoice_id or "") == "":
-                    continue
-                fb_match = fb
-                break
+                cid = (fb.applies_to or {}).get("contract_id") or ""
+                if cid and cid in it.id:
+                    fb_match = fb
+                    break
+            if fb_match is None:
+                for fb in feedback_items:
+                    if fb.scope_kind != "standing":
+                        continue
+                    k = fb.finding_key or {}
+                    if k.get("invoice_id") and k["invoice_id"] == (it.invoice_id or ""):
+                        fb_match = fb
+                        break
             if fb_match is not None:
                 annotations.setdefault(it.id, {})["learned_at"] = {
                     "feedback_item_id": fb_match.item_id,
-                    "batch": fb_match.batch,
+                    "batch": fb_match.batch or "",
                 }
 
     # Serialise to report JSON.
@@ -631,8 +638,10 @@ def feedback(feedback_file: str, state_dir: str) -> None:
     state.root.mkdir(parents=True, exist_ok=True)
 
     payload = json.loads(Path(feedback_file).read_text())
-    for item in payload.get("items", []):
-        state.append_feedback(item)
+    # Store feedback with its envelope (audit M11) so load_feedback can
+    # read after_batch and decided_at from the right place, and
+    # learned_at.batch is always a string.
+    state.append_feedback(payload)
 
 
 # ---------------------------------------------------------------------------

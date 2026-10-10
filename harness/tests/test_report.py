@@ -94,4 +94,8 @@ def test_feedback_stored(tmp_path):
     lines = fb_jsonl.read_text().strip().splitlines()
     assert len(lines) == 1
     stored = _json.loads(lines[0])
-    assert stored["item_id"] == "fb-01"
+    # audit M11: feedback is stored with its envelope (after_batch,
+    # decided_at), so load_feedback can source batch/decided_at from the
+    # right field.
+    assert stored["after_batch"] == "batch_01"
+    assert stored["items"][0]["item_id"] == "fb-01"

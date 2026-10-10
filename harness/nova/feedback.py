@@ -182,12 +182,12 @@ def _apply_one(fb: FeedbackItem, item: Item, docs=None) -> Optional[_ApplyChange
     if fb.decision == "reject":
         return _ApplyChange(new_item=None,
                             learned_at={"feedback_item_id": fb.item_id,
-                                        "batch": fb.batch})
+                                        "batch": fb.batch or ""})
     if fb.decision == "close":
         # The task says "close stops raising that key" — drop it from this report.
         return _ApplyChange(new_item=None,
                             learned_at={"feedback_item_id": fb.item_id,
-                                        "batch": fb.batch})
+                                        "batch": fb.batch or ""})
     if fb.decision == "one_off_approval" and fb.fact_type == "waiver_scope":
         months = fb.fact_value.get("months") or []
         # Typed-months guard: if the feedback lists months, and we can derive
@@ -216,7 +216,7 @@ def _apply_one(fb: FeedbackItem, item: Item, docs=None) -> Optional[_ApplyChange
         )
         return _ApplyChange(new_item=finding,
                             learned_at={"feedback_item_id": fb.item_id,
-                                        "batch": fb.batch})
+                                        "batch": fb.batch or ""})
     if fb.decision == "override_amount":
         amt = fb.fact_value.get("amount_usd")
         if amt is None:
@@ -230,7 +230,7 @@ def _apply_one(fb: FeedbackItem, item: Item, docs=None) -> Optional[_ApplyChange
         )
         return _ApplyChange(new_item=new,
                             learned_at={"feedback_item_id": fb.item_id,
-                                        "batch": fb.batch})
+                                        "batch": fb.batch or ""})
     return None
 
 
