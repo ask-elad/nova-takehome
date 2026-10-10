@@ -246,6 +246,43 @@ def test_5k_rule_autonomous_mode_blocks_execution():
 
 
 # ---------------------------------------------------------------------------
+# B1: autonomous checks must fail when pickup comes only from the invoice
+# ---------------------------------------------------------------------------
+
+def test_autonomous_small_dispute_invoice_pickup_only_is_human_review():
+    """A $200 dispute whose pickup date comes only from the invoice (no
+    tracking export, no 'picked up' email) must be human_review in
+    autonomous mode (audit B1, check 1)."""
+    item = _overcharge("overcharge:INV-PI", "INV-PI", "200.00")
+    flags = ItemFlags(pickup_from_tracking=False)
+    out = apply_policy([item], mode="autonomous", flags_map={item.id: flags})
+    assert out[0].action == "human_review"
+
+
+def test_autonomous_small_dispute_with_tracked_pickup_executes():
+    """A clean small dispute with a tracking-sourced pickup date and all
+    checks passing executes in autonomous mode."""
+    item = _overcharge("overcharge:INV-OK", "INV-OK", "200.00")
+    flags = ItemFlags()  # all defaults pass
+    out = apply_policy([item], mode="autonomous", flags_map={item.id: flags})
+    assert out[0].action == "execute:dispute"
+
+
+def test_autonomous_blocks_when_open_conflict_on_same_contract():
+    item = _overcharge("overcharge:INV-C", "INV-C", "200.00")
+    flags = ItemFlags(has_same_key_conflict=True)
+    out = apply_policy([item], mode="autonomous", flags_map={item.id: flags})
+    assert out[0].action == "human_review"
+
+
+def test_autonomous_blocks_when_relying_on_feedback():
+    item = _overcharge("overcharge:INV-F", "INV-F", "200.00")
+    flags = ItemFlags(all_facts_level3plus=False)
+    out = apply_policy([item], mode="autonomous", flags_map={item.id: flags})
+    assert out[0].action == "human_review"
+
+
+# ---------------------------------------------------------------------------
 # Report schema validation (both modes)
 # ---------------------------------------------------------------------------
 

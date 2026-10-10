@@ -65,9 +65,15 @@ def _condition_met(case: Case, waiver, em: EmailRecord) -> Optional[bool]:
                           f"Is this condition met for this waiver on "
                           f"charge {waiver.charge!r} "
                           f"(awb={waiver.awb}, invoice={waiver.invoice}, "
-                          f"month={waiver.month})? A vacuous or purely "
-                          f"stylistic clause (e.g. 'this time', 'everything "
-                          f"else stands') counts as met."),
+                          f"month={waiver.month})? Clauses that merely "
+                          f"direct how to apply the waiver — e.g. 'if "
+                          f"already invoiced, short-pay', 'leave the "
+                          f"charge unpaid', 'no credit note will follow', "
+                          f"'this time', 'everything else stands' — are "
+                          f"not real conditions and count as met. Answer "
+                          f"false only when the clause names a factual "
+                          f"gate (dates, weight, destination) that the "
+                          f"shipment demonstrably fails."),
              "awb": waiver.awb, "invoice": waiver.invoice,
              "month": waiver.month, "condition": waiver.condition},
         )

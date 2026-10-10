@@ -79,8 +79,12 @@ def _internal_action(class_: str, deadline: Optional[str]) -> str:
 
 def _all_checks_pass(item: Item, flags: ItemFlags) -> bool:
     """Return True iff all five unattended-action checks pass for this item."""
-    # Check 1: evidence complete
-    if flags.missing_doc_present or not flags.pickup_from_tracking:
+    # Check 1: evidence complete. For a cannot_determine item, the outbound
+    # action is request_document — the whole point is that a doc is missing,
+    # so missing_doc_present must not block that specific flow.
+    if item.verdict != "cannot_determine" and flags.missing_doc_present:
+        return False
+    if not flags.pickup_from_tracking:
         return False
     # Check 2: no open conflict on same key/contract/lane
     if flags.has_same_key_conflict:

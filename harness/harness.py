@@ -313,7 +313,8 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
         candidates.extend(run_cashback(case))
         candidates.extend(run_expiry(case))
         xs = resolve(candidates, mailbox)
-        return apply_policy(xs, mode=mode)
+        flags_map = _flags_from_case(xs, case, feedback_items)
+        return apply_policy(xs, mode=mode, flags_map=flags_map)
 
     # Build Case with Claude Judge (uses LLM client for judge calls, cached).
     judge_fn = _make_judge(state_dir)
@@ -380,6 +381,90 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
     except OSError:
         pass
     return report_obj
+
+
+def _flags_from_case(items, case, feedback_items) -> dict:
+    """Compute per-item ItemFlags from the resolved items and the Case.
+
+    The five autonomous-mode checks (audit B1):
+      1. Evidence complete + pickup from a tracking source.
+      2. No open conflict on the same contract/lane as this item.
+      3. $5k threshold — handled by apply_policy.
+      4. Action is reversible — handled by apply_policy.
+      5. Authority levels: a feedback-touched key counts as level 2 and so
+         fails if no higher-authority source backs it.
+    """
+    from nova.policy import ItemFlags
+
+    # AWBs that appear in any tracking sheet row or shipment doc.
+    tracked_awbs: set[str] = set()
+    for s in case.sheets:
+        if s.sheet.kind != "tracking_export":
+            continue
+        for row in s.rows or []:
+            awb = (row.get("awb") or "").strip()
+            if awb:
+                tracked_awbs.add(awb)
+    for sh in case.shipments:
+        awb = (sh.ship.awb.value if sh.ship.awb else "").strip()
+        if awb:
+            tracked_awbs.add(awb)
+
+    # invoice_id → list of AWBs
+    invoice_awbs: dict[str, list[str]] = {}
+    invoice_contract: dict[str, str] = {}
+    for b in case.billings:
+        inv = b.bill.id.value
+        invoice_awbs[inv] = [ln.awb for ln in b.bill.lines if ln.awb]
+        if b.bill.contract_ref:
+            invoice_contract[inv] = b.bill.contract_ref.value
+
+    # Open conflicts by invoice_id (the only lane/contract scoping we have
+    # at this layer without threading lane through resolve).
+    conflict_invoices: set[str] = set()
+    for it in items:
+        if it.verdict == "conflict" and it.invoice_id:
+            conflict_invoices.add(it.invoice_id)
+
+    # Items whose key matched any feedback fact (standing or one_off).
+    from nova.feedback import _finding_key_matches  # type: ignore
+    feedback_touched: set[str] = set()
+    for it in items:
+        for fb in feedback_items or []:
+            try:
+                if _finding_key_matches(fb, it):
+                    feedback_touched.add(it.id)
+                    break
+            except Exception:
+                continue
+
+    # Only overcharge-class findings depend on pickup-date source for check 1
+    # (pickup drives the rate period). For other classes (duplicate, waived,
+    # late_fee_not_owed, cashback) the pickup date is not the operative
+    # evidence; keep the check satisfied unless missing_doc fires.
+    PICKUP_SENSITIVE = {"overcharge"}
+
+    flags_map: dict = {}
+    for it in items:
+        if it.class_ in PICKUP_SENSITIVE:
+            awbs = invoice_awbs.get(it.invoice_id or "", [])
+            pickup_tracked = bool(awbs) and any(a in tracked_awbs for a in awbs)
+        else:
+            pickup_tracked = True
+        same_conflict = bool(
+            it.invoice_id and it.invoice_id in conflict_invoices
+            and it.verdict != "conflict"
+        )
+        touched = it.id in feedback_touched
+        flags_map[it.id] = ItemFlags(
+            missing_doc_present=it.missing_doc is not None,
+            pickup_from_tracking=pickup_tracked,
+            has_same_key_conflict=same_conflict,
+            all_terms_level12=True,
+            all_facts_level3plus=not touched,
+            recipient_from_schedule1=True,
+        )
+    return flags_map
 
 
 def _build_mailbox(state_dir: str, facts: list[dict]):
