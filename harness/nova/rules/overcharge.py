@@ -150,49 +150,113 @@ def _is_dg_accessorial(acc: Accessorial) -> bool:
 
 def _accessorial_applies(
     case: Case, acc: Accessorial, pickup_date: str, awb: Optional[str],
+    msa=None,
 ) -> bool:
     """Does this accessorial's condition fire on this shipment?
 
-    A `months` window applies by calendar month of the pickup date. For a DG
-    accessorial we read the DG declaration directly: a declaration that is
-    refrigerant-only (dry ice, UN1845 alone) means the fee does not apply
-    (MSA 5.2/5.3); any other UN number means it does. For any other
-    conditional accessorial we fall back to the Judge; when no judge is wired
-    the condition is treated as unmet.
+    A ``months`` window applies by calendar month of the pickup date. For
+    everything else we go to the Judge with the condition's clause text and
+    the shipment's documents (AWB, DG declaration, tracking). The dry-ice /
+    DG rule is derived from the contract clause through the Judge — no
+    UN-number literal lives in the rule code (audit B8). Judge exception /
+    API error presumes the accessorial legitimately applies: a wrong
+    dispute costs double, so we never flag an overcharge on uncertainty.
     """
-    # DG fee: always consult the DG declaration, even when the reader didn't
-    # surface a condition. Dry-ice-only (UN1845) means the fee doesn't apply.
+    # The reader's typed `refrigerant_only` flag still short-circuits the
+    # Judge for the common dry-ice case.
     if awb and _is_dg_accessorial(acc):
         status = case.dg_status_for(awb)
         if status is not None:
             return status[0] == "dg"
-        # No declaration: fall through to Judge, else presume applies.
     months = list(acc.months or [])
     if months:
         if pickup_date[5:7] not in months:
             return False
-        # Months pass: the condition is a date window; don't double-check.
         return True
-    if not acc.condition:
+    if not acc.condition and not _is_dg_accessorial(acc):
         return True
-    if awb and _is_dg_condition(acc.condition):
-        status = case.dg_status_for(awb)
-        if status is not None:
-            return status[0] == "dg"
-        # No DG declaration held: fall through to the Judge; if the Judge
-        # can't decide either, presume the DG fee applies.
+    context = _accessorial_context(case, acc, pickup_date, awb, msa)
     try:
         answer, _ref = case.judge(
-            f"accessorial_condition:{acc.code}",
-            {"awb": awb, "pickup_date": pickup_date, "condition": acc.condition},
+            f"accessorial_condition:{acc.code}", context,
         )
         return bool(answer)
     except (NotImplementedError, KeyError):
-        # No evidence to rebut the carrier's claim: assume the accessorial
-        # legitimately applies. Overcharges should rest on evidence we hold,
-        # not on the Judge's silence (which produced false positives on the
-        # practice set for Delivery fee / Peak season / Dry-ice handling).
         return True
+    except Exception:
+        # API error, timeout, parsing failure: audit B8 says this must not
+        # become an overcharge (a wrong dispute costs double).
+        return True
+
+
+def _accessorial_context(case: Case, acc: Accessorial, pickup_date: str,
+                         awb: Optional[str], msa) -> dict:
+    """Build the Judge's context: the condition's clause text and the
+    shipment's documents (AWB, DG declaration, tracking)."""
+    context: dict = {
+        "awb": awb or "",
+        "pickup_date": pickup_date,
+        "accessorial_code": acc.code,
+        "accessorial_label": acc.label,
+        "condition_clause": acc.condition or "",
+    }
+    # The contract/MSA page carries the clause. Point `doc` and `pages`
+    # at the MSA so the Judge can read the clause in situ.
+    mailbox = getattr(case, "mailbox", None)
+    if msa is not None and mailbox is not None:
+        try:
+            pages, _ = mailbox.pages(msa.doc)
+            context["doc"] = msa.doc
+            context["pages"] = pages
+        except (LookupError, ValueError):
+            pass
+    context["question"] = (
+        f"Given the accessorial clause ({acc.label!r}: "
+        f"{acc.condition or 'no condition stated'}) and the shipment "
+        f"facts below, does this accessorial legitimately apply to this "
+        f"shipment? Answer true if it applies, false if it does not."
+    )
+    if awb:
+        context["dg_status"] = _dg_status_summary(case, awb)
+        context["tracking_summary"] = _tracking_summary(case, awb)
+        context["awb_summary"] = _awb_summary(case, awb)
+    return context
+
+
+def _dg_status_summary(case: Case, awb: str) -> str:
+    for sh in case.shipments:
+        if sh.ship.kind != "dg_declaration":
+            continue
+        if sh.ship.awb.value != awb:
+            continue
+        if sh.ship.refrigerant_only is True:
+            return "refrigerant_only (only refrigerant is dangerous)"
+        uns = ", ".join(u.value for u in (sh.ship.un_numbers or []))
+        return f"declared: {uns}" if uns else "declaration held, no UN numbers"
+    return "no DG declaration held"
+
+
+def _tracking_summary(case: Case, awb: str) -> str:
+    for s in case.sheets:
+        if s.sheet.kind != "tracking_export":
+            continue
+        for row in s.rows or []:
+            if (row.get("awb") or "") != awb:
+                continue
+            return (f"event {row.get('event','')} date {row.get('date','')} "
+                    f"station {row.get('station','')}").strip()
+    return "no tracking row held"
+
+
+def _awb_summary(case: Case, awb: str) -> str:
+    for sh in case.shipments:
+        if sh.ship.kind != "awb":
+            continue
+        if sh.ship.awb.value != awb:
+            continue
+        goods = sh.ship.goods.value if sh.ship.goods else ""
+        return f"goods: {goods}" if goods else "AWB held, no goods line"
+    return "no AWB document held"
 
 
 def _correct_accessorial(
@@ -205,7 +269,7 @@ def _correct_accessorial(
     if found is None:
         return None
     acc, src = found
-    if not _accessorial_applies(case, acc, pickup_date, line.awb):
+    if not _accessorial_applies(case, acc, pickup_date, line.awb, msa=terms.msa):
         return Decimal(0), [SourceRef.from_ref(src.doc, acc.ref)]
     rate = Decimal(acc.rate)
     if acc.basis_kind == "per_shipment":

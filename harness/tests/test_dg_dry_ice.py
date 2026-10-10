@@ -111,8 +111,12 @@ def _tracking() -> dict:
     }
 
 
-def test_dry_ice_only_un1845_full_dg_fee_is_overcharge():
-    records = [_msa(), _invoice(), _dg_dec(["UN1845"]), _tracking()]
+def test_dry_ice_only_refrigerant_only_full_dg_fee_is_overcharge():
+    """Audit B8: the shipment reader sets refrigerant_only=True on a
+    dry-ice-only declaration; the rule honours the typed flag, not a
+    UN-number literal."""
+    records = [_msa(), _invoice(),
+               _dg_dec(["UN1845"], refrigerant_only=True), _tracking()]
     case = Case.from_records(records, as_of="2031-12-31")
     cands = run_overcharge(case)
     assert len(cands) == 1

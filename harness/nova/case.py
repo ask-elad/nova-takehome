@@ -584,38 +584,31 @@ class Case:
     def dg_status_for(self, awb: str) -> Optional[tuple[str, SourceRef]]:
         """Return the dangerous-goods status of a shipment from its DG declaration.
 
-        The returned string is one of:
-          - ``"refrigerant_only"`` — the declaration says the refrigerant is
-            the only hazard, or lists only UN1845 (dry ice). The DG fee does
-            not apply (MSA 5.2/5.3): the full DG fee billed is an overcharge.
-          - ``"dg"`` — the declaration lists one or more dangerous goods, with
-            or without dry ice (a mixed shipment). The DG fee applies **once**.
-          - ``None`` — no DG declaration is held for this AWB.
+        Trusts the reader's typed ``refrigerant_only`` flag only (audit B8):
+        the specific UN-number literal that means "dry ice" is a contract-
+        clause concern and belongs to the Judge, not to this method.
+
+        Values:
+          - ``"refrigerant_only"`` — declaration states refrigerant is the
+            only hazard; the DG fee must not apply.
+          - ``"dg"`` — declaration lists one or more dangerous goods.
+          - ``None`` — no DG declaration held, or the reader could not decide.
         """
+        want = _normalise_awb(awb)
         for sh in self.shipments:
             if sh.ship.kind != "dg_declaration":
                 continue
-            if sh.ship.awb.value != awb:
+            if _normalise_awb(sh.ship.awb.value) != want:
                 continue
-            un_nums = {u.value.upper() for u in (sh.ship.un_numbers or [])}
             if sh.ship.refrigerant_only is True:
                 ref_src = SourceRef.from_ref(
                     sh.doc,
                     sh.ship.refrigerant_only_ref or sh.ship.awb.ref,
                 )
                 return "refrigerant_only", ref_src
-            if un_nums and un_nums <= {"UN1845"}:
-                # Only dry ice is listed.
-                any_ref = next(
-                    (u.ref for u in (sh.ship.un_numbers or [])),
-                    sh.ship.awb.ref,
-                )
-                return "refrigerant_only", SourceRef.from_ref(sh.doc, any_ref)
+            un_nums = [u for u in (sh.ship.un_numbers or [])]
             if un_nums:
-                any_ref = next(
-                    (u.ref for u in (sh.ship.un_numbers or [])),
-                    sh.ship.awb.ref,
-                )
+                any_ref = un_nums[0].ref
                 return "dg", SourceRef.from_ref(sh.doc, any_ref)
         return None
 
