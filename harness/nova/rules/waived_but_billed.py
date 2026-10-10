@@ -41,17 +41,39 @@ def _in_quoted_text(email: EmailRecord, ref) -> bool:
     return False
 
 
-def _condition_met(case: Case, waiver, awb: Optional[str]) -> bool:
+def _condition_met(case: Case, waiver, em: EmailRecord) -> Optional[bool]:
     """Is the waiver's condition met for this shipment?
 
-    A Schedule 1 waivers contact writing in their own text is level-2
-    authority. Common conditions on real waivers are self-referential
-    ("if already invoiced, short-pay that line") or ask us to verify
-    something we can see from the invoice. Without reader-level evidence
-    we can't contradict the human; we therefore treat the condition as met
-    and let a later feedback item correct us if that was wrong.
+    Returns True/False from the Judge given the waiver's own text, or None
+    when the Judge can't decide. A None answer means "no finding" (audit
+    B2): a wrong dispute costs double, so we don't fire on an unverified
+    condition.
     """
-    return True
+    if not waiver.condition:
+        return True
+    pages = [""]
+    if case.mailbox is not None:
+        try:
+            pages = case.mailbox.pages(em.doc)[0]
+        except (LookupError, ValueError, AttributeError):
+            pages = [""]
+    try:
+        answer, _ref = case.judge(
+            f"waiver_condition:{em.doc}:{waiver.ref.line}",
+            {"doc": em.doc, "pages": pages,
+             "question": (f"The waiver says: {waiver.condition!r}. "
+                          f"Is this condition met for this waiver on "
+                          f"charge {waiver.charge!r} "
+                          f"(awb={waiver.awb}, invoice={waiver.invoice}, "
+                          f"month={waiver.month})? A vacuous or purely "
+                          f"stylistic clause (e.g. 'this time', 'everything "
+                          f"else stands') counts as met."),
+             "awb": waiver.awb, "invoice": waiver.invoice,
+             "month": waiver.month, "condition": waiver.condition},
+        )
+    except (NotImplementedError, KeyError):
+        return None
+    return bool(answer)
 
 
 def _contract_of(bill: BillingRecord) -> Optional[str]:
@@ -86,6 +108,10 @@ def run(case: Case) -> list[Candidate]:
         sender = _addr_of(em.email.sender.value)
 
         for w in waivers:
+            # A waiver that names no AWB, invoice or month is not a finding
+            # (audit B2: skip blanket waivers).
+            if not (w.awb or w.invoice or w.month):
+                continue
             # Figure out which contract(s) the sender has waivers authority on.
             authorised_contracts: list[str] = []
             for c in case.contracts:
@@ -108,13 +134,16 @@ def run(case: Case) -> list[Candidate]:
                 waivers_own.append((cid, w, em))
 
     out: list[Candidate] = []
+    seen_own: set[tuple[str, str]] = set()
     for cid, w, em in waivers_own:
-        if not _condition_met(case, w, w.awb):
-            continue
+        if _condition_met(case, w, em) is not True:
+            continue  # unknown or false → no finding (audit B2)
         for bill in case.billings:
             if bill.bill.kind != "invoice":
                 continue
             if _contract_of(bill) != cid:
+                continue
+            if w.invoice and bill.bill.id.value != w.invoice:
                 continue
             msa = case.contract_for_invoice(bill)
             if msa is None:
@@ -138,6 +167,10 @@ def run(case: Case) -> list[Candidate]:
                 total_inr += Decimal(ln.amount)
             if not matched_lines:
                 continue
+            key = ("waived_but_billed", bill.bill.id.value)
+            if key in seen_own:
+                continue  # merge candidates per key (audit B2)
+            seen_own.add(key)
 
             evidence = [SourceRef.from_ref(em.doc, w.ref)]
             # Schedule 1 row for the sender (evidence of authority).
@@ -173,11 +206,14 @@ def run(case: Case) -> list[Candidate]:
             ))
 
     # Quoted-only waivers → cannot_determine candidates (one per matching invoice).
+    seen_quoted: set[tuple[str, str]] = set()
     for cid, w, em in waivers_quoted_only:
         for bill in case.billings:
             if bill.bill.kind != "invoice":
                 continue
             if _contract_of(bill) != cid:
+                continue
+            if w.invoice and bill.bill.id.value != w.invoice:
                 continue
             msa = case.contract_for_invoice(bill)
             if msa is None:
@@ -196,6 +232,10 @@ def run(case: Case) -> list[Candidate]:
                 break
             if not matched:
                 continue
+            key = ("waived_but_billed", bill.bill.id.value)
+            if key in seen_quoted or key in seen_own:
+                continue
+            seen_quoted.add(key)
             # Holder: issuing party's KAM (notices).
             holder: dict = {"party": ""}
             for c in case.contracts:

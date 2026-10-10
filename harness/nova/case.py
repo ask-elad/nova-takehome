@@ -229,6 +229,7 @@ class Case:
     extra_authorities: list[dict] = field(default_factory=list)
     rate_accepted_facts: list[dict] = field(default_factory=list)
     precedence_facts: list[dict] = field(default_factory=list)
+    mailbox: Any = None
 
     # ----- construction -----
 
@@ -315,6 +316,7 @@ class Case:
             extra_authorities=list(prf.get("sender_authority") or []),
             rate_accepted_facts=list(prf.get("rate_accepted") or []),
             precedence_facts=list(prf.get("precedence") or []),
+            mailbox=mailbox,
         )
 
     # ----- contracts & terms -----
