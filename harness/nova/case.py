@@ -300,6 +300,20 @@ class Case:
                     and obj.asks_for_payment
                 ):
                     obj = obj.model_copy(update={"kind": "invoice"})
+                # Audit B7: a billing document that bills charges on its own
+                # number IS an invoice for every class. The reader often
+                # classifies "Charges advice" / consolidated bills as
+                # "statement"; summary-only balance statements have no
+                # chargeable lines (freight/fuel/accessorial/etc.) and must
+                # stay as statements to avoid double counting in QS.
+                _INVOICING = {"freight", "fuel", "security", "accessorial",
+                              "minimum_charge", "programme_fee"}
+                if (
+                    obj.kind == "statement"
+                    and obj.asks_for_payment
+                    and any(ln.category in _INVOICING for ln in obj.lines)
+                ):
+                    obj = obj.model_copy(update={"kind": "invoice"})
                 billings.append(BillingRecord(doc=doc, received_at=received, bill=obj))
             elif cls_name == "EmailFacts":
                 emails.append(EmailRecord(

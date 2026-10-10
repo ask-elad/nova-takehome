@@ -79,13 +79,13 @@ def _convert_if_inr(amount: Decimal, bill: BillingRecord, case: Case) -> Optiona
 # ---------------------------------------------------------------------------
 
 def _run_same_number(case: Case) -> list[Candidate]:
-    # The glossary treats a statement that carries its own id as an invoice
-    # for finding-key purposes, and the reader classifies "Charges advice" /
-    # consolidated bills inconsistently as invoice or statement across sends,
-    # so admit both kinds here.
+    # Audit B7: a billing document with chargeable lines carrying its own
+    # number IS an invoice — Case.from_records promotes those to
+    # kind="invoice". Summary-only statements of account stay out: they are
+    # a running balance, not a new ask for payment.
     by_id: dict[str, list[BillingRecord]] = {}
     for b in case.billings:
-        if b.bill.kind not in ("invoice", "statement"):
+        if b.bill.kind != "invoice":
             continue
         by_id.setdefault(b.bill.id.value, []).append(b)
 
