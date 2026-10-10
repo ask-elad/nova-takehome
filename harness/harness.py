@@ -317,9 +317,12 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
     docs = state.load_docs(as_of=as_of_date)
     prf = pre_rule_facts(feedback_items, docs=docs)
 
+    last_flags: dict = {}
+
     def _run(case) -> list:
         """Run each rule in try/except so a single bad fact drops one item,
         never the batch (audit B3)."""
+        nonlocal last_flags
         import traceback
         candidates = []
         for name, run_fn in (
@@ -346,6 +349,7 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
         except Exception as e:
             print(f"flags failed: {e!r}", file=sys.stderr)
             flags_map = {}
+        last_flags = flags_map
         return apply_policy(xs, mode=mode, flags_map=flags_map)
 
     # Build Case with Claude Judge (uses LLM client for judge calls, cached).
@@ -410,9 +414,42 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
                     "batch": fb_match.batch or "",
                 }
 
+    # Per-item signals for the confidence score (audit M1).
+    inv_currency = {}
+    inv_awbs = {}
+    for b in case.billings:
+        inv_currency[b.bill.id.value] = (
+            b.bill.currency.value if b.bill.currency else "USD"
+        ).upper()
+        inv_awbs[b.bill.id.value] = {ln.awb for ln in b.bill.lines if ln.awb}
+    signals: dict = {}
+    for it in items:
+        f = last_flags.get(it.id)
+        pickup_tracked = f.pickup_from_tracking if f is not None else True
+        inr = (inv_currency.get(it.invoice_id or "", "USD") == "INR")
+        # Mark judge_used for waiver findings whose source email had a
+        # non-null condition — the Judge was called in that path.
+        judge_used = False
+        if it.class_ == "waived_but_billed" and it.verdict == "finding":
+            for ev in it.evidence:
+                for em in case.emails:
+                    if em.doc != ev.doc:
+                        continue
+                    for w in (em.email.waivers or []):
+                        if w.condition:
+                            judge_used = True
+                            break
+        min_auth = 2 if (f is not None and not f.all_facts_level3plus) else 1
+        signals[it.id] = {
+            "pickup_from_tracking": pickup_tracked,
+            "inr_converted": inr,
+            "judge_used": judge_used,
+            "min_term_authority": min_auth,
+        }
+
     # Serialise to report JSON.
     report_obj = _build_report(items, as_of, mode, conf_score,
-                                annotations=annotations)
+                                annotations=annotations, signals=signals)
     # Persist the report snapshot so later batches can diff for supersedes.
     try:
         state.reports_dir.mkdir(parents=True, exist_ok=True)
@@ -568,7 +605,8 @@ def _make_judge(state_dir: str):
 
 
 def _build_report(items, as_of: str, mode: str, conf_score,
-                  annotations: dict | None = None) -> dict:
+                  annotations: dict | None = None,
+                  signals: dict | None = None) -> dict:
     """Convert resolved+policy Items to report JSON."""
     findings = []
     cashback = []
@@ -577,7 +615,7 @@ def _build_report(items, as_of: str, mode: str, conf_score,
     annotations = annotations or {}
 
     for item in items:
-        serialised = _item_to_dict(item, conf_score)
+        serialised = _item_to_dict(item, conf_score, signals=signals)
         ann = annotations.get(item.id) or {}
         if ann.get("learned_at"):
             serialised["learned_at"] = ann["learned_at"]
@@ -616,14 +654,22 @@ def _build_report(items, as_of: str, mode: str, conf_score,
     }
 
 
-def _item_to_dict(item, conf_score) -> dict:
+def _item_to_dict(item, conf_score, signals: dict | None = None) -> dict:
     """Serialise a resolved Item to a report-schema-compatible dict."""
+    sig = (signals or {}).get(item.id, {})
     d: dict = {
         "id": item.id,
         "class": item.class_,
         "verdict": item.verdict,
         "action": item.action,
-        "confidence": conf_score(item.verdict),
+        "confidence": conf_score(
+            item.verdict,
+            pickup_from_tracking=sig.get("pickup_from_tracking", True),
+            had_reread=sig.get("had_reread", False),
+            min_term_authority=sig.get("min_term_authority", 1),
+            judge_used=sig.get("judge_used", False),
+            inr_converted=sig.get("inr_converted", False),
+        ),
         "evidence": [
             {"doc": e.doc, "page": e.page, "quote": e.quote}
             for e in item.evidence
