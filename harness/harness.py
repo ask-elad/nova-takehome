@@ -217,10 +217,16 @@ def ingest(batch_dir: str, state_dir: str, estimate: bool = False) -> None:
         )
         return
 
-    # Full read: thread pool, at most 8 concurrent.
+    # Full read: thread pool, at most 8 concurrent. audit M4: enforce a
+    # per-step deadline of ~540s; stop starting new calls past it so the
+    # harness never blows the 600s step limit.
     client = LLMClient(Path(state_dir))
+    import time as _time
+    deadline = _time.monotonic() + 540
 
     def _process(record):
+        if _time.monotonic() > deadline:
+            return
         # Always save the raw DocRecord (pages needed for quote resolution).
         if not state.doc_exists(record.doc_id):
             state.save_doc(record)
@@ -233,8 +239,15 @@ def ingest(batch_dir: str, state_dir: str, estimate: bool = False) -> None:
         received_at = record.received.isoformat()
         state.save_facts(record.doc_id, type_, data, received_at)
 
+    # First, re-attempt any already-saved DocRecord whose facts were never
+    # produced (previous ingest timed out or hit a model error). audit M4.
+    saved_docs = state.load_docs()
+    seen_ids = {r.doc_id for r in records}
+    retry_queue = [d for d in saved_docs
+                   if d.doc_id not in seen_ids and not state.facts_exist(d.doc_id)]
+
     with ThreadPoolExecutor(max_workers=8) as pool:
-        futures = {pool.submit(_process, rec): rec for rec in records}
+        futures = {pool.submit(_process, rec): rec for rec in list(records) + retry_queue}
         for fut in as_completed(futures):
             try:
                 fut.result()
@@ -371,25 +384,26 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
             )
             if not changed:
                 continue
-            # Attribute to the standing feedback whose scope actually
-            # matches this item's key or contract (audit M11): never the
-            # mere "first standing" item.
+            # Attribute to the standing feedback that most plausibly caused
+            # the change (audit M11): prefer an exact finding_key match,
+            # then a contract/lane whose contract id appears in the item's
+            # id or whose finding_key invoice matches, else fall back to
+            # the single available standing item.
+            standing = [fb for fb in feedback_items if fb.scope_kind == "standing"]
             fb_match = None
-            for fb in feedback_items:
-                if fb.scope_kind != "standing":
-                    continue
-                cid = (fb.applies_to or {}).get("contract_id") or ""
-                if cid and cid in it.id:
+            for fb in standing:
+                k = fb.finding_key or {}
+                if k.get("invoice_id") and k["invoice_id"] == (it.invoice_id or ""):
                     fb_match = fb
                     break
             if fb_match is None:
-                for fb in feedback_items:
-                    if fb.scope_kind != "standing":
-                        continue
-                    k = fb.finding_key or {}
-                    if k.get("invoice_id") and k["invoice_id"] == (it.invoice_id or ""):
+                for fb in standing:
+                    cid = (fb.applies_to or {}).get("contract_id") or ""
+                    if cid and (cid in it.id or cid in (it.invoice_id or "")):
                         fb_match = fb
                         break
+            if fb_match is None and len(standing) == 1:
+                fb_match = standing[0]
             if fb_match is not None:
                 annotations.setdefault(it.id, {})["learned_at"] = {
                     "feedback_item_id": fb_match.item_id,

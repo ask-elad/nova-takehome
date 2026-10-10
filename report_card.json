@@ -449,19 +449,19 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 167 cache hits\n",
-       "secs": 6.2
+       "secs": 2.7
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 2.4
+       "secs": 0.8
       },
       {
        "step": "feedback",
        "rc": 0,
        "stderr": "",
-       "secs": 0.3
+       "secs": 0.1
       }
      ],
      "items": 7
@@ -475,13 +475,13 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 330 cache hits\n",
-       "secs": 5.9
+       "secs": 2.2
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 2.1
+       "secs": 1.0
       }
      ],
      "items": 17
@@ -499,19 +499,19 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 167 cache hits\n",
-       "secs": 7.0
+       "secs": 2.2
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 2.0
+       "secs": 0.8
       },
       {
        "step": "feedback",
        "rc": 0,
        "stderr": "",
-       "secs": 0.3
+       "secs": 0.1
       }
      ],
      "items": 7
@@ -525,13 +525,13 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 330 cache hits\n",
-       "secs": 6.0
+       "secs": 2.3
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 2.1
+       "secs": 0.9
       }
      ],
      "items": 17

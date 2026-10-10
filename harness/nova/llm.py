@@ -92,11 +92,24 @@ def _is_retryable(exc: Exception) -> bool:
 
 
 def _is_not_found(exc: Exception) -> bool:
+    """Fall back to the next model on 404, 403 (no access to this model),
+    and 400s that specifically say the model is unavailable (audit M4).
+    """
     try:
         import anthropic
-        return isinstance(exc, anthropic.NotFoundError)
     except ImportError:
         return False
+    if isinstance(exc, (anthropic.NotFoundError, anthropic.PermissionDeniedError)):
+        return True
+    if isinstance(exc, anthropic.BadRequestError):
+        msg = str(exc).lower()
+        if any(s in msg for s in (
+            "model not available", "model is not available",
+            "deprecated", "no longer supported", "unavailable",
+            "not found",
+        )):
+            return True
+    return False
 
 
 # ---- LLMClient --------------------------------------------------------------------------------------------------------
@@ -118,7 +131,10 @@ class LLMClient:
                 self._client = _client
             else:
                 import anthropic
-                self._client = anthropic.Anthropic()
+                # audit M4: tight per-call timeout and low SDK-level
+                # retries. Our own retry loop in _real_invoke covers
+                # transient failures with jittered backoff.
+                self._client = anthropic.Anthropic(timeout=90, max_retries=1)
 
     # ---- public API ---------------------------------------------------------------------------------------------------
 
@@ -249,6 +265,8 @@ class LLMClient:
             except TruncatedOutput:
                 raise
             except anthropic.NotFoundError:
+                raise
+            except anthropic.PermissionDeniedError:
                 raise
             except anthropic.BadRequestError as e:
                 # Some newer models don't support tool_choice:tool/any. Retry
