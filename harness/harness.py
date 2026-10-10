@@ -301,7 +301,8 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
     # fold in after apply_policy.
     from nova.feedback import load_feedback, pre_rule_facts, apply_post_items
     feedback_items = load_feedback(state.root)
-    prf = pre_rule_facts(feedback_items)
+    docs = state.load_docs(as_of=as_of_date)
+    prf = pre_rule_facts(feedback_items, docs=docs)
 
     def _run(case) -> list:
         candidates = []
@@ -333,7 +334,7 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
     # Apply scoped feedback (reject / close / one_off_approval / override_amount)
     # and compute learned_at / supersedes against the latest saved report.
     items, annotations = apply_post_items(
-        items, feedback_items, report_dir=state.reports_dir,
+        items, feedback_items, report_dir=state.reports_dir, docs=docs,
     )
 
     # Pre-rules learned_at: for each item that differs from the no-feedback run.

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from nova.feedback import FeedbackItem, apply_post_items, load_feedback
+from nova.feedback import FeedbackItem, apply_post_items, load_feedback, pre_rule_facts
 from nova.resolve import Evidence, Item
 
 
@@ -108,10 +108,13 @@ def test_close_does_not_affect_a_different_invoice():
 # one_off_approval + waiver_scope (must not spread)
 # ---------------------------------------------------------------------------
 
-def test_one_off_approval_waives_the_named_invoice_only():
-    """Approving a waiver for 2040-03 on INV-3 must not touch INV-4 in 2040-04."""
+def test_one_off_approval_makes_the_named_invoice_a_finding_only():
+    """Approving a waiver for 2040-03 on INV-3 confirms the key as a finding
+    (with learned_at). It must not touch INV-4 in 2040-04 (applies_to is a
+    hard lock on invoice_id)."""
     march = _item(
         "waived_but_billed", "INV-3", amount="90.00",
+        verdict="cannot_determine",
         evidence=[Evidence(doc="x", page=1, quote="pickup 2040-03-14 AWB1")],
     )
     april = _item(
@@ -131,17 +134,30 @@ def test_one_off_approval_waives_the_named_invoice_only():
     }])
     out, ann = apply_post_items([march, april], fb)
     out_by_id = {i.id: i for i in out}
-    assert out_by_id["waived_but_billed:INV-3"].verdict == "no_finding"
+    assert out_by_id["waived_but_billed:INV-3"].verdict == "finding"
+    assert out_by_id["waived_but_billed:INV-3"].action == "draft:dispute"
     assert out_by_id["waived_but_billed:INV-4"].verdict == "finding"
     assert "waived_but_billed:INV-3" in ann
+    assert ann["waived_but_billed:INV-3"]["learned_at"]["feedback_item_id"] == "fb-02-04"
+    assert "waived_but_billed:INV-4" not in ann
 
 
 def test_one_off_waiver_does_not_cover_another_month_on_same_invoice():
-    """If the single item spans two months, the fact must only waive the named one."""
-    oct_item = _item(
+    """If the invoice's doc date is in a different month than the waiver_scope
+    names, the one-off approval does not apply (typed-months guard, audit B4)."""
+    from datetime import datetime, timezone
+    from types import SimpleNamespace
+
+    nov_item = _item(
         "waived_but_billed", "INV-5", amount="200.00",
-        evidence=[Evidence(doc="x", page=1, quote="pickup 2040-11-02 AWB9")],
+        verdict="cannot_determine",
+        evidence=[Evidence(doc="batch_01/0001.eml", page=1, quote="pickup 2040-11-02 AWB9")],
     )
+    docs = [SimpleNamespace(
+        doc_id="batch_01/0001.eml",
+        received=datetime(2040, 11, 2, tzinfo=timezone.utc),
+        sender_name="X", sender_addr="x@y",
+    )]
     fb = _fb([{
         "item_id": "fb-02-05", "decision": "one_off_approval",
         "finding_key": {"invoice_id": "INV-5", "class": "waived_but_billed"},
@@ -153,9 +169,10 @@ def test_one_off_waiver_does_not_cover_another_month_on_same_invoice():
                   "applies_to": {"invoice_id": "INV-5"},
                   "valid_from": "2040-11-30", "valid_to": None},
     }])
-    out, _ = apply_post_items([oct_item], fb)
-    # 2040-10 named but invoice evidence is 2040-11 → waiver does not apply.
-    assert out[0].verdict == "finding"
+    out, ann = apply_post_items([nov_item], fb, docs=docs)
+    # The invoice's doc month is 2040-11, not in [2040-10] → unchanged.
+    assert out[0].verdict == "cannot_determine"
+    assert "waived_but_billed:INV-5" not in ann
 
 
 # ---------------------------------------------------------------------------
@@ -270,3 +287,69 @@ def test_supersedes_annotates_changed_items(tmp_path):
     out, ann = apply_post_items([now], fb, report_dir=reports)
     assert out[0].amount_usd == "80.00"
     assert ann["overcharge:INV-7"]["supersedes"] == ["overcharge:INV-7"]
+
+
+# ---------------------------------------------------------------------------
+# sender_authority: resolve subject.person via held emails' From display names
+# ---------------------------------------------------------------------------
+
+def test_sender_authority_resolves_person_name_to_email_via_docs():
+    """`confirm + sender_authority` with subject.person (a name) must resolve
+    to the sender_addr of every held email whose From display name matches,
+    so case.authority_of() can match on the real address (audit B4)."""
+    from datetime import datetime, timezone
+    from types import SimpleNamespace
+
+    docs = [
+        SimpleNamespace(doc_id="batch_01/0001.eml",
+                        received=datetime(2035, 4, 1, tzinfo=timezone.utc),
+                        sender_name="Ada Example",
+                        sender_addr="ada@tbx.example"),
+        SimpleNamespace(doc_id="batch_01/0002.eml",
+                        received=datetime(2035, 4, 2, tzinfo=timezone.utc),
+                        sender_name="  ada  example  ",
+                        sender_addr="ada.v2@tbx.example"),
+        SimpleNamespace(doc_id="batch_01/0003.eml",
+                        received=datetime(2035, 4, 3, tzinfo=timezone.utc),
+                        sender_name="Other Person",
+                        sender_addr="other@tbx.example"),
+    ]
+    fb = _fb([{
+        "item_id": "fb-02-01", "decision": "confirm",
+        "finding_key": {"invoice_id": "INV-X", "class": "waived_but_billed"},
+        "fact": {"type": "sender_authority",
+                 "subject": {"person": "Ada Example", "party": "TBX"},
+                 "value": {"categories": ["waivers"]},
+                 "evidence": "delegation letter"},
+        "scope": {"kind": "standing",
+                  "applies_to": {"contract_id": "CDA-01",
+                                 "person": "Ada Example",
+                                 "category": "waivers"},
+                  "valid_from": "2035-04-01", "valid_to": None},
+    }])
+    prf = pre_rule_facts(fb, docs=docs)
+    sa = prf["sender_authority"]
+    emails = sorted(x["email"] for x in sa)
+    assert emails == ["ada.v2@tbx.example", "ada@tbx.example"]
+    for row in sa:
+        assert row["contract_id"] == "CDA-01"
+        assert row["categories"] == ["waivers"]
+        assert row["valid_from"] == "2035-04-01"
+
+
+def test_sender_authority_without_docs_or_match_emits_nothing():
+    """A person-only sender_authority with no matching display name produces
+    no authority rows (don't fall back to using the name as an email)."""
+    fb = _fb([{
+        "item_id": "fb-02-01", "decision": "confirm",
+        "finding_key": {"invoice_id": "INV-X", "class": "waived_but_billed"},
+        "fact": {"type": "sender_authority",
+                 "subject": {"person": "Nobody Here", "party": "TBX"},
+                 "value": {"categories": ["waivers"]},
+                 "evidence": ""},
+        "scope": {"kind": "standing",
+                  "applies_to": {"contract_id": "CDA-01",
+                                 "category": "waivers"},
+                  "valid_from": "2035-04-01", "valid_to": None},
+    }])
+    assert pre_rule_facts(fb, docs=[])["sender_authority"] == []

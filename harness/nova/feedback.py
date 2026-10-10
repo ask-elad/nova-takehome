@@ -22,8 +22,9 @@ Post-rules decisions:
 - ``reject`` → drop that key.
 - ``close`` → drop that key for this batch; a later invoice with the same
   wrong rate (a new key) is still a finding.
-- ``one_off_approval`` + ``waiver_scope`` → waive the key for the named
-  months only; the item becomes ``no_finding`` with ``learned_at``.
+- ``one_off_approval`` + ``waiver_scope`` → the waiver covers the named
+  months on that key only: the item becomes a ``finding`` (verdict changes
+  from ``cannot_determine`` to ``finding``) with ``learned_at``.
 - ``override_amount`` → use ``fact.value.amount_usd`` as the amount with
   ``learned_at``.
 """
@@ -171,7 +172,7 @@ class _ApplyChange:
     learned_at: Optional[dict] = None
 
 
-def _apply_one(fb: FeedbackItem, item: Item) -> Optional[_ApplyChange]:
+def _apply_one(fb: FeedbackItem, item: Item, docs=None) -> Optional[_ApplyChange]:
     """Return the change this feedback item would make to *item*, or None."""
     if not _finding_key_matches(fb, item):
         return None
@@ -189,19 +190,33 @@ def _apply_one(fb: FeedbackItem, item: Item) -> Optional[_ApplyChange]:
                                         "batch": fb.batch})
     if fb.decision == "one_off_approval" and fb.fact_type == "waiver_scope":
         months = fb.fact_value.get("months") or []
-        # Only drop if the item's deadline/evidence month is in the named months.
-        # In the absence of a per-item month, trust the one_off scope match.
-        if not months or _item_touches_months(item, months):
-            no_find = Item(
-                id=item.id, class_=item.class_, invoice_id=item.invoice_id,
-                verdict="no_finding", amount_usd=None, amount_range=None,
-                deadline=None, action="none", evidence=item.evidence,
-                missing_doc=item.missing_doc,
-            )
-            return _ApplyChange(new_item=no_find,
-                                learned_at={"feedback_item_id": fb.item_id,
-                                            "batch": fb.batch})
-        return None
+        # Typed-months guard: if the feedback lists months, and we can derive
+        # the item's months from doc dates, require intersection. If we can't
+        # derive months, trust the one_off invoice-id lock. Never search quote
+        # text (audit B4).
+        if months and docs is not None:
+            item_months = _item_months_from_docs(item, docs)
+            if item_months and not (set(months) & item_months):
+                return None
+        # The waiver covers that key only: make the key a finding.
+        outbound_base = {
+            "overcharge": "dispute", "duplicate": "dispute",
+            "waived_but_billed": "dispute", "late_fee_not_owed": "dispute",
+            "cashback": "claim_credit",
+        }.get(item.class_, "dispute")
+        action = item.action
+        if item.verdict != "finding":
+            action = f"draft:{outbound_base}"
+        finding = Item(
+            id=item.id, class_=item.class_, invoice_id=item.invoice_id,
+            verdict="finding",
+            amount_usd=item.amount_usd, amount_range=item.amount_range,
+            deadline=item.deadline, action=action, evidence=item.evidence,
+            missing_doc=None,
+        )
+        return _ApplyChange(new_item=finding,
+                            learned_at={"feedback_item_id": fb.item_id,
+                                        "batch": fb.batch})
     if fb.decision == "override_amount":
         amt = fb.fact_value.get("amount_usd")
         if amt is None:
@@ -219,13 +234,19 @@ def _apply_one(fb: FeedbackItem, item: Item) -> Optional[_ApplyChange]:
     return None
 
 
-def _item_touches_months(item: Item, months: list[str]) -> bool:
-    """Does any evidence in *item* refer to one of the named months?"""
+def _item_months_from_docs(item: Item, docs) -> set[str]:
+    """Return the YYYY-MM months the item's evidence docs were received in.
+
+    Used as a typed guard for one_off waiver_scope: the audit (B4) forbids
+    searching evidence quote text for a month substring.
+    """
+    doc_by_id = {d.doc_id: d for d in docs}
+    out: set[str] = set()
     for ev in item.evidence:
-        for m in months:
-            if m and m in (ev.quote or ""):
-                return True
-    return bool(months) is False
+        d = doc_by_id.get(ev.doc)
+        if d is not None:
+            out.add(d.received.strftime("%Y-%m"))
+    return out
 
 
 def apply_post_items(
@@ -233,6 +254,7 @@ def apply_post_items(
     feedback_items: list[FeedbackItem],
     *,
     report_dir: Optional[Path] = None,
+    docs=None,
 ) -> tuple[list[Item], dict[str, dict]]:
     """Apply feedback to resolved+policy items.
 
@@ -247,7 +269,7 @@ def apply_post_items(
         changed = False
         learned_at: Optional[dict] = None
         for fb in feedback_items:
-            change = _apply_one(fb, current)
+            change = _apply_one(fb, current, docs=docs)
             if change is None:
                 continue
             changed = True
@@ -323,7 +345,24 @@ def _annotate_supersedes(
 # Pre-rule injection (sender_authority / rate_accepted / resolve_conflict)
 # ---------------------------------------------------------------------------
 
-def pre_rule_facts(feedback_items: list[FeedbackItem]) -> dict:
+def _emails_for_person(name: str, docs) -> list[str]:
+    """Return every DocRecord sender_addr whose display name matches *name*.
+
+    Match is case-insensitive and whitespace-normalised. Deduplicated,
+    preserving first-seen order.
+    """
+    if not name or not docs:
+        return []
+    want = " ".join(name.split()).lower()
+    seen: list[str] = []
+    for d in docs:
+        got = " ".join((d.sender_name or "").split()).lower()
+        if got and got == want and d.sender_addr and d.sender_addr not in seen:
+            seen.append(d.sender_addr)
+    return seen
+
+
+def pre_rule_facts(feedback_items: list[FeedbackItem], docs=None) -> dict:
     """Return standing-scope facts the Case consumes:
 
     - ``sender_authority``: list of ``{email, contract_id, categories, valid_from, valid_to}``
@@ -343,21 +382,35 @@ def pre_rule_facts(feedback_items: list[FeedbackItem]) -> dict:
         at = fb.applies_to or {}
         subject = (fb.raw.get("fact") or {}).get("subject") or {}
         if fb.fact_type == "sender_authority":
-            # The person's email may live in applies_to or in subject.email.
-            email = (at.get("email") or subject.get("email")
-                     or subject.get("person") or "")
+            # The subject may give a direct email, or just a person name
+            # (`subject.person`); resolve the name via held emails' From
+            # display names so case.authority_of() can match on the real
+            # address. Grant the category on that contract from valid_from.
             cid = at.get("contract_id") or ""
             cats = fb.fact_value.get("categories") or []
             if not cats and at.get("category"):
                 cats = [at["category"]]
-            if email and cid and cats:
-                out["sender_authority"].append({
-                    "email": email,
-                    "contract_id": cid,
-                    "categories": list(cats),
-                    "valid_from": fb.valid_from,
-                    "valid_to": fb.valid_to,
-                })
+            emails: list[str] = []
+            direct = at.get("email") or subject.get("email")
+            if direct:
+                emails.append(direct)
+            person = subject.get("person") or at.get("person")
+            if person:
+                emails.extend(_emails_for_person(person, docs))
+            # Dedupe preserving order.
+            seen: list[str] = []
+            for e in emails:
+                if e and e not in seen:
+                    seen.append(e)
+            if cid and cats:
+                for e in seen:
+                    out["sender_authority"].append({
+                        "email": e,
+                        "contract_id": cid,
+                        "categories": list(cats),
+                        "valid_from": fb.valid_from,
+                        "valid_to": fb.valid_to,
+                    })
         elif fb.fact_type == "rate_accepted":
             cid = at.get("contract_id") or subject.get("contract_id") or ""
             lane = at.get("lane") or subject.get("lane") or ""

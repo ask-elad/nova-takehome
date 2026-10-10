@@ -61,7 +61,7 @@
   },
   {
    "case": "waiver_one_off_next_month.yaml",
-   "name": "a one-off waiver covers only its month, not the next",
+   "name": "a one-off waiver approval makes that key a finding, for its month only",
    "pass": true,
    "diff": []
   },

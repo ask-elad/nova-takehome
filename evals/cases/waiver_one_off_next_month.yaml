@@ -1,4 +1,4 @@
-name: a one-off waiver covers only its month, not the next
+name: a one-off waiver approval makes that key a finding, for its month only
 mailbox: evals/mailboxes/waiver_one_off_next_month
 as_of: '2033-07-31'
 mode: supervised
@@ -8,5 +8,5 @@ expect:
   key:
     invoice_id: TX-US-2033-5337
     class: waived_but_billed
-  verdict: no_finding
-why: The one_off_approval scoped to 2033-06 drops the June key; a July invoice with the same wrong charge would still be a finding.
+  verdict: finding
+why: GLOSSARY §feedback — one_off_approval + waiver_scope confirms the waiver covers the named months on that key only; the key becomes a `finding` (with learned_at). A July invoice with the same wrong charge is not covered because applies_to pins the one-off to this invoice and 2033-07 is not in the scoped months.

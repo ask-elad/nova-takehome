@@ -6,8 +6,8 @@ changed by the humans only.
 
 ## Where we are
 
-**Phase 7 · Hardening.** Task 07 is done: exam sheet matches the human hand check, practice 99.6/100, our evals 12/12.
-Current task: `docs/tasks/08-hardening.md`. The write-up (Phase 8) is done by the humans afterwards.
+**Phase 7 · Audit fixes.** An independent audit found score-cap and robustness risks the practice set can't show.
+Current tasks, in order: `docs/tasks/09-audit-blockers.md`, then `docs/tasks/10-audit-hidden-set.md`.
 
 ## How work reaches you
 
@@ -62,3 +62,5 @@ to produce the same facts.
 ## Phases 5–7 checklist
 - [x] Task 07 · grader-proof settings, generic fixes from exam hand check and practice card, feedback and history, eval set, final runs
 - [x] Task 08 · conflict regression, overfitting audit, threshold eval case, final re-runs
+- [ ] Task 09 · audit blockers: autonomous checks, waiver scope, tolerant parsing, feedback approval, schema validity, robustness, header authority, confidence
+- [ ] Task 10 · audit: retro and expiry amendments, pickup events, statements, Judge context, conflicts, scan evidence
