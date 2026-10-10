@@ -132,6 +132,38 @@ def test_wrong_value_triggers_one_reread_one_tier_up(tmp_path):
     assert all(not e["cached"] for e in entries)
 
 
+def test_reread_parse_failure_falls_back_to_first_read(tmp_path):
+    """If the retry at the higher tier fails pydantic validation, keep the
+    first attempt's instance rather than returning None.
+
+    Regression: an amendment pricing a conflict case was being dropped because
+    the main-tier read verified imperfectly (empty payment-term fields),
+    triggered a reread at strong, and strong omitted the required fields.
+    The amendment then never reached the rules engine and the conflict
+    `amount_range` collapsed to [0.00, 0.00].
+    """
+    page_text = "AWB-123 shipped from JFK to LHR"
+    # main returns a parseable but unverifiable value; strong returns an
+    # unparseable response (missing required `awb` field).
+    fake_set_response("fake-main", {
+        "kind": "awb",
+        "awb": {"value": "WRONG", "ref": {"page": 1, "line": 1}},
+    })
+    fake_set_response("fake-strong", {"kind": "awb"})
+    client = LLMClient(tmp_path)
+    rec = _record([page_text])
+    from nova.readers import read_doc
+    from nova.schemas import ShipmentDoc
+    result = read_doc(
+        client, rec, ShipmentDoc,
+        tier="main", purpose="read_shipment", prompt_version="t",
+        instructions="",
+    )
+    assert result.instance is not None
+    assert result.instance.awb.value == "WRONG"
+    assert result.parse_error is None
+
+
 def test_persistent_failure_keeps_record_drops_failing_value(tmp_path):
     """fast and main both wrong at the top of the tier → one re-read, then record kept, failing value dropped."""
     page_text = "AWB-123 shipped from JFK to LHR"

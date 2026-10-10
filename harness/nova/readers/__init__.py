@@ -177,9 +177,19 @@ def read_doc(
                 "line, or omit the field if the value is not in the document:\n"
                 + "\n".join(lines)
             )
+        # Keep the first attempt around so a reread that fails parse validation
+        # doesn't erase a usable (if imperfect) first read.
+        prev_instance = result.instance
+        prev_data = result.data
+        prev_verify = result.verify_failures
         result.tier_used = higher
         result.reread = True
         _attempt(higher, extra=failures_summary)
+        if result.instance is None and prev_instance is not None:
+            result.instance = prev_instance
+            result.data = prev_data
+            result.verify_failures = prev_verify
+            result.parse_error = None
 
     if result.verify_failures:
         result.data = _drop_failing_values(result.data, result.verify_failures)

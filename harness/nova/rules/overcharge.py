@@ -148,64 +148,6 @@ def _is_dg_accessorial(acc: Accessorial) -> bool:
     return "dangerous good" in label
 
 
-_MONTH_WORDS = {
-    "january": "01", "jan": "01", "february": "02", "feb": "02",
-    "march": "03", "mar": "03", "april": "04", "apr": "04",
-    "may": "05", "june": "06", "jun": "06", "july": "07", "jul": "07",
-    "august": "08", "aug": "08", "september": "09", "sep": "09", "sept": "09",
-    "october": "10", "oct": "10", "november": "11", "nov": "11",
-    "december": "12", "dec": "12",
-}
-
-
-def _months_from_condition(text: str) -> Optional[list[str]]:
-    """Parse a month window out of a free-text accessorial condition.
-
-    Handles the two shapes we see in practice:
-    - "for pickups in September to November only"
-    - "September-November", "Sep to Nov"
-    Returns a sorted list of ``MM`` strings, or None if the condition doesn't
-    look like a month window at all. "December through February" wraps the
-    year and is handled.
-    """
-    if not text:
-        return None
-    low = text.lower()
-    # Find two month words with a "to"/"-"/"through"/"until" between them.
-    words = re.findall(r"[a-z]+", low)
-    found: list[tuple[int, str]] = []
-    for i, w in enumerate(words):
-        if w in _MONTH_WORDS:
-            found.append((i, _MONTH_WORDS[w]))
-    if not found:
-        return None
-    if len(found) == 1:
-        return [found[0][1]]
-    # Pick the first two near-adjacent month mentions (within 5 words of each
-    # other) as the range endpoints.
-    for a_idx, (i_a, m_a) in enumerate(found):
-        for i_b, m_b in found[a_idx + 1:]:
-            if 0 < (i_b - i_a) <= 5:
-                return _range_months(m_a, m_b)
-    return [m for _i, m in found]
-
-
-def _range_months(start: str, end: str) -> list[str]:
-    """Return every month in [start, end], wrapping across year end."""
-    s = int(start)
-    e = int(end)
-    out: list[str] = []
-    m = s
-    while True:
-        out.append(f"{m:02d}")
-        if m == e:
-            break
-        m = 1 if m == 12 else m + 1
-        if len(out) >= 12:
-            break
-    return out
-
-
 def _accessorial_applies(
     case: Case, acc: Accessorial, pickup_date: str, awb: Optional[str],
 ) -> bool:
@@ -226,10 +168,6 @@ def _accessorial_applies(
             return status[0] == "dg"
         # No declaration: fall through to Judge, else presume applies.
     months = list(acc.months or [])
-    if not months and acc.condition:
-        parsed = _months_from_condition(acc.condition)
-        if parsed:
-            months = parsed
     if months:
         if pickup_date[5:7] not in months:
             return False

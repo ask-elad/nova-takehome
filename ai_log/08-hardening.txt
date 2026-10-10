@@ -1,0 +1,600 @@
+ ▐▛███▜▌   Claude Code v2.1.140
+▝▜█████▛▘  Opus 4.7 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/AAtakeHome/nova-takehome
+
+❯ Read CLAUDE.md and docs/PLAN.md, then do the current task.                    
+
+  Searched for 8 patterns, read 6 files, listed 5 directories, ran 13 shell commands (ctrl+o to expand)
+
+● Update(harness/harness.py)
+  ⎿  Added 2 lines
+      240                  fut.result()
+      241              except Exception as exc:
+      242                  rec = futures[fut]
+      243 +                import traceback                              
+      244                  print(f"ingest error for {rec.doc_id}: {exc}",
+            file=sys.stderr)
+      245 +                traceback.print_exc(file=sys.stderr)          
+      246  
+      247      # Print ledger totals to stderr.
+      248      _print_ledger_summary(Path(state_dir))
+
+  Searched for 1 pattern, read 1 file, ran 6 shell commands (ctrl+o to expand)
+
+● Update(harness/harness.py)
+  ⎿  Added 2 lines
+      225          if not state.doc_exists(record.doc_id):
+      226              state.save_doc(record)
+      227          if state.facts_exist(record.doc_id):
+      228 +            print(f"DBG facts_exist skip {record.doc_id}", fil
+          +e=sys.stderr)                                                 
+      229              return
+      230          result = _read_record(client, record)
+      231          if result is None:
+      232 +            print(f"DBG result None for {record.doc_id}", file
+          +=sys.stderr)                                                  
+      233              return
+      234          type_, data = result
+      235          received_at = record.received.isoformat()
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Update(harness/harness.py)
+  ⎿  Added 2 lines
+      100      mod = READER_MAP[reader_name]
+      101      result = mod.read(client, record)
+      102      if result.instance is None:
+      103 +        import sys as _s                                      
+      104 +        _s.stderr.write(f"DBG {record.doc_id} reader={reader_n
+          +ame} instance=None data={str(result.data)[:400]}\n")          
+      105          return None
+      106  
+      107      SCHEMA_MAP = {
+
+  Searched for 4 patterns, read 2 files, ran 2 shell commands (ctrl+o to expand)
+
+● Update(harness/harness.py)
+  ⎿  Added 2 lines, removed 1 line
+      101      result = mod.read(client, record)
+      102      if result.instance is None:
+      103          import sys as _s
+      104 -        _s.stderr.write(f"DBG {record.doc_id} reader={reader_n
+          -ame} instance=None data={str(result.data)[:400]}\n")          
+      104 +        _s.stderr.write(f"DBG {record.doc_id} reader={reader_n
+          +ame} parse_error={result.parse_error} tier={result.tier_used} 
+          +truncated={result.truncated}\n")                              
+      105 +        _s.stderr.write(f"DBG data keys={list((result.data or 
+          +{}).keys())}\n")                                              
+      106          return None
+      107  
+      108      SCHEMA_MAP = {
+
+  Searched for 3 patterns, read 2 files, ran 2 shell commands (ctrl+o to expand)
+● Update(harness/nova/readers/__init__.py)
+  ⎿  Added 10 lines
+      177                  "line, or omit the field if the value is not i
+           n the document:\n"
+      178                  + "\n".join(lines)
+      179              )
+      180 +        # Keep the first attempt around so a reread that fails
+          + parse validation                                             
+      181 +        # doesn't erase a usable (if imperfect) first read.   
+      182 +        prev_instance = result.instance                       
+      183 +        prev_data = result.data                               
+      184 +        prev_verify = result.verify_failures                  
+      185          result.tier_used = higher
+      186          result.reread = True
+      187          _attempt(higher, extra=failures_summary)
+      188 +        if result.instance is None and prev_instance is not No
+          +ne:                                                           
+      189 +            result.instance = prev_instance                   
+      190 +            result.data = prev_data                           
+      191 +            result.verify_failures = prev_verify              
+      192 +            result.parse_error = None                         
+      193  
+      194      if result.verify_failures:
+      195          result.data = _drop_failing_values(result.data, result
+           .verify_failures)
+
+● Now revert the debug logging and test:
+
+● Update(harness/harness.py)
+  ⎿  Removed 2 lines
+      228          if not state.doc_exists(record.doc_id):
+      229              state.save_doc(record)
+      230          if state.facts_exist(record.doc_id):
+      231 -            print(f"DBG facts_exist skip {record.doc_id}", fil
+          -e=sys.stderr)                                                 
+      231              return
+      232          result = _read_record(client, record)
+      233          if result is None:
+      235 -            print(f"DBG result None for {record.doc_id}", file
+          -=sys.stderr)                                                  
+      234              return
+      235          type_, data = result
+      236          received_at = record.received.isoformat()
+
+● Update(harness/harness.py)
+  ⎿  Removed 3 lines
+      100      mod = READER_MAP[reader_name]
+      101      result = mod.read(client, record)
+      102      if result.instance is None:
+      103 -        import sys as _s                                      
+      104 -        _s.stderr.write(f"DBG {record.doc_id} reader={reader_n
+          -ame} parse_error={result.parse_error} tier={result.tier_used} 
+          -truncated={result.truncated}\n")                              
+      105 -        _s.stderr.write(f"DBG data keys={list((result.data or 
+          -{}).keys())}\n")                                              
+      103          return None
+      104  
+      105      SCHEMA_MAP = {
+
+● Update(harness/harness.py)
+  ⎿  Removed 2 lines
+      240                  fut.result()
+      241              except Exception as exc:
+      242                  rec = futures[fut]
+      243 -                import traceback                              
+      243                  print(f"ingest error for {rec.doc_id}: {exc}",
+            file=sys.stderr)
+      245 -                traceback.print_exc(file=sys.stderr)          
+      244  
+      245      # Print ledger totals to stderr.
+      246      _print_ledger_summary(Path(state_dir))
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now let me add a unit test that pins this behaviour:
+
+  Searched for 1 pattern, read 1 file, listed 1 directory (ctrl+o to expand)
+
+● Update(harness/tests/test_readers.py)
+  ⎿  Added 32 lines
+      132      assert all(not e["cached"] for e in entries)
+      133  
+      134  
+      135 +def test_reread_parse_failure_falls_back_to_first_read(tmp_pat
+          +h):                                                           
+      136 +    """If the retry at the higher tier fails pydantic validati
+          +on, keep the                                                  
+      137 +    first attempt's instance rather than returning None.      
+      138 +                                                              
+      139 +    Regression: an amendment pricing a conflict case was being
+          + dropped because                                              
+      140 +    the main-tier read verified imperfectly (empty payment-ter
+          +m fields),                                                    
+      141 +    triggered a reread at strong, and strong omitted the requi
+          +red fields.                                                   
+      142 +    The amendment then never reached the rules engine and the 
+          +conflict                                                      
+      143 +    `amount_range` collapsed to [0.00, 0.00].                 
+      144 +    """                                                       
+      145 +    page_text = "AWB-123 shipped from JFK to LHR"             
+      146 +    # main returns a parseable but unverifiable value; strong 
+          +returns an                                                    
+      147 +    # unparseable response (missing required `awb` field).    
+      148 +    fake_set_response("fake-main", {                          
+      149 +        "kind": "awb",                                        
+      150 +        "awb": {"value": "WRONG", "ref": {"page": 1, "line": 1
+          +}},                                                           
+      151 +    })                                                        
+      152 +    fake_set_response("fake-strong", {"kind": "awb"})         
+      153 +    client = LLMClient(tmp_path)                              
+      154 +    rec = _record([page_text])                                
+      155 +    from nova.readers import read_doc                         
+      156 +    from nova.schemas import ShipmentDoc                      
+      157 +    result = read_doc(                                        
+      158 +        client, rec, ShipmentDoc,                             
+      159 +        tier="main", purpose="read_shipment", prompt_version="
+          +t",                                                           
+      160 +        instructions="",                                      
+      161 +    )                                                         
+      162 +    assert result.instance is not None                        
+      163 +    assert result.instance.awb.value == "WRONG"               
+      164 +    assert result.parse_error is None                         
+      165 +                                                              
+      166 +                                                              
+      167  def test_persistent_failure_keeps_record_drops_failing_value(t
+           mp_path):
+      168      """fast and main both wrong at the top of the tier → one r
+           e-read, then record kept, failing value dropped."""
+      169      page_text = "AWB-123 shipped from JFK to LHR"
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now let me check the DELIBERATE_BREAK and update it, then move on to
+  overfitting audit.
+
+  Searched for 5 patterns, read 2 files (ctrl+o to expand)
+
+● Update(harness/nova/readers/contract.py)
+  ⎿  File must be read first
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(harness/nova/readers/contract.py)
+  ⎿  Added 1 line, removed 1 line
+       6  from nova.readers import ReadResult, read_doc
+       7  from nova.schemas import ContractTerms
+       8  
+       9 -prompt_version = "contract-3"                                  
+       9 +prompt_version = "contract-4"                                  
+      10  
+      11  _INSTRUCTIONS = (
+      12      "This document is a Master Services Agreement (MSA) or a si
+          gned Amendment.\n"
+
+● Update(harness/nova/readers/contract.py)
+  ⎿  Added 5 lines
+      21      "  e.g. [\"signed_amendment\", \"msa\", \"annexes\"].\n"
+      22      "- `unranked_pairs` lists pairs that the contract declares 
+          as unranked (e.g.\n"
+      23      "  rate_notice and amendment). Each pair has `a`, `b` and a
+           `ref` to the clause.\n"
+      24 +    "- For each accessorial row, if the condition names a calen
+         +dar window\n"                                                  
+      25 +    "  (e.g. \"for pickups in September to November only\", \"D
+         +ec-Feb\"), also\n"                                             
+      26 +    "  fill `months` with the two-digit month codes it covers (
+         +wrap across\n"                                                 
+      27 +    "  year end when the range does, e.g. December-February → [
+         +\"12\",\"01\",\"02\"]).\n"                                     
+      28 +    "  Leave `months` null when the condition is not a calendar
+         + window.\n"                                                    
+      29      "- For every \"Not applicable\" clause (fuel, accessorials,
+           rebate, margin,\n"
+      30      "  promised credits, fx), set the corresponding `_not_appli
+          cable` ref to the line.\n"
+      31      "- `payment_due_days`, `payment_grace_days`, `late_fee_rate
+          ` are the printed\n"
+
+● Now remove the regex from the rule:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(harness/nova/rules/overcharge.py)
+  ⎿  Removed 58 lines
+      148      return "dangerous good" in label
+      149  
+      150  
+      151 -_MONTH_WORDS = {                                              
+      152 -    "january": "01", "jan": "01", "february": "02", "feb": "02
+          -",                                                            
+      153 -    "march": "03", "mar": "03", "april": "04", "apr": "04",   
+      154 -    "may": "05", "june": "06", "jun": "06", "july": "07", "jul
+          -": "07",                                                      
+      155 -    "august": "08", "aug": "08", "september": "09", "sep": "09
+          -", "sept": "09",                                              
+      156 -    "october": "10", "oct": "10", "november": "11", "nov": "11
+          -",                                                            
+      157 -    "december": "12", "dec": "12",                            
+      158 -}                                                             
+      159 -                                                              
+      160 -                                                              
+      161 -def _months_from_condition(text: str) -> Optional[list[str]]: 
+      162 -    """Parse a month window out of a free-text accessorial con
+          -dition.                                                       
+      163 -                                                              
+      164 -    Handles the two shapes we see in practice:                
+      165 -    - "for pickups in September to November only"             
+      166 -    - "September-November", "Sep to Nov"                      
+      167 -    Returns a sorted list of ``MM`` strings, or None if the co
+          -ndition doesn't                                               
+      168 -    look like a month window at all. "December through Februar
+          -y" wraps the                                                  
+      169 -    year and is handled.                                      
+      170 -    """                                                       
+      171 -    if not text:                                              
+      172 -        return None                                           
+      173 -    low = text.lower()                                        
+      174 -    # Find two month words with a "to"/"-"/"through"/"until" b
+          -etween them.                                                  
+      175 -    words = re.findall(r"[a-z]+", low)                        
+      176 -    found: list[tuple[int, str]] = []                         
+      177 -    for i, w in enumerate(words):                             
+      178 -        if w in _MONTH_WORDS:                                 
+      179 -            found.append((i, _MONTH_WORDS[w]))                
+      180 -    if not found:                                             
+      181 -        return None                                           
+      182 -    if len(found) == 1:                                       
+      183 -        return [found[0][1]]                                  
+      184 -    # Pick the first two near-adjacent month mentions (within 
+          -5 words of each                                               
+      185 -    # other) as the range endpoints.                          
+      186 -    for a_idx, (i_a, m_a) in enumerate(found):                
+      187 -        for i_b, m_b in found[a_idx + 1:]:                    
+      188 -            if 0 < (i_b - i_a) <= 5:                          
+      189 -                return _range_months(m_a, m_b)                
+      190 -    return [m for _i, m in found]                             
+      191 -                                                              
+      192 -                                                              
+      193 -def _range_months(start: str, end: str) -> list[str]:         
+      194 -    """Return every month in [start, end], wrapping across yea
+          -r end."""                                                     
+      195 -    s = int(start)                                            
+      196 -    e = int(end)                                              
+      197 -    out: list[str] = []                                       
+      198 -    m = s                                                     
+      199 -    while True:                                               
+      200 -        out.append(f"{m:02d}")                                
+      201 -        if m == e:                                            
+      202 -            break                                             
+      203 -        m = 1 if m == 12 else m + 1                           
+      204 -        if len(out) >= 12:                                    
+      205 -            break                                             
+      206 -    return out                                                
+      207 -                                                              
+      208 -                                                              
+      151  def _accessorial_applies(
+      152      case: Case, acc: Accessorial, pickup_date: str, awb: Optio
+           nal[str],
+      153  ) -> bool:
+
+● Update(harness/nova/rules/overcharge.py)
+  ⎿  Removed 4 lines
+      168              return status[0] == "dg"
+      169          # No declaration: fall through to Judge, else presume 
+           applies.
+      170      months = list(acc.months or [])
+      171 -    if not months and acc.condition:                          
+      172 -        parsed = _months_from_condition(acc.condition)        
+      173 -        if parsed:                                            
+      174 -            months = parsed                                   
+      171      if months:
+      172          if pickup_date[5:7] not in months:
+      173              return False
+
+  Searched for 3 patterns, read 3 files, listed 1 directory, ran 1 shell command (ctrl+o to expand)
+
+● Update(evals/cases/autonomous_small_dispute_executes.yaml)
+  ⎿  Added 1 line, removed 1 line
+      1  name: autonomous mode promotes a safe outbound to execute
+      2 -mailbox: evals/mailboxes/autonomous_over_threshold              
+      2 +mailbox: evals/mailboxes/autonomous_small_dispute               
+      3  as_of: '2033-04-30'
+      4  mode: autonomous
+      5  expect:
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now I need to create a real over-threshold case. Let me look at existing cases
+   and the build_mailboxes.py:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Update(evals/build_mailboxes.py)
+  ⎿  Added 7 lines, removed 1 line
+      260      # 12. Autonomous mode: safe outbound executes without huma
+           n review.
+      261      #     Uses the rebilled-4-months duplicate example (two ba
+           tches) to
+      262      #     produce a straightforward dispute at level-1 authori
+           ty.
+      263 -    mb = MAILBOXES / "autonomous_over_threshold"              
+      263 +    mb = MAILBOXES / "autonomous_small_dispute"               
+      264      _copy_example_batch("duplicate_rebilled_4_months", mb, bat
+           ch="batch_01")
+      265      _copy_example_batch("duplicate_rebilled_4_months", mb, bat
+           ch="batch_02")
+      266  
+      267 +    # 13. Autonomous mode, outbound ≥ $5,000.00: policy must f
+          +orce human_review                                             
+      268 +    #     regardless of the five safety checks (the five $0 ov
+          +ercharges on the                                              
+      269 +    #     overcharge example sum to over $5k; use that as the 
+          +big dispute).                                                 
+      270 +    mb = MAILBOXES / "autonomous_over_threshold"              
+      271 +    _copy_example_batch("overcharge", mb)                     
+      272  
+      273 +                                                              
+      274  if __name__ == "__main__":
+      275      build_all()
+      276      print(f"built {len(list(MAILBOXES.iterdir()))} mailboxes u
+           nder {MAILBOXES}")
+
+  Searched for 6 patterns, read 3 files, listed 5 directories, ran 7 shell commands (ctrl+o to expand)
+
+● Update(harness/tests/test_policy.py)
+  ⎿  Added 12 lines
+      233      assert out[0].action == "draft:dispute"
+      234  
+      235  
+      236 +def test_5k_rule_autonomous_mode_blocks_execution():          
+      237 +    """Autonomous mode: outbound sum >= $5,000 on one invoice 
+          +must still be                                                 
+      238 +    human_review, not execute:dispute. The $5k ceiling applies
+          + regardless of                                                
+      239 +    the five safety checks."""                                
+      240 +    item = _overcharge("overcharge:INV-AUTO-BIG", "INV-AUTO-BI
+          +G", "5500.00")                                                
+      241 +    out = apply_policy([item], mode="autonomous")             
+      242 +    assert out[0].action == "human_review", (                 
+      243 +        f"Expected human_review for $5,500 outbound in autonom
+          +ous mode, "                                                   
+      244 +        f"got {out[0].action}"                                
+      245 +    )                                                         
+      246 +                                                              
+      247 +                                                              
+      248  # ------------------------------------------------------------
+           ---------------
+      249  # Report schema validation (both modes)
+      250  # ------------------------------------------------------------
+           ---------------
+
+● Update(evals/build_mailboxes.py)
+  ⎿  Added 6 lines, removed 9 lines
+      257          '             "valid_from": "2032-09-01", "valid_to": 
+           null}}]}\n'
+      258      )
+      259  
+      260 -    # 12. Autonomous mode: safe outbound executes without huma
+          -n review.                                                     
+      261 -    #     Uses the rebilled-4-months duplicate example (two ba
+          -tches) to                                                     
+      262 -    #     produce a straightforward dispute at level-1 authori
+          -ty.                                                           
+      260 +    # 12. Autonomous mode: safe outbound (under $5k) executes 
+          +without human                                                 
+      261 +    #     review. Uses the rebilled-4-months duplicate example
+          + to produce a                                                 
+      262 +    #     straightforward dispute at level-1 authority. The $5
+          +k over-threshold                                              
+      263 +    #     ceiling is pinned by a direct policy unit test, not 
+          +an eval case,                                                 
+      264 +    #     because none of the public example documents price a
+          +bove $5,000 and                                               
+      265 +    #     the test harness treats synthetic invoices as untrus
+          +ted LLM reads.                                                
+      266      mb = MAILBOXES / "autonomous_small_dispute"
+      267      _copy_example_batch("duplicate_rebilled_4_months", mb, bat
+           ch="batch_01")
+      268      _copy_example_batch("duplicate_rebilled_4_months", mb, bat
+           ch="batch_02")
+      269  
+      267 -    # 13. Autonomous mode, outbound ≥ $5,000.00: policy must f
+          -orce human_review                                             
+      268 -    #     regardless of the five safety checks (the five $0 ov
+          -ercharges on the                                              
+      269 -    #     overcharge example sum to over $5k; use that as the 
+          -big dispute).                                                 
+      270 -    mb = MAILBOXES / "autonomous_over_threshold"              
+      271 -    _copy_example_batch("overcharge", mb)                     
+      270  
+      273 -                                                              
+      271  if __name__ == "__main__":
+      272      build_all()
+      273      print(f"built {len(list(MAILBOXES.iterdir()))} mailboxes u
+           nder {MAILBOXES}")
+
+  Read 1 file, listed 1 directory, ran 5 shell commands (ctrl+o to expand)
+
+● Background command "bash -c 'source ~/.nova-key.env &amp;&amp; .venv/bin/python evals/run_evals.py 2&gt;&amp;1 | tail -25'" completed (exit code 0)
+
+● Background command "bash -c 'source ~/.nova-key.env &amp;&amp; .venv/bin/python evals/run_evals.py 2&gt;&amp;1 | tail -20'" completed (exit code 0)
+
+● Background command "bash -c 'source ~/.nova-key.env &amp;&amp; .venv/bin/python evals/run_evals.py' 2&gt;&amp;1 | tail -25" completed (exit code 0)
+
+● 14/14. Now let me update DELIBERATE_BREAK and run grade and sheet:
+
+● Update(evals/DELIBERATE_BREAK.md)
+  ⎿  File must be read first
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(evals/DELIBERATE_BREAK.md)
+  ⎿  Added 25 lines
+      40  the master") and the regression test in
+      41  `harness/tests/test_duplicate_house_awb.py`.
+      42  
+      43 +## Second real-world case the eval set caught                  
+      44 +                                                               
+      45 +In Phase 7 the eval case `evals/cases/sample_conflict.yaml` sta
+         +rted failing                                                   
+      46 +with `range ['0.00', '0.00']` instead of `['0.00', 20.87']` — s
+         +ame mailbox                                                    
+      47 +and expected finding as the hand-written example, so the regres
+         +sion had to                                                    
+      48 +be inside the harness. Tracing the pipeline showed the amendmen
+         +t was never                                                    
+      49 +reaching the rules engine: `_read_record` returned `None` for  
+      50 +`batch_01/0003.eml#TBX-US-EXP-E90-AMD-1.pdf`, so overcharge pri
+         +ced the                                                        
+      51 +invoice from the MSA alone and the two "correct" amounts collap
+         +sed to one.                                                    
+      52 +                                                               
+      53 +The root cause was in `harness/nova/readers/__init__.py`. The f
+         +irst                                                           
+      54 +(`main` tier) read of the amendment parsed cleanly but tripped 
+      55 +`verify_object` on a few empty-string payment fields; that trig
+         +gered a                                                        
+      56 +reread at `strong`, which omitted the required `payment_due_day
+         +s`,                                                            
+      57 +`payment_grace_days` and `late_fee_rate` fields entirely. Pydan
+         +tic                                                            
+      58 +rejected the strong-tier dict, and the reader threw away the pe
+         +rfectly                                                        
+      59 +good main-tier parse because it only kept the latest attempt.  
+      60 +                                                               
+      61 +The fix: when the reread fails pydantic validation, fall back t
+         +o the                                                          
+      62 +first attempt's instance (and clear `parse_error`). The main-ti
+         +er parse                                                       
+      63 +is imperfect but usable — exactly the shape the amendment reade
+         +r was                                                          
+      64 +written to handle. The unit test                               
+      65 +`test_reread_parse_failure_falls_back_to_first_read` in        
+      66 +`harness/tests/test_readers.py` pins the behaviour.            
+      67 +                                                               
+      68  ## Restoring the rule
+      69  
+      70  Revert the comparison back to the exact `awb != awb2` check and
+           confirm
+● Now run grade and sheet:
+
+  Searched for 1 pattern, read 1 file, listed 2 directories, ran 2 shell commands (ctrl+o to expand)
+
+● Score stays at 99.6. Let me check the answer_sheet unchanged:
+
+  Ran 5 shell commands (ctrl+o to expand)
+
+● All green. Let me also run make validate:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      61  
+      62  ## Phases 5–7 checklist
+      63  - [x] Task 07 · grader-proof settings, generic fixes from exam 
+          hand check and practice card, feedback and history, eval set, f
+          inal runs
+      64 -- [ ] Task 08 · conflict regression, overfitting audit, thresho
+         -ld eval case, final re-runs                                    
+      64   No newline at end of file
+      65 +- [x] Task 08 · conflict regression, overfitting audit, thresho
+         +ld eval case, final re-runs                                    
+      66   No newline at end of file
+
+● Task 08 complete. Final results:
+
+  grep (step 2a) — only comments/docstrings; no runtime references to carriers,
+  people, or ids:
+  harness/nova/rules/__init__.py:31:    key: tuple                   # e.g.
+  ("overcharge", "TX-US-2032-5394")
+  harness/nova/readers/billing.py:34:    "  master in a parenthetical like
+  `(MAWB CA12345678)` ..."
+  harness/nova/schemas.py: comment lines for "TBX-US", "TX-US-2032-5394",
+  "Tarrowby Express Inc.", etc.
+
+  step 2b — removed _months_from_condition / _range_months / _MONTH_WORDS from
+  harness/nova/rules/overcharge.py; the contract reader now fills the typed
+  Accessorial.months field (prompt bumped to contract-4). Rule code no longer
+  regexes free text.
+
+  step 2c — contract_for_invoice issuer fallback uses typed fields only
+  (bill.bill.contract_ref.value first, then an exact lower-cased match of
+  bill.bill.issuer.value against c.terms.parties); kept.
+
+  step 3 — the old autonomous_over_threshold.yaml really tested the sub-$5k
+  safe-outbound promotion, so it is renamed to
+  autonomous_small_dispute_executes.yaml (and the mailbox with it). The over-$5k
+   ceiling in autonomous mode is pinned by the new unit test
+  test_5k_rule_autonomous_mode_blocks_execution in harness/tests/test_policy.py.
+
+  step 1 — root cause of the sample_conflict regression:
+  harness/nova/readers/__init__.py dropped the main-tier parse when the reread
+  at the next tier failed pydantic validation (the amendment's main-tier dict
+  had empty strings in payment fields, verify failed, strong-tier retry omitted
+  those required fields). Fix: keep the first attempt's instance on reread
+  parse-failure. New unit test
+  test_reread_parse_failure_falls_back_to_first_read; written up in
+  evals/DELIBERATE_BREAK.md as the second real-world catch.
+
+  Re-runs:
+  make eval  → 14 of 14 cases pass (12 of them ours)
+  make grade → Score: 99.6 / 100 (unchanged)
+  make sheet → answer_sheet.json unchanged (total_savings 8165.33; overpayment
+  3847.70)
+
+✻ Brewed for 24m 45s
+
+※ recap: Task 08 hardening is done: conflict regression fixed, overfitting audit clean, autonomous-mode threshold pinned, and make eval 14/14, grade 99.6, sheet unchanged. Next action: commit the changes. (disable recaps in /config)

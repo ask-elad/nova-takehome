@@ -257,10 +257,13 @@ def build_all() -> None:
         '             "valid_from": "2032-09-01", "valid_to": null}}]}\n'
     )
 
-    # 12. Autonomous mode: safe outbound executes without human review.
-    #     Uses the rebilled-4-months duplicate example (two batches) to
-    #     produce a straightforward dispute at level-1 authority.
-    mb = MAILBOXES / "autonomous_over_threshold"
+    # 12. Autonomous mode: safe outbound (under $5k) executes without human
+    #     review. Uses the rebilled-4-months duplicate example to produce a
+    #     straightforward dispute at level-1 authority. The $5k over-threshold
+    #     ceiling is pinned by a direct policy unit test, not an eval case,
+    #     because none of the public example documents price above $5,000 and
+    #     the test harness treats synthetic invoices as untrusted LLM reads.
+    mb = MAILBOXES / "autonomous_small_dispute"
     _copy_example_batch("duplicate_rebilled_4_months", mb, batch="batch_01")
     _copy_example_batch("duplicate_rebilled_4_months", mb, batch="batch_02")
 

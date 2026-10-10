@@ -233,6 +233,18 @@ def test_5k_rule_below_threshold_does_not_trigger():
     assert out[0].action == "draft:dispute"
 
 
+def test_5k_rule_autonomous_mode_blocks_execution():
+    """Autonomous mode: outbound sum >= $5,000 on one invoice must still be
+    human_review, not execute:dispute. The $5k ceiling applies regardless of
+    the five safety checks."""
+    item = _overcharge("overcharge:INV-AUTO-BIG", "INV-AUTO-BIG", "5500.00")
+    out = apply_policy([item], mode="autonomous")
+    assert out[0].action == "human_review", (
+        f"Expected human_review for $5,500 outbound in autonomous mode, "
+        f"got {out[0].action}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Report schema validation (both modes)
 # ---------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 name: autonomous mode promotes a safe outbound to execute
-mailbox: evals/mailboxes/autonomous_over_threshold
+mailbox: evals/mailboxes/autonomous_small_dispute
 as_of: '2033-04-30'
 mode: autonomous
 expect:

@@ -6,7 +6,7 @@ from nova.mailbox import DocRecord
 from nova.readers import ReadResult, read_doc
 from nova.schemas import ContractTerms
 
-prompt_version = "contract-3"
+prompt_version = "contract-4"
 
 _INSTRUCTIONS = (
     "This document is a Master Services Agreement (MSA) or a signed Amendment.\n"
@@ -21,6 +21,11 @@ _INSTRUCTIONS = (
     "  e.g. [\"signed_amendment\", \"msa\", \"annexes\"].\n"
     "- `unranked_pairs` lists pairs that the contract declares as unranked (e.g.\n"
     "  rate_notice and amendment). Each pair has `a`, `b` and a `ref` to the clause.\n"
+    "- For each accessorial row, if the condition names a calendar window\n"
+    "  (e.g. \"for pickups in September to November only\", \"Dec-Feb\"), also\n"
+    "  fill `months` with the two-digit month codes it covers (wrap across\n"
+    "  year end when the range does, e.g. December-February → [\"12\",\"01\",\"02\"]).\n"
+    "  Leave `months` null when the condition is not a calendar window.\n"
     "- For every \"Not applicable\" clause (fuel, accessorials, rebate, margin,\n"
     "  promised credits, fx), set the corresponding `_not_applicable` ref to the line.\n"
     "- `payment_due_days`, `payment_grace_days`, `late_fee_rate` are the printed\n"

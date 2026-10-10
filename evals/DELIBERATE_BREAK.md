@@ -40,6 +40,31 @@ the billing-reader prompt change ("keep the full waybill, don't collapse to
 the master") and the regression test in
 `harness/tests/test_duplicate_house_awb.py`.
 
+## Second real-world case the eval set caught
+
+In Phase 7 the eval case `evals/cases/sample_conflict.yaml` started failing
+with `range ['0.00', '0.00']` instead of `['0.00', 20.87']` — same mailbox
+and expected finding as the hand-written example, so the regression had to
+be inside the harness. Tracing the pipeline showed the amendment was never
+reaching the rules engine: `_read_record` returned `None` for
+`batch_01/0003.eml#TBX-US-EXP-E90-AMD-1.pdf`, so overcharge priced the
+invoice from the MSA alone and the two "correct" amounts collapsed to one.
+
+The root cause was in `harness/nova/readers/__init__.py`. The first
+(`main` tier) read of the amendment parsed cleanly but tripped
+`verify_object` on a few empty-string payment fields; that triggered a
+reread at `strong`, which omitted the required `payment_due_days`,
+`payment_grace_days` and `late_fee_rate` fields entirely. Pydantic
+rejected the strong-tier dict, and the reader threw away the perfectly
+good main-tier parse because it only kept the latest attempt.
+
+The fix: when the reread fails pydantic validation, fall back to the
+first attempt's instance (and clear `parse_error`). The main-tier parse
+is imperfect but usable — exactly the shape the amendment reader was
+written to handle. The unit test
+`test_reread_parse_failure_falls_back_to_first_read` in
+`harness/tests/test_readers.py` pins the behaviour.
+
 ## Restoring the rule
 
 Revert the comparison back to the exact `awb != awb2` check and confirm

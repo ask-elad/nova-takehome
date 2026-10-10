@@ -1,12 +1,12 @@
 {
  "harness": "harness/harness.py",
- "passed": 13,
+ "passed": 14,
  "total": 14,
  "your_cases": 12,
- "score": 0.9286,
+ "score": 1.0,
  "cases": [
   {
-   "case": "autonomous_over_threshold.yaml",
+   "case": "autonomous_small_dispute_executes.yaml",
    "name": "autonomous mode promotes a safe outbound to execute",
    "pass": true,
    "diff": []
@@ -44,10 +44,8 @@
   {
    "case": "sample_conflict.yaml",
    "name": "amendment and rate notice disagree",
-   "pass": false,
-   "diff": [
-    "range ['0.00', '0.00'], expected ['0.00', '20.87']"
-   ]
+   "pass": true,
+   "diff": []
   },
   {
    "case": "sample_overcharge.yaml",

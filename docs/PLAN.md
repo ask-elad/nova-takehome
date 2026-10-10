@@ -6,9 +6,8 @@ changed by the humans only.
 
 ## Where we are
 
-**Phases 5–7 · Fix, feedback, evals.** Task 06 is done: first real runs (practice 59.6/100; exam sheet
-hand-checked by the humans and found wrong in five places). Current task: `docs/tasks/07-fix-and-finish.md`.
-The write-up (Phase 8) is done by the humans afterwards.
+**Phase 7 · Hardening.** Task 07 is done: exam sheet matches the human hand check, practice 99.6/100, our evals 12/12.
+Current task: `docs/tasks/08-hardening.md`. The write-up (Phase 8) is done by the humans afterwards.
 
 ## How work reaches you
 
@@ -61,4 +60,5 @@ to produce the same facts.
 - [x] Task 06 · cost fixes, ingest and report end to end, policy layer (actions, modes, $5k, confidence); first real `make grade` score
 
 ## Phases 5–7 checklist
-- [ ] Task 07 · grader-proof settings, generic fixes from exam hand check and practice card, feedback and history, eval set, final runs
+- [x] Task 07 · grader-proof settings, generic fixes from exam hand check and practice card, feedback and history, eval set, final runs
+- [x] Task 08 · conflict regression, overfitting audit, threshold eval case, final re-runs
