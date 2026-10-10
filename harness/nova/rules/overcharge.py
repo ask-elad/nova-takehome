@@ -103,11 +103,82 @@ def _correct_freight(
     return computed, srcs
 
 
+_BAND_RANGE_RE = re.compile(
+    r'(\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(\d+(?:\.\d+)?)',
+    re.IGNORECASE,
+)
+_BAND_OPEN_RE = re.compile(r'(\d+(?:\.\d+)?)\s*\+')
+
+
+def _normalise_source_kind(k: str) -> str:
+    """Fold synonymous source-kind names (audit M5)."""
+    s = (k or "").strip().lower()
+    if s in {"signed_amendment", "amendment"}:
+        return "amendment"
+    if s in {"rate_notice", "notice", "rate-notice"}:
+        return "rate_notice"
+    if s in {"msa"}:
+        return "msa"
+    return s
+
+
+def _normalise_use(use: Optional[str]) -> Optional[str]:
+    """Normalise a feedback precedence `use` value."""
+    if use is None:
+        return None
+    return _normalise_source_kind(use)
+
+
+def _amendment_newer_than_feedback(case: Case, msa, bd) -> bool:
+    """True iff a signed amendment on any invoice-lane postdates the
+    precedence feedback that would otherwise bind the choice."""
+    for ln in bd.lines:
+        if not ln.lane or not ln.awb:
+            continue
+        pk = case.pickup_date(ln.awb)
+        if pk is None:
+            continue
+        use = case.precedence_fact_for(msa.id, ln.lane, pk[0])
+        if use is None:
+            continue
+        # Find the feedback's valid_from and compare to amendments' effective_from.
+        fb_from = None
+        for pf in case.precedence_facts:
+            if pf.get("contract_id") == msa.id and pf.get("lane") == ln.lane:
+                fb_from = pf.get("valid_from")
+                break
+        if fb_from is None:
+            return False
+        for c in case.contracts:
+            if not c.is_amendment or c.amends != msa.id:
+                continue
+            if c.effective_from > fb_from:
+                return True
+    return False
+
+
+def _parse_band_limits(band: str) -> Optional[tuple[Optional[Decimal], Optional[Decimal]]]:
+    """Parse a band label like "0-44.5 kg" or "100+" into (min, max).
+
+    Returns None when the label has no number (e.g. "minimum charge").
+    """
+    if not band:
+        return None
+    m = _BAND_RANGE_RE.search(band)
+    if m:
+        return Decimal(m.group(1)), Decimal(m.group(2))
+    m = _BAND_OPEN_RE.search(band)
+    if m:
+        return Decimal(m.group(1)), None
+    return None
+
+
 def _notice_row_for(terms: Terms, lane: str, weight: Decimal) -> Optional[tuple[Decimal, SourceRef, object]]:
     """If an in-force rate_notice covers (lane, band containing weight), return
-    (rate, source_ref, notice). The band label match is loose: the notice row's
-    numeric bounds are not parsed, so we match on the lane and pick the row
-    whose band label coincides with a known band containing the weight."""
+    (rate, source_ref, notice). Match by numeric limits (audit M5): fall back
+    to the loose band-label equality when the notice row's label can't be
+    parsed into bounds, so no notice goes unmatched when the carrier uses a
+    different band naming convention."""
     for rns in terms.rate_notices:
         rn = rns.notice
         if rn.lane and rn.lane != lane:
@@ -115,7 +186,16 @@ def _notice_row_for(terms: Terms, lane: str, weight: Decimal) -> Optional[tuple[
         for row in rn.rows:
             if row.lane != lane:
                 continue
-            # Try to match by band label against an MSA rate row covering weight.
+            # Numeric match on the notice row's own limits.
+            notice_limits = _parse_band_limits(row.band)
+            if notice_limits is not None:
+                lo, hi = notice_limits
+                if weight < lo:
+                    continue
+                if hi is not None and weight > hi:
+                    continue
+                return Decimal(row.rate), SourceRef.from_ref(rns.doc, row.ref), rns
+            # Fallback: match by band label against an MSA rate row.
             for mrow, _ in terms.rate_rows_for(lane):
                 if mrow.is_minimum_charge:
                     continue
@@ -607,6 +687,13 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
                 if case.rate_accepted_for(msa.id, ln.lane, pk[0]) is not None:
                     precedence_use = "rate_notice"
                     break
+            precedence_use = _normalise_use(precedence_use)
+            # Audit M5: a later signed amendment beats feedback. If the
+            # feedback precedence is older than the latest signed amendment
+            # on this (contract, lane), ignore it.
+            if precedence_use == "amendment":
+                if _amendment_newer_than_feedback(case, msa, bd):
+                    precedence_use = None
             if precedence_use == "amendment":
                 pass  # keep the single amendment-sourced correct only
             elif precedence_use == "rate_notice":
@@ -621,11 +708,17 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
                     authority_level=2, in_force=True,
                     source_kind="rate_notice",
                 ))
+                # Audit M5: treat any listed unranked pair as unranked.
+                # The MSA may word the pair in either direction, and the
+                # kinds may use synonyms (notice ↔ rate_notice,
+                # signed_amendment ↔ amendment). Normalise before matching.
                 if msa.terms.unranked_pairs:
+                    present = {"rate_notice", "amendment"}
                     for pair in msa.terms.unranked_pairs:
-                        kinds = {pair.a, pair.b}
-                        if "rate_notice" in kinds and "amendment" in kinds:
-                            unranked_pair = ("rate_notice", "amendment")
+                        a = _normalise_source_kind(pair.a)
+                        b = _normalise_source_kind(pair.b)
+                        if {a, b} == present:
+                            unranked_pair = (a, b)
                             unranked_ref = SourceRef.from_ref(msa.doc, pair.ref)
                             dedup.append(unranked_ref)
                             break
