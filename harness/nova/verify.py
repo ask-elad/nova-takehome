@@ -57,11 +57,21 @@ def _strip_money(s: str) -> str:
 
 
 def _date_variants(iso: str) -> list[str]:
-    """Return every plausible printed form of an ISO date."""
+    """Return every plausible printed form of an ISO date.
+
+    Accepts ISO (YYYY-MM-DD), D/M/Y, M/D/Y (when the day is over 12 to
+    disambiguate from D/M/Y), month-name forms. Audit B3.
+    """
     variants = [iso]
     try:
         y, m, d = iso.split("-")
-        variants.append(f"{d}/{m}/{y}")               # 17/07/2030
+        di, mi = int(d), int(m)
+        variants.append(f"{d}/{m}/{y}")               # 17/07/2030 (D/M/Y)
+        variants.append(f"{di}/{mi}/{y}")             # 7/4/2030 (no zero-pad D/M/Y)
+        # US M/D/Y variants: safe to accept when the day > 12 (unambiguous)
+        if di > 12:
+            variants.append(f"{m}/{d}/{y}")           # 07/17/2030
+            variants.append(f"{mi}/{di}/{y}")         # 7/17/2030
         dt = date(int(y), int(m), int(d))
         variants.append(dt.strftime("%d %B %Y"))      # 17 July 2030
         variants.append(dt.strftime("%-d %B %Y"))     # 17 July 2030 (no zero-pad)
@@ -69,6 +79,8 @@ def _date_variants(iso: str) -> list[str]:
         variants.append(dt.strftime("%-d %b %Y"))     # 17 Jul 2030 (no zero-pad)
         variants.append(dt.strftime("%B %d, %Y"))     # July 17, 2030
         variants.append(dt.strftime("%B %-d, %Y"))    # July 17, 2030 (no zero-pad)
+        variants.append(dt.strftime("%b %d, %Y"))     # Jul 17, 2030
+        variants.append(dt.strftime("%b %-d, %Y"))    # Jul 17, 2030 (no zero-pad)
     except (ValueError, AttributeError):
         pass
     return variants

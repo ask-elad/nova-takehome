@@ -305,15 +305,34 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
     prf = pre_rule_facts(feedback_items, docs=docs)
 
     def _run(case) -> list:
+        """Run each rule in try/except so a single bad fact drops one item,
+        never the batch (audit B3)."""
+        import traceback
         candidates = []
-        candidates.extend(run_overcharge(case))
-        candidates.extend(run_duplicate(case))
-        candidates.extend(run_waived(case))
-        candidates.extend(run_late_fees(case))
-        candidates.extend(run_cashback(case))
-        candidates.extend(run_expiry(case))
-        xs = resolve(candidates, mailbox)
-        flags_map = _flags_from_case(xs, case, feedback_items)
+        for name, run_fn in (
+            ("overcharge", run_overcharge),
+            ("duplicate", run_duplicate),
+            ("waived_but_billed", run_waived),
+            ("late_fees", run_late_fees),
+            ("cashback", run_cashback),
+            ("expiry", run_expiry),
+        ):
+            try:
+                candidates.extend(run_fn(case))
+            except Exception as e:
+                print(f"rule {name} failed: {e!r}", file=sys.stderr)
+                traceback.print_exc(file=sys.stderr)
+        try:
+            xs = resolve(candidates, mailbox)
+        except Exception as e:
+            print(f"resolve failed: {e!r}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+            xs = []
+        try:
+            flags_map = _flags_from_case(xs, case, feedback_items)
+        except Exception as e:
+            print(f"flags failed: {e!r}", file=sys.stderr)
+            flags_map = {}
         return apply_policy(xs, mode=mode, flags_map=flags_map)
 
     # Build Case with Claude Judge (uses LLM client for judge calls, cached).

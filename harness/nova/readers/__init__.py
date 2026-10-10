@@ -82,43 +82,13 @@ def _user_message(doc_id: str, pages: list[str], instructions: str, max_doc_line
 
 
 def _drop_failing_values(data: Any, failures: list[VerifyFailure]) -> Any:
-    """Blank the Val entries at every failing path. Paths look like
-    ``a.b[2].c``. Leaves the containing object in place with ``value`` empty.
+    """Historically blanked values that failed verification. Audit B3: keep
+    the extracted value so down-stream rules can still try to use it (with
+    low confidence); a single bad fact must not drop the whole batch.
     """
-    if not failures:
-        return data
-    out = data
-    for f in failures:
-        parts: list[Any] = []
-        buf = ""
-        i = 0
-        while i < len(f.path):
-            ch = f.path[i]
-            if ch == ".":
-                if buf:
-                    parts.append(buf); buf = ""
-            elif ch == "[":
-                if buf:
-                    parts.append(buf); buf = ""
-                j = f.path.index("]", i)
-                parts.append(int(f.path[i + 1:j]))
-                i = j
-            else:
-                buf += ch
-            i += 1
-        if buf:
-            parts.append(buf)
-        node = out
-        try:
-            for p in parts[:-1]:
-                node = node[p]
-            last = parts[-1]
-            # Val is encoded as {"value": "...", "ref": {...}} in the dict.
-            if isinstance(node, dict) and isinstance(node.get(last), dict) and "value" in node[last]:
-                node[last]["value"] = ""
-        except (KeyError, IndexError, TypeError):
-            pass
-    return out
+    return data
+
+
 
 
 def read_doc(

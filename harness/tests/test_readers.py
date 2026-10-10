@@ -164,8 +164,10 @@ def test_reread_parse_failure_falls_back_to_first_read(tmp_path):
     assert result.parse_error is None
 
 
-def test_persistent_failure_keeps_record_drops_failing_value(tmp_path):
-    """fast and main both wrong at the top of the tier → one re-read, then record kept, failing value dropped."""
+def test_persistent_failure_keeps_record_and_value_for_rules(tmp_path):
+    """fast and main both wrong at the top of the tier → one re-read, then
+    the record is kept with the extracted value in place (audit B3: never
+    blank; a down-stream rule decides, with low confidence)."""
     page_text = "AWB-123 shipped from JFK to LHR"
     fake_set_response("fake-fast", {
         "kind": "awb",
@@ -180,7 +182,7 @@ def test_persistent_failure_keeps_record_drops_failing_value(tmp_path):
     result = shipment_reader.read(client, rec)
     assert result.reread is True
     assert result.verify_failures != []
-    assert result.data["awb"]["value"] == ""  # failing value dropped
+    assert result.data["awb"]["value"] == "ALSO-NOPE"  # kept, not blanked
     # Only two tier attempts (fast + main). No strong call.
     entries = [json.loads(l) for l in (tmp_path / "ledger.jsonl").read_text().splitlines()]
     assert [e["model"] for e in entries] == ["fake-fast", "fake-main"]
