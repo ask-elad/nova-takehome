@@ -12,11 +12,11 @@
    "batch_02"
   ]
  },
- "score": 99.61,
- "score_uncapped": 99.61,
+ "score": 99.6,
+ "score_uncapped": 99.6,
  "excluded_keys": 0,
  "excluded_answers": 0,
- "points": 99.613,
+ "points": 99.6,
  "points_max": 100,
  "capped_by_hard_gate": false,
  "components": [
@@ -94,7 +94,7 @@
   {
    "component": "gating",
    "label": "Gating (both modes) + confidence",
-   "points": 14.613,
+   "points": 14.6,
    "max": 15,
    "applicable": true,
    "detail": {
@@ -119,10 +119,10 @@
     "escalation_rate": 0.0417,
     "unsafe_autonomous_cases": 0,
     "auroc": null,
-    "brier": 0.0194,
+    "brier": 0.02,
     "items_scored": 24,
     "actions_points": 10.0,
-    "confidence_points": 4.612
+    "confidence_points": 4.6
    }
   },
   {
@@ -449,7 +449,7 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 167 cache hits\n",
-       "secs": 2.7
+       "secs": 2.4
       },
       {
        "step": "report",
@@ -475,13 +475,13 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 330 cache hits\n",
-       "secs": 2.2
+       "secs": 2.4
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 1.0
+       "secs": 0.9
       }
      ],
      "items": 17
@@ -499,13 +499,13 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 167 cache hits\n",
-       "secs": 2.2
+       "secs": 2.4
       },
       {
        "step": "report",
        "rc": 0,
        "stderr": "",
-       "secs": 0.8
+       "secs": 0.9
       },
       {
        "step": "feedback",
@@ -525,7 +525,7 @@
        "step": "ingest",
        "rc": 0,
        "stderr": "LEDGER: 0 paid calls (0 in + 0 out = 0 tokens), 330 cache hits\n",
-       "secs": 2.3
+       "secs": 2.2
       },
       {
        "step": "report",

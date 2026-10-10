@@ -448,9 +448,18 @@ def run(case: Case, contract_id: Optional[str] = None) -> list[Candidate]:
                       for fx_row, _src in (case.terms_on(msa.id, invoice_date).fx_rows
                                             if case.terms_on(msa.id, invoice_date) else [])}
                 try:
+                    # Audit minors: compute the delta in INR, convert the
+                    # delta once. Billed is still converted so the report
+                    # shows a USD billed total; correct is derived as
+                    # billed - delta_usd to avoid a 1-cent drift between
+                    # two independent conversions.
                     final_billed = inr_to_usd(billed_total, invoice_date, fx)
-                    final_correct_amd = inr_to_usd(correct_amendment, invoice_date, fx)
-                    final_correct_rn = inr_to_usd(correct_notice, invoice_date, fx)
+                    delta_amd = inr_to_usd(
+                        billed_total - correct_amendment, invoice_date, fx)
+                    final_correct_amd = final_billed - delta_amd
+                    delta_rn = inr_to_usd(
+                        billed_total - correct_notice, invoice_date, fx)
+                    final_correct_rn = final_billed - delta_rn
                 except CannotDetermine:
                     unresolved_fx_month = invoice_date[:7]
 

@@ -176,8 +176,16 @@ def _run_not_owed(case: Case) -> list[Candidate]:
         delta = billed_total - correct_total
         if delta <= 0:
             continue
+        # Audit minors: convert the delta once (keeps billed and correct
+        # in exact lock-step without a 1-cent drift between two
+        # independent conversions).
         converted_billed = _convert_once(billed_total, bill, case)
-        converted_correct = _convert_once(correct_total, bill, case)
+        delta_usd = _convert_once(billed_total - correct_total, bill, case)
+        converted_correct = (
+            converted_billed - delta_usd
+            if converted_billed is not None and delta_usd is not None
+            else None
+        )
         if converted_billed is None or converted_correct is None:
             out.append(Candidate(
                 key=("late_fee_not_owed", bill.bill.id.value),

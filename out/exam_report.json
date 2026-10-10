@@ -177,7 +177,7 @@
    "class": "overcharge",
    "verdict": "finding",
    "action": "draft:dispute",
-   "confidence": 0.95,
+   "confidence": 0.8999999999999999,
    "evidence": [
     {
      "doc": "batch_01/0001.eml#MSA-CDA-IN-EXP-E91.pdf",

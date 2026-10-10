@@ -65,8 +65,25 @@ class DocRecord:
 
 
 def _parse_received(msg) -> datetime:
-    dt = parsedate_to_datetime(str(msg["Date"]))
-    return dt.astimezone(timezone.utc).replace(tzinfo=timezone.utc)
+    """Return the UTC datetime of the email's Date header.
+
+    An .eml without a parseable Date header must not crash ingest
+    (audit minors): fall back to UNIX epoch so the record is still
+    loadable; as_of filtering will keep the doc visible in most reports.
+    """
+    raw = msg.get("Date")
+    if raw is None:
+        return datetime(1970, 1, 1, tzinfo=timezone.utc)
+    try:
+        dt = parsedate_to_datetime(str(raw))
+    except (TypeError, ValueError):
+        return datetime(1970, 1, 1, tzinfo=timezone.utc)
+    if dt is None:
+        return datetime(1970, 1, 1, tzinfo=timezone.utc)
+    try:
+        return dt.astimezone(timezone.utc).replace(tzinfo=timezone.utc)
+    except (ValueError, OSError):
+        return datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 
 def load_batch(batch_dir: Path) -> list[DocRecord]:

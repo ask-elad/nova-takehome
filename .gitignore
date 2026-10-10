@@ -7,3 +7,4 @@ __pycache__/
 *.pyc
 out/text/
 .nova-local.json
+.claude/settings.local.json
