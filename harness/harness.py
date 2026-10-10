@@ -351,7 +351,7 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
     # Build Case with Claude Judge (uses LLM client for judge calls, cached).
     judge_fn = _make_judge(state_dir)
     case = Case.from_records(facts, as_of=as_of, judge=judge_fn, mailbox=mailbox,
-                              pre_rule_facts=prf)
+                              pre_rule_facts=prf, docs=docs)
     items = _run(case)
 
     # If any pre-rules feedback exists, run again without it and diff to
@@ -360,7 +360,7 @@ def report(as_of: str, mode: str, state_dir: str) -> dict:
     pre_rules_items: dict[str, "Item"] = {}
     if any(prf.get(k) for k in ("sender_authority", "rate_accepted", "precedence")):
         base_case = Case.from_records(facts, as_of=as_of, judge=judge_fn,
-                                       mailbox=mailbox)
+                                       mailbox=mailbox, docs=docs)
         for it in _run(base_case):
             pre_rules_items[it.id] = it
 

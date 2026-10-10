@@ -22,14 +22,33 @@ from nova.rules import Candidate, CorrectAmount
 
 
 def _in_own_text(email: EmailRecord, ref) -> bool:
-    """Is ref.line inside any of the email's own-text blocks? (not quoted.)"""
+    """Is ref.line inside any of the email's own-text blocks? (not quoted.)
+
+    Audit M2: when the reader produced no own_lines, treat the whole body
+    as quoted (never fall back to accepting the whole message as own).
+    """
     for block in email.email.own_lines:
         start = block.ref.line
         end = block.ref.line_end or block.ref.line
         if start <= ref.line <= end:
             return True
-    # If the reader didn't demarcate own_lines, default to treating it as own text.
-    return not email.email.own_lines
+    return False
+
+
+def _is_level5(email: EmailRecord, ref) -> bool:
+    """True iff the fact's line sits inside a run flagged as addressing
+    automation or giving orders. Those facts are dropped (audit M2)."""
+    for flag_ref in (
+        email.email.addresses_automation_ref if email.email.addresses_automation else None,
+        email.email.gives_orders_ref if email.email.gives_orders else None,
+    ):
+        if flag_ref is None:
+            continue
+        start = flag_ref.line
+        end = flag_ref.line_end or flag_ref.line
+        if start <= ref.line <= end:
+            return True
+    return False
 
 
 def _in_quoted_text(email: EmailRecord, ref) -> bool:
@@ -111,12 +130,16 @@ def run(case: Case) -> list[Candidate]:
         waivers = em.email.waivers or []
         if not waivers:
             continue
-        sender = _addr_of(em.email.sender.value)
+        sender = em.true_sender()
 
         for w in waivers:
             # A waiver that names no AWB, invoice or month is not a finding
             # (audit B2: skip blanket waivers).
             if not (w.awb or w.invoice or w.month):
+                continue
+            # Facts on lines flagged as addressing automation or giving
+            # orders are dropped as level 5 (audit M2).
+            if _is_level5(em, w.ref):
                 continue
             # Figure out which contract(s) the sender has waivers authority on.
             authorised_contracts: list[str] = []
@@ -184,7 +207,7 @@ def run(case: Case) -> list[Candidate]:
                 if c.id != cid and (not c.amends or c.amends != cid):
                     continue
                 for row in c.terms.schedule1_rows:
-                    if row.email.strip().lower() == _addr_of(em.email.sender.value).lower() and "waivers" in row.categories:
+                    if row.email.strip().lower() == em.true_sender().lower() and "waivers" in row.categories:
                         evidence.append(SourceRef.from_ref(c.doc, row.ref))
                         break
                 break

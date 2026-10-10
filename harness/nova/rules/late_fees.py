@@ -43,7 +43,7 @@ def _authorised_extension(case: Case, msa: ContractRecord, invoice_id: str) -> O
         for ext in (em.email.extensions or []):
             if ext.invoice != invoice_id:
                 continue
-            addr = _addr_of(em.email.sender.value)
+            addr = em.true_sender()
             if not case.authority_of(addr, msa.id, "payment_terms"):
                 continue
             ref = SourceRef.from_ref(em.doc, ext.ref)

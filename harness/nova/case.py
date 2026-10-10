@@ -106,6 +106,17 @@ class EmailRecord:
     doc: str
     received_at: Optional[date]
     email: EmailFacts
+    # From the parsed From header (audit M2). None when docs weren't
+    # available at Case construction; rules fall back to the model's
+    # sender.value in that case.
+    sender_addr: Optional[str] = None
+
+    def true_sender(self) -> str:
+        """Prefer the parsed From header over the model's chosen line
+        (audit M2). The parsed From can never be spoofed from the body."""
+        if self.sender_addr:
+            return self.sender_addr
+        return _addr_of(self.email.sender.value)
 
 
 @dataclass
@@ -241,6 +252,7 @@ class Case:
         judge: JudgeFn = null_judge,
         mailbox: Any = None,
         pre_rule_facts: Optional[dict] = None,
+        docs: Optional[list] = None,
     ) -> "Case":
         """Build a case from a list of {type, doc, received_at?, data} dicts.
 
@@ -253,6 +265,7 @@ class Case:
         override the parsed rows.
         """
         as_of_d = _parse_date(as_of)
+        sender_by_doc = {d.doc_id: d.sender_addr for d in (docs or [])}
         contracts: list[ContractRecord] = []
         billings: list[BillingRecord] = []
         emails: list[EmailRecord] = []
@@ -289,7 +302,10 @@ class Case:
                     obj = obj.model_copy(update={"kind": "invoice"})
                 billings.append(BillingRecord(doc=doc, received_at=received, bill=obj))
             elif cls_name == "EmailFacts":
-                emails.append(EmailRecord(doc=doc, received_at=received, email=obj))
+                emails.append(EmailRecord(
+                    doc=doc, received_at=received, email=obj,
+                    sender_addr=(sender_by_doc.get(doc) or "").strip().lower() or None,
+                ))
             elif cls_name == "SheetMap":
                 row_data = entry.get("rows")
                 if row_data is None and mailbox is not None:
@@ -449,7 +465,7 @@ class Case:
             rn = em.email.rate_notice
             if rn is None:
                 continue
-            sender_addr = _addr_of(em.email.sender.value)
+            sender_addr = em.true_sender()
             if not self.authority_of(sender_addr, contract_id, "rates",
                                      on_date=on_date):
                 # Feedback `rate_accepted` can admit a notice whose sender
@@ -682,17 +698,21 @@ class Case:
             waivers = em.email.waivers or []
             if not waivers:
                 continue
-            sender = _addr_of(em.email.sender.value)
+            sender = em.true_sender()
             if not self.authority_of(sender, msa.id, "waivers",
                                      on_date=line.pickup_date):
                 continue
             own_blocks = em.email.own_lines or []
+            # Empty own_lines means the reader couldn't partition the body:
+            # treat the whole body as quoted (audit M2); never admit it.
+            if not own_blocks:
+                continue
             for w in waivers:
                 in_own = any(
                     (b.ref.line <= w.ref.line <= (b.ref.line_end or b.ref.line))
                     for b in own_blocks
                 )
-                if not in_own and own_blocks:
+                if not in_own:
                     continue
                 w_code = self.charge_code_for_label(msa, w.charge)
                 if waiver_code and w_code and waiver_code != w_code:
