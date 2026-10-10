@@ -59,7 +59,13 @@ def _transcribe_page(client: LLMClient, doc_id: str, page_png: bytes, page_index
 
 
 def read(client: LLMClient, record: DocRecord, pdf_bytes: Optional[bytes] = None) -> ReadResult:
-    """Transcribe the PDF with vision, then run the billing reader on the result."""
+    """Transcribe the PDF with vision, then run the billing reader on it.
+
+    Mutates ``record.pages`` and sets ``record.is_scan=False`` so the caller
+    can persist the transcription alongside the facts (audit §scan
+    evidence): rules citing a scan line must be able to resolve the quote
+    from the saved DocRecord.
+    """
     if pdf_bytes is None:
         raise ValueError("scan reader needs the raw PDF bytes")
     import pymupdf
@@ -70,5 +76,6 @@ def read(client: LLMClient, record: DocRecord, pdf_bytes: Optional[bytes] = None
         png = _render_page_png(pdf_bytes, i)
         lines = _transcribe_page(client, record.doc_id, png, i)
         transcribed_pages.append("\n".join(lines))
-    synthetic = replace(record, pages=transcribed_pages, is_scan=False)
-    return billing_reader.read(client, synthetic)
+    record.pages = transcribed_pages
+    record.is_scan = False
+    return billing_reader.read(client, record)

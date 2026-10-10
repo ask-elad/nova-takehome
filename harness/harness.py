@@ -228,6 +228,7 @@ def ingest(batch_dir: str, state_dir: str, estimate: bool = False) -> None:
         if _time.monotonic() > deadline:
             return
         # Always save the raw DocRecord (pages needed for quote resolution).
+        was_scan = record.is_scan
         if not state.doc_exists(record.doc_id):
             state.save_doc(record)
         if state.facts_exist(record.doc_id):
@@ -238,6 +239,10 @@ def ingest(batch_dir: str, state_dir: str, estimate: bool = False) -> None:
         type_, data = result
         received_at = record.received.isoformat()
         state.save_facts(record.doc_id, type_, data, received_at)
+        # Scan reader mutated pages with the transcription; persist them so
+        # rule evidence can resolve quotes from the saved record.
+        if was_scan and not record.is_scan:
+            state.save_doc(record)
 
     # First, re-attempt any already-saved DocRecord whose facts were never
     # produced (previous ingest timed out or hit a model error). audit M4.
