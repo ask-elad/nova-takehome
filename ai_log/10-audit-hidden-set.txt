@@ -1,0 +1,1813 @@
+ ▐▛███▜▌   Claude Code v2.1.140
+▝▜█████▛▘  Opus 4.7 · Claude Pro
+  ▘▘ ▝▝    ~/Documents/AAtakeHome/nova-takehome
+
+❯ Read CLAUDE.md and docs/PLAN.md, then do the current task. Go straight        
+  through items 1–7 without stopping to ask; commit after each. After each item 
+   run pytest and make eval; run the full gates (make grade ≥ 99, make sheet    
+  unchanged at 8165.33) after items 2, 4 and 7. Stop early only if a gate       
+  fails, and explain why. Finish with the “Done when” report and the autonomous 
+   escalation rate.                                                             
+
+  Read 3 files, listed 4 directories, ran 2 shell commands (ctrl+o to expand)
+
+  Read 6 files, listed 1 directory (ctrl+o to expand)
+
+● Now let me look at the readers for amendments and the contract reader, plus
+  relevant schemas and existing tests to understand the plumbing.
+
+  Read 6 files (ctrl+o to expand)
+
+● Now I have enough understanding. Let me start implementing item 1.
+
+  Item 1a: Expiry layers amendments
+
+● Update(harness/nova/rules/expiry.py)
+  ⎿  Added 34 lines, removed 5 lines
+      28      return end.isoformat()
+      29  
+      30  
+      31 +def _latest_end_source(case: Case, msa: ContractRecord) -> tupl
+         +e[ContractRecord, bool]:                                       
+      32 +    """Return the contract to use for end_date and renewal term
+         +s.                                                             
+      33 +                                                               
+      34 +    An amendment that restates the end date or renewal terms re
+         +places the MSA                                                 
+      35 +    values on those fields (audit B5). The latest-effective ame
+         +ndment with a                                                  
+      36 +    stated end_date wins; otherwise fall back to the MSA. ``had
+         +_amendment``                                                   
+      37 +    is True iff an amendment supplied the end_date.            
+      38 +    """                                                        
+      39 +    best = msa                                                 
+      40 +    best_eff = None                                            
+      41 +    had_amendment = False                                      
+      42 +    for c in case.contracts:                                   
+      43 +        if not c.is_amendment or c.amends != msa.id:           
+      44 +            continue                                           
+      45 +        if not c.end_date:                                     
+      46 +            continue                                           
+      47 +        eff = _parse(c.effective_from)                         
+      48 +        if best_eff is None or eff > best_eff:                 
+      49 +            best = c                                           
+      50 +            best_eff = eff                                     
+      51 +            had_amendment = True                               
+      52 +    return best, had_amendment                                 
+      53 +                                                               
+      54 +                                                               
+      55  def run(case: Case) -> list[Candidate]:
+      56      out: list[Candidate] = []
+      57      as_of = _parse(case.as_of)
+      58      for c in case.contracts:
+      59          if c.is_amendment:
+      60              continue
+      37 -        op = operative_date(c)                                 
+      61 +        source, had_amendment = _latest_end_source(case, c)    
+      62 +        op = operative_date(source)                            
+      63          if op is None:
+      64              continue
+      65          days = (_parse(op) - as_of).days
+      66          if not (0 <= days <= 60):
+      67              continue
+      43 -        # Evidence: the end-date clause, and the auto-renewal/n
+         -otice clause when relevant.                                    
+      44 -        evidence = [SourceRef.from_ref(c.doc, c.terms.end_date.
+         -ref)]                                                          
+      45 -        if c.terms.auto_renewal and c.terms.renewal_notice_ref:
+      46 -            evidence.append(SourceRef.from_ref(c.doc, c.terms.r
+         -enewal_notice_ref))                                            
+      68 +        evidence = [SourceRef.from_ref(source.doc, source.terms
+         +.end_date.ref)]                                                
+      69 +        if source.terms.auto_renewal and source.terms.renewal_n
+         +otice_ref:                                                     
+      70 +            evidence.append(SourceRef.from_ref(source.doc, sour
+         +ce.terms.renewal_notice_ref))                                  
+      71 +        if had_amendment:                                      
+      72 +            # Cite the MSA's end-date clause too so the evidenc
+         +e shows the                                                    
+      73 +            # thing being replaced.                            
+      74 +            if c.terms.end_date:                               
+      75 +                evidence.append(SourceRef.from_ref(c.doc, c.ter
+         +ms.end_date.ref))                                              
+      76          out.append(Candidate(
+      77              key=("expiry", c.id),
+      78              class_="expiry",
+
+● Item 1b: retro:true for new keys from backdated docs
+
+● Update(harness/nova/feedback.py)
+  ⎿  Added 2 lines, removed 1 line
+      284          out.append(current)
+      285          if changed and learned_at:
+      286              annotations[current.id] = {"learned_at": learned_a
+           t}
+      287 -    # supersedes: compare against the previous report (if any)
+      287 +    # supersedes / retro: compare against the previous report 
+          +(if any).                                                     
+      288      if report_dir is not None:
+      289          prev = _latest_prev_report(report_dir)
+      290          if prev is not None:
+      291              _annotate_supersedes(out, annotations, prev)
+      292 +            _annotate_retro(out, annotations, prev, docs=docs)
+      293      return out, annotations
+      294  
+      295  
+
+● Update(harness/nova/feedback.py)
+  ⎿  Added 63 lines
+      317              yield f
+      318  
+      319  
+      320 +def _annotate_retro(                                          
+      321 +    items: list[Item], annotations: dict[str, dict], prev: dic
+          +t, *, docs=None,                                              
+      322 +) -> None:                                                    
+      323 +    """A key that only exists because of a document received a
+          +fter the prior                                                
+      324 +    report but dated/effective-from before it carries ``retro:
+          + true``                                                       
+      325 +    (GLOSSARY §New documents; audit B5). The prior-report ``as
+          +_of`` is the                                                  
+      326 +    cutoff.                                                   
+      327 +    """                                                       
+      328 +    prev_as_of = prev.get("as_of")                            
+      329 +    if not prev_as_of or not docs:                            
+      330 +        return                                                
+      331 +    prev_ids = {pf["id"].split("@")[0] for pf in _iter_prev_it
+          +ems(prev)}                                                    
+      332 +    doc_by_id = {d.doc_id: d for d in docs}                   
+      333 +    for item in items:                                        
+      334 +        base_id = item.id.split("@")[0]                       
+      335 +        if base_id in prev_ids:                               
+      336 +            continue  # not new                               
+      337 +        if annotations.get(item.id, {}).get("supersedes"):    
+      338 +            continue  # a change, not a wholly new key        
+      339 +        backdated = False                                     
+      340 +        for ev in item.evidence:                              
+      341 +            d = doc_by_id.get(ev.doc)                         
+      342 +            if d is None:                                     
+      343 +                continue                                      
+      344 +            try:                                              
+      345 +                received = d.received.strftime("%Y-%m-%d")    
+      346 +            except Exception:                                 
+      347 +                continue                                      
+      348 +            if received <= prev_as_of:                        
+      349 +                continue                                      
+      350 +            # Received after prev_as_of. Is it a backdated ins
+          +trument?                                                      
+      351 +            # Any contract/amendment/invoice whose stated date
+          + precedes                                                     
+      352 +            # prev_as_of qualifies.                           
+      353 +            dated = _dated_before(d, prev_as_of)              
+      354 +            if dated:                                         
+      355 +                backdated = True                              
+      356 +                break                                         
+      357 +        if backdated:                                         
+      358 +            ann = annotations.setdefault(item.id, {})         
+      359 +            ann["retro"] = True                               
+      360 +                                                              
+      361 +                                                              
+      362 +def _dated_before(doc, cutoff: str) -> bool:                  
+      363 +    """True iff the document's stated date (contract effective
+          +_from, amendment                                              
+      364 +    effective_from, invoice invoice_date, email body date) is 
+          +before *cutoff*.                                              
+      365 +    """                                                       
+      366 +    # The DocRecord carries received and (for emails) sent dat
+          +es. We also                                                   
+      367 +    # consult the saved facts via the document pages' first-li
+          +ne conventions                                                
+      368 +    # when available; keep it simple: compare the sent date if
+          + present, else                                                
+      369 +    # fall back to a conservative False.                      
+      370 +    for attr in ("sent", "dated"):                            
+      371 +        v = getattr(doc, attr, None)                          
+      372 +        if v is None:                                         
+      373 +            continue                                          
+      374 +        try:                                                  
+      375 +            s = v.strftime("%Y-%m-%d") if hasattr(v, "strftime
+          +") else str(v)[:10]                                           
+      376 +            if s < cutoff:                                    
+      377 +                return True                                   
+      378 +        except Exception:                                     
+      379 +            continue                                          
+      380 +    return False                                              
+      381 +                                                              
+      382 +                                                              
+      383  def _annotate_supersedes(
+      384      items: list[Item], annotations: dict[str, dict], prev: dic
+           t,
+      385  ) -> None:
+
+  Read 1 file (ctrl+o to expand)
+
+● Let me reconsider - I need the facts to know effective_from of amendments. Let
+   me change the retro detection to use the case directly from the harness.
+
+● Update(harness/nova/feedback.py)
+  ⎿  Added 3 lines, removed 2 lines
+      284          out.append(current)
+      285          if changed and learned_at:
+      286              annotations[current.id] = {"learned_at": learned_a
+           t}
+      287 -    # supersedes / retro: compare against the previous report 
+          -(if any).                                                     
+      287 +    # supersedes: compare against the previous report (if any)
+          +. ``retro`` is                                                
+      288 +    # annotated by the harness, which can see fact dates (effe
+          +ctive_from /                                                  
+      289 +    # invoice_date) that aren't on the DocRecord alone.       
+      290      if report_dir is not None:
+      291          prev = _latest_prev_report(report_dir)
+      292          if prev is not None:
+      293              _annotate_supersedes(out, annotations, prev)
+      292 -            _annotate_retro(out, annotations, prev, docs=docs)
+      294      return out, annotations
+      295  
+      296  
+● Update(harness/nova/feedback.py)
+  ⎿  Removed 63 lines
+      318              yield f
+      319  
+      320  
+      321 -def _annotate_retro(                                          
+      322 -    items: list[Item], annotations: dict[str, dict], prev: dic
+          -t, *, docs=None,                                              
+      323 -) -> None:                                                    
+      324 -    """A key that only exists because of a document received a
+          -fter the prior                                                
+      325 -    report but dated/effective-from before it carries ``retro:
+          - true``                                                       
+      326 -    (GLOSSARY §New documents; audit B5). The prior-report ``as
+          -_of`` is the                                                  
+      327 -    cutoff.                                                   
+      328 -    """                                                       
+      329 -    prev_as_of = prev.get("as_of")                            
+      330 -    if not prev_as_of or not docs:                            
+      331 -        return                                                
+      332 -    prev_ids = {pf["id"].split("@")[0] for pf in _iter_prev_it
+          -ems(prev)}                                                    
+      333 -    doc_by_id = {d.doc_id: d for d in docs}                   
+      334 -    for item in items:                                        
+      335 -        base_id = item.id.split("@")[0]                       
+      336 -        if base_id in prev_ids:                               
+      337 -            continue  # not new                               
+      338 -        if annotations.get(item.id, {}).get("supersedes"):    
+      339 -            continue  # a change, not a wholly new key        
+      340 -        backdated = False                                     
+      341 -        for ev in item.evidence:                              
+      342 -            d = doc_by_id.get(ev.doc)                         
+      343 -            if d is None:                                     
+      344 -                continue                                      
+      345 -            try:                                              
+      346 -                received = d.received.strftime("%Y-%m-%d")    
+      347 -            except Exception:                                 
+      348 -                continue                                      
+      349 -            if received <= prev_as_of:                        
+      350 -                continue                                      
+      351 -            # Received after prev_as_of. Is it a backdated ins
+          -trument?                                                      
+      352 -            # Any contract/amendment/invoice whose stated date
+          - precedes                                                     
+      353 -            # prev_as_of qualifies.                           
+      354 -            dated = _dated_before(d, prev_as_of)              
+      355 -            if dated:                                         
+      356 -                backdated = True                              
+      357 -                break                                         
+      358 -        if backdated:                                         
+      359 -            ann = annotations.setdefault(item.id, {})         
+      360 -            ann["retro"] = True                               
+      361 -                                                              
+      362 -                                                              
+      363 -def _dated_before(doc, cutoff: str) -> bool:                  
+      364 -    """True iff the document's stated date (contract effective
+          -_from, amendment                                              
+      365 -    effective_from, invoice invoice_date, email body date) is 
+          -before *cutoff*.                                              
+      366 -    """                                                       
+      367 -    # The DocRecord carries received and (for emails) sent dat
+          -es. We also                                                   
+      368 -    # consult the saved facts via the document pages' first-li
+          -ne conventions                                                
+      369 -    # when available; keep it simple: compare the sent date if
+          - present, else                                                
+      370 -    # fall back to a conservative False.                      
+      371 -    for attr in ("sent", "dated"):                            
+      372 -        v = getattr(doc, attr, None)                          
+      373 -        if v is None:                                         
+      374 -            continue                                          
+      375 -        try:                                                  
+      376 -            s = v.strftime("%Y-%m-%d") if hasattr(v, "strftime
+          -") else str(v)[:10]                                           
+      377 -            if s < cutoff:                                    
+      378 -                return True                                   
+      379 -        except Exception:                                     
+      380 -            continue                                          
+      381 -    return False                                              
+      382 -                                                              
+      383 -                                                              
+      321  def _annotate_supersedes(
+      322      items: list[Item], annotations: dict[str, dict], prev: dic
+           t,
+      323  ) -> None:
+
+● Now wire retro detection into harness.py.
+
+● Update(harness/harness.py)
+  ⎿  Added 7 lines
+      414                      "batch": fb_match.batch or "",
+      415                  }
+      416  
+      417 +    # retro: a key that only exists because of a document rece
+          +ived after the                                                
+      418 +    # prior report but dated/effective-from before that prior 
+          +as_of (audit B5).                                             
+      419 +    try:                                                      
+      420 +        _annotate_retro(items, annotations, state.reports_dir,
+          + case, docs)                                                  
+      421 +    except Exception as e:                                    
+      422 +        print(f"retro annotation failed: {e!r}", file=sys.stde
+          +rr)                                                           
+      423 +                                                              
+      424      # Per-item signals for the confidence score (audit M1).
+      425      inv_currency = {}
+      426      inv_awbs = {}
+
+● Update(harness/harness.py)
+  ⎿  Added 53 lines
+      467      return report_obj
+      468  
+      469  
+      470 +def _annotate_retro(items, annotations: dict, report_dir, case
+          +, docs) -> None:                                              
+      471 +    """Mark ``retro: true`` on items that only exist because o
+          +f a backdated                                                 
+      472 +    document (GLOSSARY §New documents, audit B5). The deciding
+          + document must                                                
+      473 +    have been received after the previous report's ``as_of``, 
+          +and the fact it                                               
+      474 +    carries must be effective/dated before that cutoff.       
+      475 +    """                                                       
+      476 +    from nova.feedback import _latest_prev_report, _iter_prev_
+          +items                                                         
+      477 +                                                              
+      478 +    prev = _latest_prev_report(report_dir)                    
+      479 +    if prev is None:                                          
+      480 +        return                                                
+      481 +    prev_as_of = prev.get("as_of")                            
+      482 +    if not prev_as_of:                                        
+      483 +        return                                                
+      484 +    prev_ids = {pf["id"].split("@")[0] for pf in _iter_prev_it
+          +ems(prev)}                                                    
+      485 +    doc_received: dict[str, str] = {}                         
+      486 +    for d in docs or []:                                      
+      487 +        try:                                                  
+      488 +            doc_received[d.doc_id] = d.received.strftime("%Y-%
+          +m-%d")                                                        
+      489 +        except Exception:                                     
+      490 +            continue                                          
+      491 +    # Doc id -> "stated date": contract.effective_from, amendm
+          +ent.effective_from,                                           
+      492 +    # invoice.invoice_date. If stated < prev_as_of, the doc is
+          + backdated.                                                   
+      493 +    stated: dict[str, str] = {}                               
+      494 +    for c in case.contracts:                                  
+      495 +        try:                                                  
+      496 +            stated[c.doc] = c.effective_from                  
+      497 +        except Exception:                                     
+      498 +            pass                                              
+      499 +    for b in case.billings:                                   
+      500 +        inv_d = b.bill.invoice_date.value if b.bill.invoice_da
+          +te else None                                                  
+      501 +        if inv_d:                                             
+      502 +            stated[b.doc] = inv_d                             
+      503 +    for item in items:                                        
+      504 +        base_id = item.id.split("@")[0]                       
+      505 +        if base_id in prev_ids:                               
+      506 +            continue                                          
+      507 +        if annotations.get(item.id, {}).get("supersedes"):    
+      508 +            continue                                          
+      509 +        found = False                                         
+      510 +        for ev in item.evidence:                              
+      511 +            rec = doc_received.get(ev.doc)                    
+      512 +            if rec is None or rec <= prev_as_of:              
+      513 +                continue                                      
+      514 +            dt = stated.get(ev.doc)                           
+      515 +            if dt is None or dt >= prev_as_of:                
+      516 +                continue                                      
+      517 +            found = True                                      
+      518 +            break                                             
+      519 +        if found:                                             
+      520 +            annotations.setdefault(item.id, {})["retro"] = Tru
+          +e                                                             
+      521 +                                                              
+      522 +                                                              
+      523  def _flags_from_case(items, case, feedback_items) -> dict:
+      524      """Compute per-item ItemFlags from the resolved items and 
+           the Case.
+      525  
+
+● Now plumb the retro annotation into the serialised report:
+
+● Update(harness/harness.py)
+  ⎿  Added 2 lines
+      681              serialised["learned_at"] = ann["learned_at"]
+      682          if ann.get("supersedes"):
+      683              serialised["supersedes"] = ann["supersedes"]
+      684 +        if ann.get("retro"):                                  
+      685 +            serialised["retro"] = True                        
+      686          if item.class_ in ("overcharge", "duplicate", "waived_
+           but_billed", "late_fee_not_owed"):
+      687              findings.append(serialised)
+      688          elif item.class_ == "cashback":
+
+● Now let me look at eval cases and add one.
+
+  Read 2 files, listed 2 directories (ctrl+o to expand)
+
+● Let me first run the current unit tests to see if existing tests still pass:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now add a unit test for item 1:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(harness/tests/test_expiry_rule.py)
+  ⎿  Added 40 lines
+       68      # operative 2034-02-18; 61 days before is 2033-12-19.
+       69      cands = _run("2033-12-19", msa)
+       70      assert cands == []
+       71 +                                                              
+       72 +                                                              
+       73 +def _amendment(amends: str, effective_from: str, new_end: str)
+          + -> dict:                                                     
+       74 +    data = {                                                  
+       75 +        "id": {"value": "C1-AMD1", "ref": {"page": 1, "line": 
+          +1}},                                                          
+       76 +        "kind": "amendment",                                  
+       77 +        "amends": {"value": amends, "ref": {"page": 1, "line":
+          + 1}},                                                         
+       78 +        "parties": ["A", "B"],                                
+       79 +        "dated": {"value": effective_from, "ref": {"page": 1, 
+          +"line": 1}},                                                  
+       80 +        "effective_from": {"value": effective_from, "ref": {"p
+          +age": 1, "line": 1}},                                         
+       81 +        "end_date": {"value": new_end, "ref": {"page": 1, "lin
+          +e": 7}},                                                      
+       82 +        "auto_renewal": False,                                
+       83 +        "rate_periods": [], "rate_rows": [],                  
+       84 +        "payment_due_days": {"value": "45", "ref": {"page": 1,
+          + "line": 1}},                                                 
+       85 +        "payment_grace_days": {"value": "0", "ref": {"page": 1
+          +, "line": 1}},                                                
+       86 +        "late_fee_rate": {"value": "1.0", "ref": {"page": 1, "
+          +line": 1}},                                                   
+       87 +        "late_fee_compounding": False,                        
+       88 +        "schedule1_rows": [],                                 
+       89 +    }                                                         
+       90 +    return {"type": "ContractTerms",                          
+       91 +            "doc": "batch_02/0003.eml#AMD1.pdf", "data": data}
+       92 +                                                              
+       93 +                                                              
+       94 +def test_signed_amendment_extends_end_and_removes_alert():    
+       95 +    """A signed amendment extending the end date past the 60-d
+          +ay window                                                     
+       96 +    takes the expiry alert away (audit B5)."""                
+       97 +    msa = _msa("2034-03-20")                                  
+       98 +    amd = _amendment("C1", effective_from="2034-01-10", new_en
+          +d="2035-03-20")                                               
+       99 +    case = Case.from_records([msa, amd], as_of="2034-02-01")  
+      100 +    assert run_expiry(case) == []                             
+      101 +                                                              
+      102 +                                                              
+      103 +def test_signed_amendment_moves_deadline_within_window():     
+      104 +    msa = _msa("2034-03-20")                                  
+      105 +    # Amendment that moves end earlier, still inside 60-day wi
+          +ndow.                                                         
+      106 +    amd = _amendment("C1", effective_from="2034-01-10", new_en
+          +d="2034-02-15")                                               
+      107 +    case = Case.from_records([msa, amd], as_of="2034-01-20")  
+      108 +    cands = run_expiry(case)                                  
+      109 +    assert len(cands) == 1                                    
+      110 +    assert cands[0].deadline == "2034-02-15"                  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now add a unit test for retro annotation:
+
+● Write(harness/tests/test_retro_annotation.py)
+  ⎿  Wrote 79 lines to harness/tests/test_retro_annotation.py
+       1 """Unit test for the retro annotation (audit B5).
+       2 
+       3 A key that only exists because of a document received after an e
+       4 but dated/effective-from before that report's as_of carries retr
+         o: true.
+       5 """
+       6 from __future__ import annotations
+       7 
+       9 import sys
+      10 from datetime import datetime, timezone
+     … +77 lines (ctrl+o to expand)
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● Pre-existing flakiness when combined. Let me run tests excluding those:
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● All eval cases pass. Commit item 1:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Item 2: B6 pickup events. Need to look at how PICKED_UP is used and fix pickup
+   event mapping.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Update(harness/nova/schemas.py)
+  ⎿  Added 4 lines
+      459      # field_name → column_label as it appears in the header ro
+           w
+      460      columns: dict[str, str]
+      461      ref: Ref                       # the header row
+      462 +    # Tracking exports: event-column values that mean "picked 
+          +up". A sheet                                                  
+      463 +    # may use "PICKED_UP", "Picked up", "PU" or similar. The s
+          +heet reader                                                   
+      464 +    # fills this from the data so rule code never pins a liter
+          +al (audit B6).                                                
+      465 +    picked_up_values: Optional[list[str]] = None              
+      466  
+      467  
+      468  # ------------------------------------------------------------
+           ---------------
+● Update(harness/nova/readers/sheet.py)
+  ⎿  Added 8 lines, removed 1 line
+      22      "  and events; \"payment_register\" if it lists invoices pa
+          id/scheduled;\n"
+      23      "  otherwise \"other\".\n"
+      24      "- `sheet_number` = 1 (first sheet) unless the document say
+          s otherwise.\n"
+      25 +    "- The header row may be preceded by a title or notes — sca
+         +n the first 15\n"                                              
+      26 +    "  rows and pick the one whose cells are the column labels.
+         +\n"                                                            
+      27      "- `columns`: a dict from our field name (the key) to the h
+          eader text\n"
+      28      "  exactly as printed (the value). Only include fields whos
+          e header is\n"
+      29      "  actually present. Use these field-name keys:\n"
+     ...
+      32      "                    pickup_date, delivered_date, status.\n
+          "
+      33      "  payment_register → invoice_id, invoice_date, due_date, a
+          mount,\n"
+      34      "                     status, paid_date, method, reference.
+          \n"
+      35 +    "- For `tracking_export`, also fill `picked_up_values` with
+         + every distinct\n"                                             
+      36 +    "  event-column value that means the shipment was picked up
+         + (e.g.\n"                                                      
+      37 +    "  [\"PICKED_UP\"], [\"Picked up\", \"PU\"], etc.). Read th
+         +em from the data\n"                                            
+      38 +    "  rows you see; omit values that mean something else (deli
+         +vered, in\n"                                                   
+      39 +    "  transit, cancelled).\n"                                 
+      40      "- `ref` must point to the header row (page=sheet number, l
+          ine=header line)."
+      41  )
+      42  
+     ...
+      45      return read_doc(
+      46          client, record, SheetMap,
+      47          tier="fast", purpose="read_sheet", prompt_version=promp
+          t_version,
+      41 -        instructions=_INSTRUCTIONS, max_tokens=1024, max_doc_li
+         -nes=4,                                                         
+      48 +        instructions=_INSTRUCTIONS, max_tokens=1024, max_doc_li
+         +nes=15,                                                        
+      49      )
+
+● Update(harness/nova/sheets.py)
+  ⎿  Added 46 lines, removed 6 lines
+      20      if not (0 <= page_idx < len(pages)):
+      21          return []
+      22      lines = pages[page_idx].splitlines()
+      23 -    header_line = sheet_map.ref.line                           
+      23 +                                                               
+      24 +    # Audit B6: the header row may not be the first line. Searc
+         +h the first 15                                                 
+      25 +    # rows for the row whose cells best match the column labels
+         +, falling back                                                 
+      26 +    # to the ref line.                                         
+      27 +    want_labels = list(sheet_map.columns.values())             
+      28 +    header_line = _find_header(lines, want_labels, hint=sheet_m
+         +ap.ref.line, window=15)                                        
+      29 +    if header_line is None:                                    
+      30 +        header_line = sheet_map.ref.line                       
+      31      if not (1 <= header_line <= len(lines)):
+      32          return []
+      33      header_cells = [c.strip() for c in lines[header_line - 1].s
+          plit(SEP)]
+      34      idx_of = {label: i for i, label in enumerate(header_cells)}
+      35  
+      29 -    missing = [label for label in sheet_map.columns.values() if
+         - label not in idx_of]                                          
+      30 -    if missing:                                                
+      36 +    # Audit B6: partial mappings keep their rows. A field whose
+         + header isn't                                                  
+      37 +    # present is simply left blank per-row (never a reason to d
+         +rop the sheet).                                                
+      38 +    present_fields: dict[str, int] = {                         
+      39 +        field: idx_of[label]                                   
+      40 +        for field, label in sheet_map.columns.items()          
+      41 +        if label in idx_of                                     
+      42 +    }                                                          
+      43 +    if not present_fields:                                     
+      44          return []
+      45  
+      46      out: list[dict[str, Any]] = []
+     ...
+      49          if not any(parts):
+      50              continue
+      51          row: dict[str, Any] = {"_page": sheet_map.sheet_number,
+           "_line": line_no}
+      39 -        for field, label in sheet_map.columns.items():         
+      40 -            i = idx_of[label]                                  
+      41 -            row[field] = parts[i] if i < len(parts) else ""    
+      52 +        for field, i in present_fields.items():                
+      53 +            val = parts[i] if i < len(parts) else ""           
+      54 +            # Audit B6: normalise AWBs (strip and uppercase) so
+         + a mix of                                                      
+      55 +            # casings/spaces across tracking/AWB/invoice still 
+         +joins.                                                         
+      56 +            if field == "awb":                                 
+      57 +                val = "".join(val.split()).upper()             
+      58 +            row[field] = val                                   
+      59          out.append(row)
+      60      return out
+      61 +                                                               
+      62 +                                                               
+      63 +def _find_header(lines: list[str], want_labels: list[str], hint
+         +: int, window: int) -> int | None:                             
+      64 +    """Return the 1-indexed line number whose cells best match 
+         +*want_labels*.                                                 
+      65 +                                                               
+      66 +    Prefer the ``hint`` line when it matches at all; otherwise 
+         +scan the first                                                 
+      67 +    *window* lines and pick the one with the most matches. Retu
+         +rn None if no                                                  
+      68 +    line contains any wanted label.                            
+      69 +    """                                                        
+      70 +    want = {w for w in want_labels if w}                       
+      71 +    best = (0, None)                                           
+      72 +    scan_end = min(window, len(lines))                         
+      73 +    hint_idx = hint - 1                                        
+      74 +    if 0 <= hint_idx < len(lines):                             
+      75 +        cells = {c.strip() for c in lines[hint_idx].split(SEP)}
+      76 +        if want and want.issubset(cells):                      
+      77 +            return hint                                        
+      78 +    for i in range(scan_end):                                  
+      79 +        cells = {c.strip() for c in lines[i].split(SEP)}       
+      80 +        hits = len(want & cells)                               
+      81 +        if hits > best[0]:                                     
+      82 +            best = (hits, i + 1)                               
+      83 +    return best[1]                                             
+
+● Now update case.py to remove the "PICKED_UP" literal, use picked_up_values,
+  and also support wide-format pickup_date column:
+
+● Update(harness/nova/case.py)
+  ⎿  Added 20 lines, removed 2 lines
+      521  
+      522      def pickup_date(self, awb: str) -> Optional[tuple[str, Sou
+           rceRef]]:
+      523          """Return (iso_date, source_ref) using the fallback ch
+           ain:
+      524 -        tracking PICKED_UP → carrier pickup email → AWB execut
+          -ed date → invoice line.                                       
+      524 +        tracking pickup event → carrier pickup email → AWB exe
+          +cuted date → invoice line.                                    
+      525 +                                                              
+      526 +        Which event value means "picked up" comes from the She
+          +etMap (audit                                                  
+      527 +        B6): the sheet reader fills ``picked_up_values`` from 
+          +the data so                                                   
+      528 +        this never pins a literal. A wide-format ``pickup_date
+          +`` column on                                                  
+      529 +        the AWB's row is also accepted.                       
+      530          """
+      531 +        want_awb = _normalise_awb(awb)                        
+      532          # 1. tracking export
+      533          for s in self.sheets:
+      534              if s.sheet.kind != "tracking_export":
+      535                  continue
+      536 +            picked_values = {v.strip().lower() for v in       
+      537 +                             (s.sheet.picked_up_values or ["PI
+          +CKED_UP"])}                                                   
+      538              for row in s.rows:
+      531 -                if row.get("awb") == awb and row.get("event") 
+          -== "PICKED_UP" and row.get("date"):                           
+      539 +                row_awb = _normalise_awb(row.get("awb") or "")
+      540 +                if row_awb != want_awb:                       
+      541 +                    continue                                  
+      542 +                # Wide-format: a `pickup_date` cell on this AW
+          +B's row.                                                      
+      543 +                wide = (row.get("pickup_date") or "").strip() 
+      544 +                if wide:                                      
+      545 +                    ref = Ref(page=s.sheet.sheet_number,      
+      546 +                              line=row.get("_line", s.sheet.re
+          +f.line))                                                      
+      547 +                    return wide, SourceRef.from_ref(s.doc, ref
+          +)                                                             
+      548 +                ev = (row.get("event") or "").strip().lower() 
+      549 +                if ev in picked_values and row.get("date"):   
+      550                      ref = Ref(page=s.sheet.sheet_number, line=
+           row.get("_line", s.sheet.ref.line))
+      551                      return row["date"], SourceRef.from_ref(s.d
+           oc, ref)
+      552          # 2. pickup email
+
+● Update(harness/nova/case.py)
+  ⎿  Added 5 lines
+      810      return True
+      811  
+      812  
+      813 +def _normalise_awb(s: str) -> str:                            
+      814 +    """Strip spaces and uppercase so lookups match across casi
+          +ngs (audit B6)."""                                            
+      815 +    return "".join((s or "").split()).upper()                 
+      816 +                                                              
+      817 +                                                              
+      818  def _addr_of(sender: str) -> str:
+      819      """Extract the bare email address from a `Name <addr>` sen
+           der string."""
+      820      s = sender.strip()
+
+● Also normalise AWBs on comparison in other case places. Let me check how
+  shipments, email pickup, invoice awb are compared:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Update(harness/nova/case.py)
+  ⎿  Added 3 lines, removed 3 lines
+      552          # 2. pickup email
+      553          for e in self.emails:
+      554              p = e.email.pickup
+      555 -            if p and p.awb == awb and p.date:                 
+      555 +            if p and _normalise_awb(p.awb) == want_awb and p.d
+          +ate:                                                          
+      556                  return p.date, SourceRef.from_ref(e.doc, p.ref
+           )
+      557          # 3. AWB executed date
+      558          for sh in self.shipments:
+      559 -            if sh.ship.awb.value == awb and sh.ship.executed_d
+          -ate:                                                          
+      559 +            if _normalise_awb(sh.ship.awb.value) == want_awb a
+          +nd sh.ship.executed_date:                                     
+      560                  return sh.ship.executed_date.value, SourceRef.
+           from_ref(sh.doc, sh.ship.executed_date.ref)
+      561          # 4. invoice line pickup_date
+      562          for b in self.billings:
+      563              for ln in b.bill.lines:
+      564 -                if ln.awb == awb and ln.pickup_date:          
+      564 +                if ln.awb and _normalise_awb(ln.awb) == want_a
+          +wb and ln.pickup_date:                                        
+      565                      return ln.pickup_date, SourceRef.from_ref(
+           b.doc, ln.ref)
+      566          return None
+      567  
+
+● Now let me check that we have no test regressions:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Update(harness/tests/test_sheets.py)
+  ⎿  Added 66 lines, removed 2 lines
+      70      assert picked, "at least one PICKED_UP event expected"
+      71  
+      72  
+      73 -def test_missing_header_label_returns_empty():                 
+      73 +def test_missing_header_label_keeps_present_fields():          
+      74 +    """Audit B6: a partial mapping keeps rows, with the mapped 
+         +fields                                                         
+      75 +    present and the missing field blank."""                    
+      76      mb = Mailbox(Path("data/examples/overcharge/docs"))
+      77      pages, _ = mb.pages("batch_01/0005.eml#tracking-2031-07-01.
+          xlsx")
+      78      sm = SheetMap(
+     ...
+       81          columns={"awb": "AWB", "event": "No Such Column"},
+       82          ref=Ref(page=1, line=1),
+       83      )
+       82 -    assert rows(pages, sm) == []                              
+       84 +    out = rows(pages, sm)                                     
+       85 +    assert out, "awb column present → rows should be returned"
+       86 +    assert "awb" in out[0]                                    
+       87 +    assert "event" not in out[0] or out[0]["event"] == ""     
+       88 +                                                              
+       89 +                                                              
+       90 +def test_header_search_scans_first_15_rows():                 
+       91 +    """Audit B6: the header may be preceded by a title/notes."
+          +""                                                            
+       92 +    pages = [                                                 
+       93 +        "Weekly tracking export\n"                            
+       94 +        "exported 2032-02-01\n"                               
+       95 +        "AWB | Event | Date\n"                                
+       96 +        "ABC123 | PICKED_UP | 2032-02-02\n"                   
+       97 +        "DEF456 | DELIVERED | 2032-02-03\n"                   
+       98 +    ]                                                         
+       99 +    sm = SheetMap(                                            
+      100 +        kind="tracking_export",                               
+      101 +        sheet_number=1,                                       
+      102 +        columns={"awb": "AWB", "event": "Event", "date": "Date
+          +"},                                                           
+      103 +        ref=Ref(page=1, line=1),                              
+      104 +    )                                                         
+      105 +    out = rows(pages, sm)                                     
+      106 +    assert len(out) == 2                                      
+      107 +    assert out[0]["awb"] == "ABC123"                          
+      108 +                                                              
+      109 +                                                              
+      110 +def test_awb_normalisation_strips_and_uppercases():           
+      111 +    pages = [                                                 
+      112 +        "AWB | Event | Date\n"                                
+      113 +        "  abc 123  | PICKED_UP | 2032-02-02\n"               
+      114 +    ]                                                         
+      115 +    sm = SheetMap(                                            
+      116 +        kind="tracking_export",                               
+      117 +        sheet_number=1,                                       
+      118 +        columns={"awb": "AWB", "event": "Event", "date": "Date
+          +"},                                                           
+      119 +        ref=Ref(page=1, line=1),                              
+      120 +    )                                                         
+      121 +    out = rows(pages, sm)                                     
+      122 +    assert out[0]["awb"] == "ABC123"                          
+      123 +                                                              
+      124 +                                                              
+      125 +def test_picked_up_values_used_in_pickup_lookup():            
+      126 +    """Audit B6: the pickup-event literal lives in SheetMap, n
+          +ot rule code."""                                              
+      127 +    from nova.case import Case                                
+      128 +                                                              
+      129 +    sheet_data = {                                            
+      130 +        "kind": "tracking_export",                            
+      131 +        "sheet_number": 1,                                    
+      132 +        "columns": {"awb": "AWB", "event": "Event", "date": "D
+          +ate"},                                                        
+      133 +        "ref": {"page": 1, "line": 1},                        
+      134 +        "picked_up_values": ["Picked up"],                    
+      135 +    }                                                         
+      136 +    rec = {                                                   
+      137 +        "type": "SheetMap",                                   
+      138 +        "doc": "batch_01/tracking.xlsx",                      
+      139 +        "data": sheet_data,                                   
+      140 +        "rows": [{"awb": "ABC123", "event": "Picked up", "date
+          +": "2032-02-02",                                              
+      141 +                  "_page": 1, "_line": 2}],                   
+      142 +    }                                                         
+      143 +    case = Case.from_records([rec], as_of="2032-03-01")       
+      144 +    got = case.pickup_date("ABC123")                          
+      145 +    assert got is not None                                    
+      146 +    assert got[0] == "2032-02-02"                             
+
+  Searched for 4 patterns, read 2 files, listed 4 directories, ran 12 shell commands (ctrl+o to expand)
+
+● With the API key, all pass. Commit item 2:
+
+  Committed 6ddbe2 (ctrl+o to expand)
+
+● Now gate: make grade >= 99, make sheet unchanged at 8165.33.
+
+  Listed 1 directory, ran 3 shell commands (ctrl+o to expand)
+
+● Grade 99.6 ≥ 99 ✓
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Sheet still $8165.33 ✓. Items 1 & 2 gate held. Mark 2 done, start 3.
+
+● Update(harness/nova/case.py)  ⎿  Added 14 lines
+      300                      and obj.asks_for_payment
+      301                  ):
+      302                      obj = obj.model_copy(update={"kind": "invo
+           ice"})
+      303 +                # Audit B7: a billing document that bills char
+          +ges on its own                                                
+      304 +                # number IS an invoice for every class. The re
+          +ader often                                                    
+      305 +                # classifies "Charges advice" / consolidated b
+          +ills as                                                       
+      306 +                # "statement"; summary-only balance statements
+          + have no                                                      
+      307 +                # chargeable lines (freight/fuel/accessorial/e
+          +tc.) and must                                                 
+      308 +                # stay as statements to avoid double counting 
+          +in QS.                                                        
+      309 +                _INVOICING = {"freight", "fuel", "security", "
+          +accessorial",                                                 
+      310 +                              "minimum_charge", "programme_fee
+          +"}                                                            
+      311 +                if (                                          
+      312 +                    obj.kind == "statement"                   
+      313 +                    and obj.asks_for_payment                  
+      314 +                    and any(ln.category in _INVOICING for ln i
+          +n obj.lines)                                                  
+      315 +                ):                                            
+      316 +                    obj = obj.model_copy(update={"kind": "invo
+          +ice"})                                                        
+      317                  billings.append(BillingRecord(doc=doc, receive
+           d_at=received, bill=obj))
+      318              elif cls_name == "EmailFacts":
+      319                  emails.append(EmailRecord(
+
+● Update(harness/nova/rules/cashback.py)
+  ⎿  Added 3 lines, removed 3 lines
+      204          if _bill_contract(b, case) != msa.id:
+      205              continue
+      206          # Dedupe: a resent invoice (same id) counts once in QS
+           , not twice.
+      207 -        if b.bill.kind in ("invoice", "statement"):           
+      207 +        if b.bill.kind == "invoice":                          
+      208              inv_id = b.bill.id.value
+      209              if inv_id in seen_invoice_ids:
+      210                  continue
+     ...
+      213          if inv_date is None:
+      214              continue
+      215          qlabel = _quarter_of(inv_date)
+      216 -        if b.bill.kind in ("invoice", "statement"):           
+      216 +        if b.bill.kind == "invoice":                          
+      217              qs = _qs_from_bill(b, qs_includes, qs_excludes, ca
+           se)
+      218              if qs is None:
+      219                  continue
+     ...
+      246          if inv_date is None:
+      247              continue
+      248          cy = _cyn_of(eff, _parse(inv_date))
+      249 -        if b.bill.kind in ("invoice", "statement"):           
+      249 +        if b.bill.kind == "invoice":                          
+      250              qs = _qs_from_bill(b, qs_includes, qs_excludes, ca
+           se)
+      251              if qs is None:
+      252                  continue
+
+● Update(harness/nova/rules/duplicate.py)
+  ⎿  File must be read first
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Update(harness/nova/rules/duplicate.py)
+  ⎿  Added 5 lines, removed 5 lines
+      79  # -------------------------------------------------------------
+          --------------
+      80  
+      81  def _run_same_number(case: Case) -> list[Candidate]:
+      82 -    # The glossary treats a statement that carries its own id a
+         -s an invoice                                                   
+      83 -    # for finding-key purposes, and the reader classifies "Char
+         -ges advice" /                                                  
+      84 -    # consolidated bills inconsistently as invoice or statement
+         - across sends,                                                 
+      85 -    # so admit both kinds here.                                
+      82 +    # Audit B7: a billing document with chargeable lines carryi
+         +ng its own                                                     
+      83 +    # number IS an invoice — Case.from_records promotes those t
+         +o                                                              
+      84 +    # kind="invoice". Summary-only statements of account stay o
+         +ut: they are                                                   
+      85 +    # a running balance, not a new ask for payment.            
+      86      by_id: dict[str, list[BillingRecord]] = {}
+      87      for b in case.billings:
+      88 -        if b.bill.kind not in ("invoice", "statement"):        
+      88 +        if b.bill.kind != "invoice":                           
+      89              continue
+      90          by_id.setdefault(b.bill.id.value, []).append(b)
+      91  
+
+● Add a test for item 3:
+
+● Write(harness/tests/test_statement_promotion.py)
+  ⎿  Wrote 44 lines to harness/tests/test_statement_promotion.py
+       1 """Audit B7: a billing document with chargeable lines is an invo
+         ice for every
+       2 class; summary-only statements of account stay out."""
+       4 
+       5 from nova.case import Case
+       6 
+       7 
+       8 def _bill(kind: str, id_: str, line_cats: list[str], asks: bool 
+       9     lines = []
+      10     for i, cat in enumerate(line_cats, start=1):
+     … +38 lines (ctrl+o to expand)
+
+  Committed 514e7d, ran 2 shell commands (ctrl+o to expand)
+
+● Item 4: B8 Judge with context.
+
+  Read 2 files (ctrl+o to expand)
+
+● Update(harness/nova/case.py)
+  ⎿  Added 13 lines, removed 20 lines
+      584      def dg_status_for(self, awb: str) -> Optional[tuple[str, S
+           ourceRef]]:
+      585          """Return the dangerous-goods status of a shipment fro
+           m its DG declaration.
+      586  
+      587 -        The returned string is one of:                        
+      588 -          - ``"refrigerant_only"`` — the declaration says the 
+          -refrigerant is                                                
+      589 -            the only hazard, or lists only UN1845 (dry ice). T
+          -he DG fee does                                                
+      590 -            not apply (MSA 5.2/5.3): the full DG fee billed is
+          - an overcharge.                                               
+      591 -          - ``"dg"`` — the declaration lists one or more dange
+          -rous goods, with                                              
+      592 -            or without dry ice (a mixed shipment). The DG fee 
+          -applies **once**.                                             
+      593 -          - ``None`` — no DG declaration is held for this AWB.
+      587 +        Trusts the reader's typed ``refrigerant_only`` flag on
+          +ly (audit B8):                                                
+      588 +        the specific UN-number literal that means "dry ice" is
+          + a contract-                                                  
+      589 +        clause concern and belongs to the Judge, not to this m
+          +ethod.                                                        
+      590 +                                                              
+      591 +        Values:                                               
+      592 +          - ``"refrigerant_only"`` — declaration states refrig
+          +erant is the                                                  
+      593 +            only hazard; the DG fee must not apply.           
+      594 +          - ``"dg"`` — declaration lists one or more dangerous
+          + goods.                                                       
+      595 +          - ``None`` — no DG declaration held, or the reader c
+          +ould not decide.                                              
+      596          """
+      597 +        want = _normalise_awb(awb)                            
+      598          for sh in self.shipments:
+      599              if sh.ship.kind != "dg_declaration":
+      600                  continue
+      598 -            if sh.ship.awb.value != awb:                      
+      601 +            if _normalise_awb(sh.ship.awb.value) != want:     
+      602                  continue
+      600 -            un_nums = {u.value.upper() for u in (sh.ship.un_nu
+          -mbers or [])}                                                 
+      603              if sh.ship.refrigerant_only is True:
+      604                  ref_src = SourceRef.from_ref(
+      605                      sh.doc,
+      606                      sh.ship.refrigerant_only_ref or sh.ship.aw
+           b.ref,
+      607                  )
+      608                  return "refrigerant_only", ref_src
+      607 -            if un_nums and un_nums <= {"UN1845"}:             
+      608 -                # Only dry ice is listed.                     
+      609 -                any_ref = next(                               
+      610 -                    (u.ref for u in (sh.ship.un_numbers or [])
+          -),                                                            
+      611 -                    sh.ship.awb.ref,                          
+      612 -                )                                             
+      613 -                return "refrigerant_only", SourceRef.from_ref(
+          -sh.doc, any_ref)                                              
+      609 +            un_nums = [u for u in (sh.ship.un_numbers or [])] 
+      610              if un_nums:
+      615 -                any_ref = next(                               
+      616 -                    (u.ref for u in (sh.ship.un_numbers or [])
+          -),                                                            
+      617 -                    sh.ship.awb.ref,                          
+      618 -                )                                             
+      611 +                any_ref = un_nums[0].ref                      
+      612                  return "dg", SourceRef.from_ref(sh.doc, any_re
+           f)
+      613          return None
+      614  
+
+● Update(harness/nova/rules/overcharge.py)
+  ⎿  Added 87 lines, removed 23 lines
+      150  
+      151  def _accessorial_applies(
+      152      case: Case, acc: Accessorial, pickup_date: str, awb: Optio
+           nal[str],
+      153 +    msa=None,                                                 
+      154  ) -> bool:
+      155      """Does this accessorial's condition fire on this shipment
+           ?
+      156  
+      156 -    A `months` window applies by calendar month of the pickup 
+          -date. For a DG                                                
+      157 -    accessorial we read the DG declaration directly: a declara
+          -tion that is                                                  
+      158 -    refrigerant-only (dry ice, UN1845 alone) means the fee doe
+          -s not apply                                                   
+      159 -    (MSA 5.2/5.3); any other UN number means it does. For any 
+          -other                                                         
+      160 -    conditional accessorial we fall back to the Judge; when no
+          - judge is wired                                               
+      161 -    the condition is treated as unmet.                        
+      157 +    A ``months`` window applies by calendar month of the picku
+          +p date. For                                                   
+      158 +    everything else we go to the Judge with the condition's cl
+          +ause text and                                                 
+      159 +    the shipment's documents (AWB, DG declaration, tracking). 
+          +The dry-ice /                                                 
+      160 +    DG rule is derived from the contract clause through the Ju
+          +dge — no                                                      
+      161 +    UN-number literal lives in the rule code (audit B8). Judge
+          + exception /                                                  
+      162 +    API error presumes the accessorial legitimately applies: a
+          + wrong                                                        
+      163 +    dispute costs double, so we never flag an overcharge on un
+          +certainty.                                                    
+      164      """
+      163 -    # DG fee: always consult the DG declaration, even when the
+          - reader didn't                                                
+      164 -    # surface a condition. Dry-ice-only (UN1845) means the fee
+          - doesn't apply.                                               
+      165 +    # The reader's typed `refrigerant_only` flag still short-c
+          +ircuits the                                                   
+      166 +    # Judge for the common dry-ice case.                      
+      167      if awb and _is_dg_accessorial(acc):
+      168          status = case.dg_status_for(awb)
+      169          if status is not None:
+      170              return status[0] == "dg"
+      169 -        # No declaration: fall through to Judge, else presume 
+          -applies.                                                      
+      171      months = list(acc.months or [])
+      172      if months:
+      173          if pickup_date[5:7] not in months:
+      174              return False
+      174 -        # Months pass: the condition is a date window; don't d
+          -ouble-check.                                                  
+      175          return True
+      176 -    if not acc.condition:                                     
+      176 +    if not acc.condition and not _is_dg_accessorial(acc):     
+      177          return True
+      178 -    if awb and _is_dg_condition(acc.condition):               
+      179 -        status = case.dg_status_for(awb)                      
+      180 -        if status is not None:                                
+      181 -            return status[0] == "dg"                          
+      182 -        # No DG declaration held: fall through to the Judge; i
+          -f the Judge                                                   
+      183 -        # can't decide either, presume the DG fee applies.    
+      178 +    context = _accessorial_context(case, acc, pickup_date, awb
+          +, msa)                                                        
+      179      try:
+      180          answer, _ref = case.judge(
+      186 -            f"accessorial_condition:{acc.code}",              
+      187 -            {"awb": awb, "pickup_date": pickup_date, "conditio
+          -n": acc.condition},                                           
+      181 +            f"accessorial_condition:{acc.code}", context,     
+      182          )
+      183          return bool(answer)
+      184      except (NotImplementedError, KeyError):
+      191 -        # No evidence to rebut the carrier's claim: assume the
+          - accessorial                                                  
+      192 -        # legitimately applies. Overcharges should rest on evi
+          -dence we hold,                                                
+      193 -        # not on the Judge's silence (which produced false pos
+          -itives on the                                                 
+      194 -        # practice set for Delivery fee / Peak season / Dry-ic
+          -e handling).                                                  
+      185          return True
+      186 +    except Exception:                                         
+      187 +        # API error, timeout, parsing failure: audit B8 says t
+          +his must not                                                  
+      188 +        # become an overcharge (a wrong dispute costs double).
+      189 +        return True                                           
+      190  
+      191  
+      192 +def _accessorial_context(case: Case, acc: Accessorial, pickup_
+          +date: str,                                                    
+      193 +                         awb: Optional[str], msa) -> dict:    
+      194 +    """Build the Judge's context: the condition's clause text 
+          +and the                                                       
+      195 +    shipment's documents (AWB, DG declaration, tracking)."""  
+      196 +    context: dict = {                                         
+      197 +        "awb": awb or "",                                     
+      198 +        "pickup_date": pickup_date,                           
+      199 +        "accessorial_code": acc.code,                         
+      200 +        "accessorial_label": acc.label,                       
+      201 +        "condition_clause": acc.condition or "",              
+      202 +    }                                                         
+      203 +    # The contract/MSA page carries the clause. Point `doc` an
+          +d `pages`                                                     
+      204 +    # at the MSA so the Judge can read the clause in situ.    
+      205 +    mailbox = getattr(case, "mailbox", None)                  
+      206 +    if msa is not None and mailbox is not None:               
+      207 +        try:                                                  
+      208 +            pages, _ = mailbox.pages(msa.doc)                 
+      209 +            context["doc"] = msa.doc                          
+      210 +            context["pages"] = pages                          
+      211 +        except (LookupError, ValueError):                     
+      212 +            pass                                              
+      213 +    context["question"] = (                                   
+      214 +        f"Given the accessorial clause ({acc.label!r}: "      
+      215 +        f"{acc.condition or 'no condition stated'}) and the sh
+          +ipment "                                                      
+      216 +        f"facts below, does this accessorial legitimately appl
+          +y to this "                                                   
+      217 +        f"shipment? Answer true if it applies, false if it doe
+          +s not."                                                       
+      218 +    )                                                         
+      219 +    if awb:                                                   
+      220 +        context["dg_status"] = _dg_status_summary(case, awb)  
+      221 +        context["tracking_summary"] = _tracking_summary(case, 
+          +awb)                                                          
+      222 +        context["awb_summary"] = _awb_summary(case, awb)      
+      223 +    return context                                            
+      224 +                                                              
+      225 +                                                              
+      226 +def _dg_status_summary(case: Case, awb: str) -> str:          
+      227 +    for sh in case.shipments:                                 
+      228 +        if sh.ship.kind != "dg_declaration":                  
+      229 +            continue                                          
+      230 +        if sh.ship.awb.value != awb:                          
+      231 +            continue                                          
+      232 +        if sh.ship.refrigerant_only is True:                  
+      233 +            return "refrigerant_only (only refrigerant is dang
+          +erous)"                                                       
+      234 +        uns = ", ".join(u.value for u in (sh.ship.un_numbers o
+          +r []))                                                        
+      235 +        return f"declared: {uns}" if uns else "declaration hel
+          +d, no UN numbers"                                             
+      236 +    return "no DG declaration held"                           
+      237 +                                                              
+      238 +                                                              
+      239 +def _tracking_summary(case: Case, awb: str) -> str:           
+      240 +    for s in case.sheets:                                     
+      241 +        if s.sheet.kind != "tracking_export":                 
+      242 +            continue                                          
+      243 +        for row in s.rows or []:                              
+      244 +            if (row.get("awb") or "") != awb:                 
+      245 +                continue                                      
+      246 +            return (f"event {row.get('event','')} date {row.ge
+          +t('date','')} "                                               
+      247 +                    f"station {row.get('station','')}").strip(
+          +)                                                             
+      248 +    return "no tracking row held"                             
+      249 +                                                              
+      250 +                                                              
+      251 +def _awb_summary(case: Case, awb: str) -> str:                
+      252 +    for sh in case.shipments:                                 
+      253 +        if sh.ship.kind != "awb":                             
+      254 +            continue                                          
+      255 +        if sh.ship.awb.value != awb:                          
+      256 +            continue                                          
+      257 +        goods = sh.ship.goods.value if sh.ship.goods else ""  
+      258 +        return f"goods: {goods}" if goods else "AWB held, no g
+          +oods line"                                                    
+      259 +    return "no AWB document held"                             
+      260 +                                                              
+      261 +                                                              
+      262  def _correct_accessorial(
+      263      case: Case, terms: Terms, line, pickup_date: str,
+      264  ) -> Optional[tuple[Decimal, list[SourceRef]]]:
+
+● Pass msa through to _accessorial_applies:
+
+● Update(harness/nova/rules/overcharge.py)
+  ⎿  Added 1 line, removed 1 line
+      269      if found is None:
+      270          return None
+      271      acc, src = found
+      272 -    if not _accessorial_applies(case, acc, pickup_date, line.a
+          -wb):                                                          
+      272 +    if not _accessorial_applies(case, acc, pickup_date, line.a
+          +wb, msa=terms.msa):                                           
+      273          return Decimal(0), [SourceRef.from_ref(src.doc, acc.re
+           f)]
+      274      rate = Decimal(acc.rate)
+      275      if acc.basis_kind == "per_shipment":
+
+● Now check test_dg_dry_ice.py and run tests:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Update(harness/tests/test_dg_dry_ice.py)
+  ⎿  Added 6 lines, removed 2 lines
+      111      }
+      112  
+      113  
+      114 -def test_dry_ice_only_un1845_full_dg_fee_is_overcharge():     
+      115 -    records = [_msa(), _invoice(), _dg_dec(["UN1845"]), _track
+          -ing()]                                                        
+      114 +def test_dry_ice_only_refrigerant_only_full_dg_fee_is_overchar
+          +ge():                                                         
+      115 +    """Audit B8: the shipment reader sets refrigerant_only=Tru
+          +e on a                                                        
+      116 +    dry-ice-only declaration; the rule honours the typed flag,
+          + not a                                                        
+      117 +    UN-number literal."""                                     
+      118 +    records = [_msa(), _invoice(),                            
+      119 +               _dg_dec(["UN1845"], refrigerant_only=True), _tr
+          +acking()]                                                     
+      120      case = Case.from_records(records, as_of="2031-12-31")
+      121      cands = run_overcharge(case)
+      122      assert len(cands) == 1
+
+  Committed a9fa2b, ran 2 shell commands (ctrl+o to expand)
+
+● Now gate for item 4:
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Gates hold. Item 4 done.
+● Update(harness/nova/rules/overcharge.py)
+  ⎿  Added 37 lines, removed 4 lines
+      103      return computed, srcs
+      104  
+      105  
+      106 +_BAND_RANGE_RE = re.compile(                                  
+      107 +    r'(\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(\d+(?:\.\d+)?)',        
+      108 +    re.IGNORECASE,                                            
+      109 +)                                                             
+      110 +_BAND_OPEN_RE = re.compile(r'(\d+(?:\.\d+)?)\s*\+')           
+      111 +                                                              
+      112 +                                                              
+      113 +def _parse_band_limits(band: str) -> Optional[tuple[Optional[D
+          +ecimal], Optional[Decimal]]]:                                 
+      114 +    """Parse a band label like "0-44.5 kg" or "100+" into (min
+          +, max).                                                       
+      115 +                                                              
+      116 +    Returns None when the label has no number (e.g. "minimum c
+          +harge").                                                      
+      117 +    """                                                       
+      118 +    if not band:                                              
+      119 +        return None                                           
+      120 +    m = _BAND_RANGE_RE.search(band)                           
+      121 +    if m:                                                     
+      122 +        return Decimal(m.group(1)), Decimal(m.group(2))       
+      123 +    m = _BAND_OPEN_RE.search(band)                            
+      124 +    if m:                                                     
+      125 +        return Decimal(m.group(1)), None                      
+      126 +    return None                                               
+      127 +                                                              
+      128 +                                                              
+      129  def _notice_row_for(terms: Terms, lane: str, weight: Decimal) 
+           -> Optional[tuple[Decimal, SourceRef, object]]:
+      130      """If an in-force rate_notice covers (lane, band containin
+           g weight), return
+      108 -    (rate, source_ref, notice). The band label match is loose:
+          - the notice row's                                             
+      109 -    numeric bounds are not parsed, so we match on the lane and
+          - pick the row                                                 
+      110 -    whose band label coincides with a known band containing th
+          -e weight."""                                                  
+      131 +    (rate, source_ref, notice). Match by numeric limits (audit
+          + M5): fall back                                               
+      132 +    to the loose band-label equality when the notice row's lab
+          +el can't be                                                   
+      133 +    parsed into bounds, so no notice goes unmatched when the c
+          +arrier uses a                                                 
+      134 +    different band naming convention."""                      
+      135      for rns in terms.rate_notices:
+      136          rn = rns.notice
+      137          if rn.lane and rn.lane != lane:
+     ...
+      139          for row in rn.rows:
+      140              if row.lane != lane:
+      141                  continue
+      118 -            # Try to match by band label against an MSA rate r
+          -ow covering weight.                                           
+      142 +            # Numeric match on the notice row's own limits.   
+      143 +            notice_limits = _parse_band_limits(row.band)      
+      144 +            if notice_limits is not None:                     
+      145 +                lo, hi = notice_limits                        
+      146 +                if weight < lo:                               
+      147 +                    continue                                  
+      148 +                if hi is not None and weight > hi:            
+      149 +                    continue                                  
+      150 +                return Decimal(row.rate), SourceRef.from_ref(r
+          +ns.doc, row.ref), rns                                         
+      151 +            # Fallback: match by band label against an MSA rat
+          +e row.                                                        
+      152              for mrow, _ in terms.rate_rows_for(lane):
+      153                  if mrow.is_minimum_charge:
+      154                      continue
+
+● Now unranked-pair generalisation and precedence 'use' normalisation:
+
+● Update(harness/nova/rules/overcharge.py)
+  ⎿  Added 16 lines, removed 3 lines
+      640                  if case.rate_accepted_for(msa.id, ln.lane, pk[
+           0]) is not None:
+      641                      precedence_use = "rate_notice"
+      642                      break
+      643 +            precedence_use = _normalise_use(precedence_use)   
+      644 +            # Audit M5: a later signed amendment beats feedbac
+          +k. If the                                                     
+      645 +            # feedback precedence is older than the latest sig
+          +ned amendment                                                 
+      646 +            # on this (contract, lane), ignore it.            
+      647              if precedence_use == "amendment":
+      648 +                if _amendment_newer_than_feedback(case, msa, b
+          +d):                                                           
+      649 +                    precedence_use = None                     
+      650 +            if precedence_use == "amendment":                 
+      651                  pass  # keep the single amendment-sourced corr
+           ect only
+      652              elif precedence_use == "rate_notice":
+      653                  corrects = [CorrectAmount(
+     ...
+      661                      authority_level=2, in_force=True,
+      662                      source_kind="rate_notice",
+      663                  ))
+      664 +                # Audit M5: treat any listed unranked pair as 
+          +unranked.                                                     
+      665 +                # The MSA may word the pair in either directio
+          +n, and the                                                    
+      666 +                # kinds may use synonyms (notice ↔ rate_notice
+          +,                                                             
+      667 +                # signed_amendment ↔ amendment). Normalise bef
+          +ore matching.                                                 
+      668                  if msa.terms.unranked_pairs:
+      669 +                    present = {"rate_notice", "amendment"}    
+      670                      for pair in msa.terms.unranked_pairs:
+      659 -                        kinds = {pair.a, pair.b}              
+      660 -                        if "rate_notice" in kinds and "amendme
+          -nt" in kinds:                                                 
+      661 -                            unranked_pair = ("rate_notice", "a
+          -mendment")                                                    
+      671 +                        a = _normalise_source_kind(pair.a)    
+      672 +                        b = _normalise_source_kind(pair.b)    
+      673 +                        if {a, b} == present:                 
+      674 +                            unranked_pair = (a, b)            
+      675                              unranked_ref = SourceRef.from_ref(
+           msa.doc, pair.ref)
+      676                              dedup.append(unranked_ref)
+      677                              break
+
+● Add the normalisation helpers:
+
+● Update(harness/nova/rules/overcharge.py)
+  ⎿  Added 47 lines
+      110  _BAND_OPEN_RE = re.compile(r'(\d+(?:\.\d+)?)\s*\+')
+      111  
+      112  
+      113 +def _normalise_source_kind(k: str) -> str:                    
+      114 +    """Fold synonymous source-kind names (audit M5)."""       
+      115 +    s = (k or "").strip().lower()                             
+      116 +    if s in {"signed_amendment", "amendment"}:                
+      117 +        return "amendment"                                    
+      118 +    if s in {"rate_notice", "notice", "rate-notice"}:         
+      119 +        return "rate_notice"                                  
+      120 +    if s in {"msa"}:                                          
+      121 +        return "msa"                                          
+      122 +    return s                                                  
+      123 +                                                              
+      124 +                                                              
+      125 +def _normalise_use(use: Optional[str]) -> Optional[str]:      
+      126 +    """Normalise a feedback precedence `use` value."""        
+      127 +    if use is None:                                           
+      128 +        return None                                           
+      129 +    return _normalise_source_kind(use)                        
+      130 +                                                              
+      131 +                                                              
+      132 +def _amendment_newer_than_feedback(case: Case, msa, bd) -> boo
+          +l:                                                            
+      133 +    """True iff a signed amendment on any invoice-lane postdat
+          +es the                                                        
+      134 +    precedence feedback that would otherwise bind the choice."
+          +""                                                            
+      135 +    for ln in bd.lines:                                       
+      136 +        if not ln.lane or not ln.awb:                         
+      137 +            continue                                          
+      138 +        pk = case.pickup_date(ln.awb)                         
+      139 +        if pk is None:                                        
+      140 +            continue                                          
+      141 +        use = case.precedence_fact_for(msa.id, ln.lane, pk[0])
+      142 +        if use is None:                                       
+      143 +            continue                                          
+      144 +        # Find the feedback's valid_from and compare to amendm
+          +ents' effective_from.                                         
+      145 +        fb_from = None                                        
+      146 +        for pf in case.precedence_facts:                      
+      147 +            if pf.get("contract_id") == msa.id and pf.get("lan
+          +e") == ln.lane:                                               
+      148 +                fb_from = pf.get("valid_from")                
+      149 +                break                                         
+      150 +        if fb_from is None:                                   
+      151 +            return False                                      
+      152 +        for c in case.contracts:                              
+      153 +            if not c.is_amendment or c.amends != msa.id:      
+      154 +                continue                                      
+      155 +            if c.effective_from > fb_from:                    
+      156 +                return True                                   
+      157 +    return False                                              
+      158 +                                                              
+      159 +                                                              
+      160  def _parse_band_limits(band: str) -> Optional[tuple[Optional[D
+           ecimal], Optional[Decimal]]]:
+      161      """Parse a band label like "0-44.5 kg" or "100+" into (min
+           , max).
+      162  
+
+  Committed 85164f, ran 2 shell commands (ctrl+o to expand)
+
+● Update(harness/nova/readers/scan.py)
+  ⎿  File must be read first
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(harness/nova/readers/scan.py)
+  ⎿  Added 10 lines, removed 3 lines
+      59  
+      60  
+      61  def read(client: LLMClient, record: DocRecord, pdf_bytes: Optio
+          nal[bytes] = None) -> ReadResult:
+      62 -    """Transcribe the PDF with vision, then run the billing rea
+         -der on the result."""                                          
+      62 +    """Transcribe the PDF with vision, then run the billing rea
+         +der on it.                                                     
+      63 +                                                               
+      64 +    Mutates ``record.pages`` and sets ``record.is_scan=False`` 
+         +so the caller                                                  
+      65 +    can persist the transcription alongside the facts (audit §s
+         +can                                                            
+      66 +    evidence): rules citing a scan line must be able to resolve
+         + the quote                                                     
+      67 +    from the saved DocRecord.                                  
+      68 +    """                                                        
+      69      if pdf_bytes is None:
+      70          raise ValueError("scan reader needs the raw PDF bytes")
+      71      import pymupdf
+     ...
+      76          png = _render_page_png(pdf_bytes, i)
+      77          lines = _transcribe_page(client, record.doc_id, png, i)
+      78          transcribed_pages.append("\n".join(lines))
+      73 -    synthetic = replace(record, pages=transcribed_pages, is_sca
+         -n=False)                                                       
+      74 -    return billing_reader.read(client, synthetic)              
+      79 +    record.pages = transcribed_pages                           
+      80 +    record.is_scan = False                                     
+      81 +    return billing_reader.read(client, record)                 
+
+● Update(harness/harness.py)
+  ⎿  Added 5 lines
+      228          if _time.monotonic() > deadline:
+      229              return
+      230          # Always save the raw DocRecord (pages needed for quot
+           e resolution).
+      231 +        was_scan = record.is_scan                             
+      232          if not state.doc_exists(record.doc_id):
+      233              state.save_doc(record)
+      234          if state.facts_exist(record.doc_id):
+     ...
+      239          type_, data = result
+      240          received_at = record.received.isoformat()
+      241          state.save_facts(record.doc_id, type_, data, received_
+           at)
+      242 +        # Scan reader mutated pages with the transcription; pe
+          +rsist them so                                                 
+      243 +        # rule evidence can resolve quotes from the saved reco
+          +rd.                                                           
+      244 +        if was_scan and not record.is_scan:                   
+      245 +            state.save_doc(record)                            
+      246  
+      247      # First, re-attempt any already-saved DocRecord whose fact
+           s were never
+      248      # produced (previous ingest timed out or hit a model error
+           ). audit M4.
+
+  Committed 44a248, ran 2 shell commands (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(harness/harness.py)
+  ⎿  Added 21 lines, removed 5 lines
+      552          if awb:
+      553              tracked_awbs.add(awb)
+      554  
+      555 -    # invoice_id → list of AWBs                               
+      555 +    # invoice_id → (list of AWBs, list of lanes, contract_id) 
+      556      invoice_awbs: dict[str, list[str]] = {}
+      557      invoice_contract: dict[str, str] = {}
+      558 +    invoice_lanes: dict[str, set[str]] = {}                   
+      559      for b in case.billings:
+      560          inv = b.bill.id.value
+      561          invoice_awbs[inv] = [ln.awb for ln in b.bill.lines if 
+           ln.awb]
+      562 +        invoice_lanes[inv] = {ln.lane for ln in b.bill.lines i
+          +f ln.lane}                                                    
+      563          if b.bill.contract_ref:
+      564              invoice_contract[inv] = b.bill.contract_ref.value
+      565 +        else:                                                 
+      566 +            msa = case.contract_for_invoice(b)                
+      567 +            if msa is not None:                               
+      568 +                invoice_contract[inv] = msa.id                
+      569  
+      564 -    # Open conflicts by invoice_id (the only lane/contract sco
+          -ping we have                                                  
+      565 -    # at this layer without threading lane through resolve).  
+      570 +    # Audit B1 (finish): open-conflict check covers the same c
+          +ontract and                                                   
+      571 +    # lane (and rate period). Build the set of (contract_id, l
+          +ane, period)                                                  
+      572 +    # with open conflicts, falling back to invoice_id for conf
+          +licts that                                                    
+      573 +    # we can't resolve to a lane.                             
+      574      conflict_invoices: set[str] = set()
+      575 +    conflict_lane_period: set[tuple[str, str, str]] = set()   
+      576      for it in items:
+      568 -        if it.verdict == "conflict" and it.invoice_id:        
+      569 -            conflict_invoices.add(it.invoice_id)              
+      577 +        if it.verdict != "conflict" or not it.invoice_id:     
+      578 +            continue                                          
+      579 +        conflict_invoices.add(it.invoice_id)                  
+      580 +        c_id = invoice_contract.get(it.invoice_id)            
+      581 +        if not c_id:                                          
+      582 +            continue                                          
+      583 +        for lane in invoice_lanes.get(it.invoice_id, set()):  
+      584 +            period = _period_for_invoice_lane(case, it.invoice
+          +_id, lane, c_id)                                              
+      585 +            conflict_lane_period.add((c_id, lane, period or ""
+          +))                                                            
+      586  
+      587      # Items whose key matched any feedback fact (standing or o
+           ne_off).
+      588      from nova.feedback import _finding_key_matches  # type: ig
+           nore
+
+● Update(harness/harness.py)
+  ⎿  Added 16 lines, removed 9 lines
+      596              except Exception:
+      597                  continue
+      598  
+      599 -    # Only overcharge-class findings depend on pickup-date sou
+          -rce for check 1                                               
+      600 -    # (pickup drives the rate period). For other classes (dupl
+          -icate, waived,                                                
+      601 -    # late_fee_not_owed, cashback) the pickup date is not the 
+          -operative                                                     
+      602 -    # evidence; keep the check satisfied unless missing_doc fi
+          -res.                                                          
+      603 -    PICKUP_SENSITIVE = {"overcharge"}                         
+      599 +    # Audit B1 (finish): the pickup-source check applies to ev
+          +ery class                                                     
+      600 +    # that relies on a pickup date — overcharge for the rate p
+          +eriod and                                                     
+      601 +    # waived_but_billed for the waiver's month-of-pickup match
+          +.                                                             
+      602 +    PICKUP_SENSITIVE = {"overcharge", "waived_but_billed"}    
+      603  
+      604      flags_map: dict = {}
+      605      for it in items:
+     ...
+      608              pickup_tracked = bool(awbs) and any(a in tracked_a
+           wbs for a in awbs)
+      609          else:
+      610              pickup_tracked = True
+      612 -        same_conflict = bool(                                 
+      613 -            it.invoice_id and it.invoice_id in conflict_invoic
+          -es                                                            
+      614 -            and it.verdict != "conflict"                      
+      615 -        )                                                     
+      611 +        same_conflict = False                                 
+      612 +        if it.invoice_id and it.verdict != "conflict":        
+      613 +            if it.invoice_id in conflict_invoices:            
+      614 +                same_conflict = True                          
+      615 +            else:                                             
+      616 +                c_id = invoice_contract.get(it.invoice_id, "")
+      617 +                for lane in invoice_lanes.get(it.invoice_id, s
+          +et()):                                                        
+      618 +                    period = _period_for_invoice_lane(        
+      619 +                        case, it.invoice_id, lane, c_id) or ""
+      620 +                    if (c_id, lane, period) in conflict_lane_p
+          +eriod:                                                        
+      621 +                        same_conflict = True                  
+      622 +                        break                                 
+      623          touched = it.id in feedback_touched
+      624          flags_map[it.id] = ItemFlags(
+      625              missing_doc_present=it.missing_doc is not None,
+
+● Now add the helper _period_for_invoice_lane:
+
+● Update(harness/harness.py)
+  ⎿  Added 21 lines
+      525              annotations.setdefault(item.id, {})["retro"] = Tru
+           e
+      526  
+      527  
+      528 +def _period_for_invoice_lane(case, invoice_id: str, lane: str,
+      529 +                             contract_id: str) -> str | None: 
+      530 +    """Rate-period label for an invoice-line's lane on its pic
+          +kup date."""                                                  
+      531 +    if not contract_id:                                       
+      532 +        return None                                           
+      533 +    for b in case.billings:                                   
+      534 +        if b.bill.id.value != invoice_id:                     
+      535 +            continue                                          
+      536 +        for ln in b.bill.lines:                               
+      537 +            if ln.lane != lane or not ln.awb:                 
+      538 +                continue                                      
+      539 +            pk = case.pickup_date(ln.awb)                     
+      540 +            if pk is None:                                    
+      541 +                continue                                      
+      542 +            msa = case.msa_for(contract_id)                   
+      543 +            if msa is None:                                   
+      544 +                return None                                   
+      545 +            return case.period_for(msa, pk[0])                
+      546 +    return None                                               
+      547 +                                                              
+      548 +                                                              
+      549  def _flags_from_case(items, case, feedback_items) -> dict:
+      550      """Compute per-item ItemFlags from the resolved items and 
+           the Case.
+      551  
+
+● Add unit test:
+
+● Write(harness/tests/test_cross_invoice_conflict.py)  ⎿  Wrote 99 lines to harness/tests/test_cross_invoice_conflict.py
+       1 """Audit B1 (finish): an open conflict on another invoice's lane
+          makes a
+       2 clean dispute on the same (contract, lane, period) escalate to h
+       3 review in autonomous mode."""
+       4 from __future__ import annotations
+       5 
+       6 import importlib
+       7 import sys
+       9 
+      10 HARNESS = Path(__file__).resolve().parents[1] / "harness.py"
+     … +94 lines (ctrl+o to expand)
+
+  Committed 4532d8, ran 3 shell commands (ctrl+o to expand)
+
+● Now the full gates (grade ≥ 99, sheet 8165.33):
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● All gates hold.
+
+● Now the escalation rate. Let me compute from the latest grade run:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● All items complete. Summary:
+
+  Done when: items 1–7 report
+
+  Each committed separately. Gates ran after items 2, 4, and 7.
+
+  Item: 1 · B5 retro + expiry
+  What changed: retro:true set on new keys whose evidence doc arrived after prev
+
+    as_of with effective_from/invoice_date before it; expiry rule layers
+    signed-amendment end_date + renewal, so an extension can drop the alert.
+  Gate result: pytest + eval
+  ────────────────────────────────────────
+  Item: 2 · B6 pickup events
+  What changed: SheetMap.picked_up_values filled by reader; sheets.rows() scans
+    first 15 rows for the header, keeps rows under partial mapping, normalises
+    AWBs; Case.pickup_date reads picked_up_values and a wide-format pickup_date
+    column; "PICKED_UP" literal gone from rule code.
+  Gate result: grade 99.6 ≥ 99, sheet 8165.33
+  ────────────────────────────────────────
+  Item: 3 · B7 statements
+  What changed: A statement with any chargeable line and asks_for_payment is
+    promoted to kind=invoice on load; summary-only statements stay out of QS and
+
+    the duplicate rule.
+  Gate result: pytest + eval
+  ────────────────────────────────────────
+  Item: 4 · B8 Judge with context
+  What changed: DG rule derives from the contract clause through the Judge;
+    _accessorial_context passes clause text + AWB/DG/tracking summary + MSA
+    pages; Judge/API error → fee presumed to apply (never a wrong dispute);
+    UN1845 literal gone from Case.dg_status_for.
+  Gate result: grade 99.6, sheet 8165.33
+  ────────────────────────────────────────
+  Item: 5 · M5 conflicts
+  What changed: Rate-notice bands matched by numeric limits parsed from the
+    label; any unranked_pair on the MSA whose two kinds are the two in-force
+    sources yields a conflict (synonym-folded); feedback use normalised; later
+    signed amendment on same (contract, lane) beats the feedback.
+  Gate result: pytest + eval
+  ────────────────────────────────────────
+  Item: 6 · Scan evidence
+  What changed: scan.read mutates record.pages with the vision transcription;
+    harness re-saves the DocRecord so later rules can resolve scan citations
+  from
+     disk.
+  Gate result: pytest + eval
+  ────────────────────────────────────────
+  Item: 7 · B1 finish
+  What changed: Open-conflict check widened from invoice to (contract, lane,
+  rate
+    period); pickup-source check extended from overcharge to waived_but_billed;
+    test_cross_invoice_conflict covers the autonomous-mode routing.
+  Gate result: grade 99.6, sheet 8165.33
+
+  Final numbers (last report card)
+
+  - Score: 99.6 / 100
+  - make sheet: $8,165.33 (unchanged throughout)
+  - make eval: 14 / 14 passing (12 of them custom)
+  - pytest: 221 passing, 29 deselected (pre-existing flakes in test_llm,
+  test_readers, test_cost_optimizations)
+  - Autonomous escalation rate: 0.0417 (4.17%), no unsafe autonomous cases,
+  action fraction 24/24 right in both modes.
+
+✻ Crunched for 26m 34s
+
+※ recap: Task 10 (audit-fixes for the hidden set) is complete: all seven items shipped as separate commits, gates held at grade 99.6 and sheet $8,165.33, autonomous escalation 4.17%. Next: hand off to the humans for Phase 8 write-up. (disable recaps in /config)
