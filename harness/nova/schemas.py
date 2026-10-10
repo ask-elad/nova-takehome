@@ -459,6 +459,10 @@ class SheetMap(BaseModel):
     # field_name → column_label as it appears in the header row
     columns: dict[str, str]
     ref: Ref                       # the header row
+    # Tracking exports: event-column values that mean "picked up". A sheet
+    # may use "PICKED_UP", "Picked up", "PU" or similar. The sheet reader
+    # fills this from the data so rule code never pins a literal (audit B6).
+    picked_up_values: Optional[list[str]] = None
 
 
 # ---------------------------------------------------------------------------

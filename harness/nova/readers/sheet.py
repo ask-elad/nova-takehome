@@ -22,6 +22,8 @@ _INSTRUCTIONS = (
     "  and events; \"payment_register\" if it lists invoices paid/scheduled;\n"
     "  otherwise \"other\".\n"
     "- `sheet_number` = 1 (first sheet) unless the document says otherwise.\n"
+    "- The header row may be preceded by a title or notes — scan the first 15\n"
+    "  rows and pick the one whose cells are the column labels.\n"
     "- `columns`: a dict from our field name (the key) to the header text\n"
     "  exactly as printed (the value). Only include fields whose header is\n"
     "  actually present. Use these field-name keys:\n"
@@ -30,6 +32,11 @@ _INSTRUCTIONS = (
     "                    pickup_date, delivered_date, status.\n"
     "  payment_register → invoice_id, invoice_date, due_date, amount,\n"
     "                     status, paid_date, method, reference.\n"
+    "- For `tracking_export`, also fill `picked_up_values` with every distinct\n"
+    "  event-column value that means the shipment was picked up (e.g.\n"
+    "  [\"PICKED_UP\"], [\"Picked up\", \"PU\"], etc.). Read them from the data\n"
+    "  rows you see; omit values that mean something else (delivered, in\n"
+    "  transit, cancelled).\n"
     "- `ref` must point to the header row (page=sheet number, line=header line)."
 )
 
@@ -38,5 +45,5 @@ def read(client: LLMClient, record: DocRecord) -> ReadResult:
     return read_doc(
         client, record, SheetMap,
         tier="fast", purpose="read_sheet", prompt_version=prompt_version,
-        instructions=_INSTRUCTIONS, max_tokens=1024, max_doc_lines=4,
+        instructions=_INSTRUCTIONS, max_tokens=1024, max_doc_lines=15,
     )

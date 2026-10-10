@@ -20,14 +20,27 @@ def rows(pages: list[str], sheet_map: SheetMap) -> list[dict[str, Any]]:
     if not (0 <= page_idx < len(pages)):
         return []
     lines = pages[page_idx].splitlines()
-    header_line = sheet_map.ref.line
+
+    # Audit B6: the header row may not be the first line. Search the first 15
+    # rows for the row whose cells best match the column labels, falling back
+    # to the ref line.
+    want_labels = list(sheet_map.columns.values())
+    header_line = _find_header(lines, want_labels, hint=sheet_map.ref.line, window=15)
+    if header_line is None:
+        header_line = sheet_map.ref.line
     if not (1 <= header_line <= len(lines)):
         return []
     header_cells = [c.strip() for c in lines[header_line - 1].split(SEP)]
     idx_of = {label: i for i, label in enumerate(header_cells)}
 
-    missing = [label for label in sheet_map.columns.values() if label not in idx_of]
-    if missing:
+    # Audit B6: partial mappings keep their rows. A field whose header isn't
+    # present is simply left blank per-row (never a reason to drop the sheet).
+    present_fields: dict[str, int] = {
+        field: idx_of[label]
+        for field, label in sheet_map.columns.items()
+        if label in idx_of
+    }
+    if not present_fields:
         return []
 
     out: list[dict[str, Any]] = []
@@ -36,8 +49,35 @@ def rows(pages: list[str], sheet_map: SheetMap) -> list[dict[str, Any]]:
         if not any(parts):
             continue
         row: dict[str, Any] = {"_page": sheet_map.sheet_number, "_line": line_no}
-        for field, label in sheet_map.columns.items():
-            i = idx_of[label]
-            row[field] = parts[i] if i < len(parts) else ""
+        for field, i in present_fields.items():
+            val = parts[i] if i < len(parts) else ""
+            # Audit B6: normalise AWBs (strip and uppercase) so a mix of
+            # casings/spaces across tracking/AWB/invoice still joins.
+            if field == "awb":
+                val = "".join(val.split()).upper()
+            row[field] = val
         out.append(row)
     return out
+
+
+def _find_header(lines: list[str], want_labels: list[str], hint: int, window: int) -> int | None:
+    """Return the 1-indexed line number whose cells best match *want_labels*.
+
+    Prefer the ``hint`` line when it matches at all; otherwise scan the first
+    *window* lines and pick the one with the most matches. Return None if no
+    line contains any wanted label.
+    """
+    want = {w for w in want_labels if w}
+    best = (0, None)
+    scan_end = min(window, len(lines))
+    hint_idx = hint - 1
+    if 0 <= hint_idx < len(lines):
+        cells = {c.strip() for c in lines[hint_idx].split(SEP)}
+        if want and want.issubset(cells):
+            return hint
+    for i in range(scan_end):
+        cells = {c.strip() for c in lines[i].split(SEP)}
+        hits = len(want & cells)
+        if hits > best[0]:
+            best = (hits, i + 1)
+    return best[1]

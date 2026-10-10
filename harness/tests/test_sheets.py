@@ -70,7 +70,9 @@ def test_tracking_export_scenarios_mailbox():
     assert picked, "at least one PICKED_UP event expected"
 
 
-def test_missing_header_label_returns_empty():
+def test_missing_header_label_keeps_present_fields():
+    """Audit B6: a partial mapping keeps rows, with the mapped fields
+    present and the missing field blank."""
     mb = Mailbox(Path("data/examples/overcharge/docs"))
     pages, _ = mb.pages("batch_01/0005.eml#tracking-2031-07-01.xlsx")
     sm = SheetMap(
@@ -79,4 +81,66 @@ def test_missing_header_label_returns_empty():
         columns={"awb": "AWB", "event": "No Such Column"},
         ref=Ref(page=1, line=1),
     )
-    assert rows(pages, sm) == []
+    out = rows(pages, sm)
+    assert out, "awb column present → rows should be returned"
+    assert "awb" in out[0]
+    assert "event" not in out[0] or out[0]["event"] == ""
+
+
+def test_header_search_scans_first_15_rows():
+    """Audit B6: the header may be preceded by a title/notes."""
+    pages = [
+        "Weekly tracking export\n"
+        "exported 2032-02-01\n"
+        "AWB | Event | Date\n"
+        "ABC123 | PICKED_UP | 2032-02-02\n"
+        "DEF456 | DELIVERED | 2032-02-03\n"
+    ]
+    sm = SheetMap(
+        kind="tracking_export",
+        sheet_number=1,
+        columns={"awb": "AWB", "event": "Event", "date": "Date"},
+        ref=Ref(page=1, line=1),
+    )
+    out = rows(pages, sm)
+    assert len(out) == 2
+    assert out[0]["awb"] == "ABC123"
+
+
+def test_awb_normalisation_strips_and_uppercases():
+    pages = [
+        "AWB | Event | Date\n"
+        "  abc 123  | PICKED_UP | 2032-02-02\n"
+    ]
+    sm = SheetMap(
+        kind="tracking_export",
+        sheet_number=1,
+        columns={"awb": "AWB", "event": "Event", "date": "Date"},
+        ref=Ref(page=1, line=1),
+    )
+    out = rows(pages, sm)
+    assert out[0]["awb"] == "ABC123"
+
+
+def test_picked_up_values_used_in_pickup_lookup():
+    """Audit B6: the pickup-event literal lives in SheetMap, not rule code."""
+    from nova.case import Case
+
+    sheet_data = {
+        "kind": "tracking_export",
+        "sheet_number": 1,
+        "columns": {"awb": "AWB", "event": "Event", "date": "Date"},
+        "ref": {"page": 1, "line": 1},
+        "picked_up_values": ["Picked up"],
+    }
+    rec = {
+        "type": "SheetMap",
+        "doc": "batch_01/tracking.xlsx",
+        "data": sheet_data,
+        "rows": [{"awb": "ABC123", "event": "Picked up", "date": "2032-02-02",
+                  "_page": 1, "_line": 2}],
+    }
+    case = Case.from_records([rec], as_of="2032-03-01")
+    got = case.pickup_date("ABC123")
+    assert got is not None
+    assert got[0] == "2032-02-02"

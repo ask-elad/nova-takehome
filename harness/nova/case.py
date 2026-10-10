@@ -521,29 +521,47 @@ class Case:
 
     def pickup_date(self, awb: str) -> Optional[tuple[str, SourceRef]]:
         """Return (iso_date, source_ref) using the fallback chain:
-        tracking PICKED_UP → carrier pickup email → AWB executed date → invoice line.
+        tracking pickup event → carrier pickup email → AWB executed date → invoice line.
+
+        Which event value means "picked up" comes from the SheetMap (audit
+        B6): the sheet reader fills ``picked_up_values`` from the data so
+        this never pins a literal. A wide-format ``pickup_date`` column on
+        the AWB's row is also accepted.
         """
+        want_awb = _normalise_awb(awb)
         # 1. tracking export
         for s in self.sheets:
             if s.sheet.kind != "tracking_export":
                 continue
+            picked_values = {v.strip().lower() for v in
+                             (s.sheet.picked_up_values or ["PICKED_UP"])}
             for row in s.rows:
-                if row.get("awb") == awb and row.get("event") == "PICKED_UP" and row.get("date"):
+                row_awb = _normalise_awb(row.get("awb") or "")
+                if row_awb != want_awb:
+                    continue
+                # Wide-format: a `pickup_date` cell on this AWB's row.
+                wide = (row.get("pickup_date") or "").strip()
+                if wide:
+                    ref = Ref(page=s.sheet.sheet_number,
+                              line=row.get("_line", s.sheet.ref.line))
+                    return wide, SourceRef.from_ref(s.doc, ref)
+                ev = (row.get("event") or "").strip().lower()
+                if ev in picked_values and row.get("date"):
                     ref = Ref(page=s.sheet.sheet_number, line=row.get("_line", s.sheet.ref.line))
                     return row["date"], SourceRef.from_ref(s.doc, ref)
         # 2. pickup email
         for e in self.emails:
             p = e.email.pickup
-            if p and p.awb == awb and p.date:
+            if p and _normalise_awb(p.awb) == want_awb and p.date:
                 return p.date, SourceRef.from_ref(e.doc, p.ref)
         # 3. AWB executed date
         for sh in self.shipments:
-            if sh.ship.awb.value == awb and sh.ship.executed_date:
+            if _normalise_awb(sh.ship.awb.value) == want_awb and sh.ship.executed_date:
                 return sh.ship.executed_date.value, SourceRef.from_ref(sh.doc, sh.ship.executed_date.ref)
         # 4. invoice line pickup_date
         for b in self.billings:
             for ln in b.bill.lines:
-                if ln.awb == awb and ln.pickup_date:
+                if ln.awb and _normalise_awb(ln.awb) == want_awb and ln.pickup_date:
                     return ln.pickup_date, SourceRef.from_ref(b.doc, ln.ref)
         return None
 
@@ -790,6 +808,11 @@ def _within_window(probe: Optional[date], valid_from: Optional[str],
     if valid_to and probe > _parse_date(valid_to):
         return False
     return True
+
+
+def _normalise_awb(s: str) -> str:
+    """Strip spaces and uppercase so lookups match across casings (audit B6)."""
+    return "".join((s or "").split()).upper()
 
 
 def _addr_of(sender: str) -> str:
