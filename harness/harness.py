@@ -525,6 +525,27 @@ def _annotate_retro(items, annotations: dict, report_dir, case, docs) -> None:
             annotations.setdefault(item.id, {})["retro"] = True
 
 
+def _period_for_invoice_lane(case, invoice_id: str, lane: str,
+                             contract_id: str) -> str | None:
+    """Rate-period label for an invoice-line's lane on its pickup date."""
+    if not contract_id:
+        return None
+    for b in case.billings:
+        if b.bill.id.value != invoice_id:
+            continue
+        for ln in b.bill.lines:
+            if ln.lane != lane or not ln.awb:
+                continue
+            pk = case.pickup_date(ln.awb)
+            if pk is None:
+                continue
+            msa = case.msa_for(contract_id)
+            if msa is None:
+                return None
+            return case.period_for(msa, pk[0])
+    return None
+
+
 def _flags_from_case(items, case, feedback_items) -> dict:
     """Compute per-item ItemFlags from the resolved items and the Case.
 
@@ -552,21 +573,37 @@ def _flags_from_case(items, case, feedback_items) -> dict:
         if awb:
             tracked_awbs.add(awb)
 
-    # invoice_id → list of AWBs
+    # invoice_id → (list of AWBs, list of lanes, contract_id)
     invoice_awbs: dict[str, list[str]] = {}
     invoice_contract: dict[str, str] = {}
+    invoice_lanes: dict[str, set[str]] = {}
     for b in case.billings:
         inv = b.bill.id.value
         invoice_awbs[inv] = [ln.awb for ln in b.bill.lines if ln.awb]
+        invoice_lanes[inv] = {ln.lane for ln in b.bill.lines if ln.lane}
         if b.bill.contract_ref:
             invoice_contract[inv] = b.bill.contract_ref.value
+        else:
+            msa = case.contract_for_invoice(b)
+            if msa is not None:
+                invoice_contract[inv] = msa.id
 
-    # Open conflicts by invoice_id (the only lane/contract scoping we have
-    # at this layer without threading lane through resolve).
+    # Audit B1 (finish): open-conflict check covers the same contract and
+    # lane (and rate period). Build the set of (contract_id, lane, period)
+    # with open conflicts, falling back to invoice_id for conflicts that
+    # we can't resolve to a lane.
     conflict_invoices: set[str] = set()
+    conflict_lane_period: set[tuple[str, str, str]] = set()
     for it in items:
-        if it.verdict == "conflict" and it.invoice_id:
-            conflict_invoices.add(it.invoice_id)
+        if it.verdict != "conflict" or not it.invoice_id:
+            continue
+        conflict_invoices.add(it.invoice_id)
+        c_id = invoice_contract.get(it.invoice_id)
+        if not c_id:
+            continue
+        for lane in invoice_lanes.get(it.invoice_id, set()):
+            period = _period_for_invoice_lane(case, it.invoice_id, lane, c_id)
+            conflict_lane_period.add((c_id, lane, period or ""))
 
     # Items whose key matched any feedback fact (standing or one_off).
     from nova.feedback import _finding_key_matches  # type: ignore
@@ -580,11 +617,10 @@ def _flags_from_case(items, case, feedback_items) -> dict:
             except Exception:
                 continue
 
-    # Only overcharge-class findings depend on pickup-date source for check 1
-    # (pickup drives the rate period). For other classes (duplicate, waived,
-    # late_fee_not_owed, cashback) the pickup date is not the operative
-    # evidence; keep the check satisfied unless missing_doc fires.
-    PICKUP_SENSITIVE = {"overcharge"}
+    # Audit B1 (finish): the pickup-source check applies to every class
+    # that relies on a pickup date — overcharge for the rate period and
+    # waived_but_billed for the waiver's month-of-pickup match.
+    PICKUP_SENSITIVE = {"overcharge", "waived_but_billed"}
 
     flags_map: dict = {}
     for it in items:
@@ -593,10 +629,18 @@ def _flags_from_case(items, case, feedback_items) -> dict:
             pickup_tracked = bool(awbs) and any(a in tracked_awbs for a in awbs)
         else:
             pickup_tracked = True
-        same_conflict = bool(
-            it.invoice_id and it.invoice_id in conflict_invoices
-            and it.verdict != "conflict"
-        )
+        same_conflict = False
+        if it.invoice_id and it.verdict != "conflict":
+            if it.invoice_id in conflict_invoices:
+                same_conflict = True
+            else:
+                c_id = invoice_contract.get(it.invoice_id, "")
+                for lane in invoice_lanes.get(it.invoice_id, set()):
+                    period = _period_for_invoice_lane(
+                        case, it.invoice_id, lane, c_id) or ""
+                    if (c_id, lane, period) in conflict_lane_period:
+                        same_conflict = True
+                        break
         touched = it.id in feedback_touched
         flags_map[it.id] = ItemFlags(
             missing_doc_present=it.missing_doc is not None,
